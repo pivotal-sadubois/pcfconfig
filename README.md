@@ -1,14 +1,21 @@
-# Creating a new shared-scripts version:
+# PCF Configuration Utility
+The PCF Configuration Utility pcfconfig.sh is to configure the Pivotal OpsManager
+and its software tiles over its API interface.  
 
-* Find the most recent version tag.
-* Increment that version number by one.
-* Apply that tag '$NEW_VERSION' to the git commit you want to version.
-* Push the changes to github.
+* Create the initial authentification credentials
+* Set the OpsManager configuration
+* Configure Networks for PKS and PCF
+* Product Upload from PivNet
+* Update Stemcells
+* Configuring the PKS and PCF tiles
+
+Prerequisites:
+* om - https://github.com/pivotal-cf/om
+* jq - https://stedolan.github.io/jq/download/
 
 ```
-git tag v1.0.12 11866e5a5e68ab4f292d0d99f2c183d086dd2a4a
-git push
-git push --tags
+mkdir ~/workspace && cd ~/workspace
+git clone https://github.com/pivotal-sadubois/pcfconfig.git
 ```
 
 * Then we should update the versions used in our app
@@ -24,4 +31,3 @@ update pks_versions
 set script_version = 'v1.0.12'
 where script_version = 'v1.0.11'
 ```
-
