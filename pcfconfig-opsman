@@ -13,12 +13,15 @@ DCRY=""
 DEBUG=0
 USAGE=0
 NO_APPLY=0
+NO_DOWNLOAD=0
 AWS_CLI_ENABLED=0
 AZURE_CLI_ENABLED=0
 MSG_SILENT=0
 PIVNET_TOKEN=""
 PCFCONFIG_PATH=$(dirname $0)
 PCFCONFIG_BASE=$(basename $0)
+PKS_VERSION=""
+PAS_VERSION=""
 
 ##############################################################################################
 ############################### COMMAND-LINE ARGS PROCESSING  ################################
@@ -29,10 +32,15 @@ while [ "$1" != "" ]; do
     --debug) DEBUG=1;;
     --usage) USAGE=1;;
     --noapply) NO_APPLY=1;;
-    -u) USER=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
-    -p) PASS=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
-    -dp) DCRY=$2; shift;;           # PCFCONFIG-OPSMAN 
-    -pt) PIVNET_TOKEN=$2; shift;;   # PCFCONFIG-PKS
+    --nodownload) NO_DOWNLOAD=1;;
+    -u) USER=$2; shift;;                       # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -p) PASS=$2; shift;;                       # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -dp) DCRY=$2; shift;;                      # PCFCONFIG-OPSMAN 
+    -pt) PIVNET_TOKEN=$2; shift;;              # PCFCONFIG-PKS
+    --decryption-key) DCRY=$2; shift;;         # PCFCONFIG-OPSMAN
+    --pivnet-token) PIVNET_TOKEN=$2; shift;;   # PCFCONFIG-PKS
+    --pks-version) PKS_VERSION=$2; shift;;     # PCFCONFIG-PKS
+    --pas-version) PAS_VERSION=$2; shift;;     # PCFCONFIG-PAS
   esac
   shift
 done
@@ -43,21 +51,35 @@ done
 
 usage_opsman() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
-  echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
-  echo "                       -p <admin>   - OpsManager Amdin Password"
-  echo "                       -dp <phrase> - OpsManager Decryption Prhase"
-  echo "                       --debug      - Debugging"
-  echo "                       --noapply    - Do not Apply changes on OpsManager"
+  echo "              OPTIONS: -u <admin>                 - OpsManager Amdin User"
+  echo "                       -p <admin>                 - OpsManager Amdin Password"
+  echo "                       --decryption-key <phrase>  - OpsManager Decryption Prhase"
+  echo "                       --debug                    - Debugging"
+  echo "                       --noapply                  - Do not Apply changes on OpsManager"
 }
 
-usage_opspks() {
+usage_pks() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
-  echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
-  echo "                       -p <admin>   - OpsManager Amdin Password"
-  echo "                       -pt <token>  - Pivnet API Token"
-  echo "                       --debug      - Debugging"
-  echo "                       --noapply    - Do not Apply changes on OpsManager"
+  echo "              OPTIONS: -u <admin>                 - OpsManager Amdin User"
+  echo "                       -p <admin>                 - OpsManager Amdin Password"
+  echo "                       --pivnet-token <token>     - Pivnet API Token"
+  echo "                       --pks-version <version>    - PKS Version"
+  echo "                       --debug                    - Debugging"
+  echo "                       --noapply                  - Do not Apply changes on OpsManager"
+  echo "                       --nodownload               - No software download from pivnet if copy local is available"
 }
+
+usage_pas() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "              OPTIONS: -u <admin>                 - OpsManager Amdin User"
+  echo "                       -p <admin>                 - OpsManager Amdin Password"
+  echo "                       --pivnet-token <token>     - Pivnet API Token"
+  echo "                       --pas-version <version>    - PAS Version"
+  echo "                       --debug                    - Debugging"
+  echo "                       --noapply                  - Do not Apply changes on OpsManager"
+  echo "                       --nodownload               - No software download from pivnet if copy local is available"
+}
+
 
 
 messagePrint() {
@@ -366,10 +388,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
-  if [ "${USER}" == "" -o "${PASS}" == "" -o "${PIVNET_TOKEN}" == "" ]; then
+  if [ "${USER}" == "" -o "${PASS}" == "" -o "${PIVNET_TOKEN}" == "" -o "${PKS_VERSION}" == "" ]; then
     usage_pks
     echo ""
-    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> -pt <token>"; exit 1
+    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> --pivnet-token <token> --pks-version <version>"; exit 1
   fi
 fi
 
@@ -440,15 +462,33 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
-  echo "Download PKS Image"
-  PKS_VERSION=1.3.6
+  echo "Looking for PKS Product Image ($PKS_VERSION)"
   PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ print $NF }')
-  PIVNET_SLAG=pivotal-container-service
+  if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
+  PIVNET_SLUG=pivotal-container-service
 
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
-  $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
-      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+  # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
+  messagePrint " - PKS Product Version requested" "$PKS_VERSION"
+  messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
+  messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
+  cnt=$(egrep -c ":${PKS_VERSION}:" $PCFCONFIG_PATH/files/pks-release-notes.txt)
+  if [ "${cnt}" -eq 0 ]; then 
+    echo ""
+    echo "ERROR: The PKS Version (${PKS_VERSION}) is not known. Please choose one from the list:"
+    cat $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ printf("         PKS-%-7s\n",$2)}' | sed 1d
+    exit 1
+  fi
+
+  if [ -f "/tmp/$PIVNET_GLOB" ]; then
+    messagePrint " - Verify download and caching options" "local-cache"
+  else
+    messagePrint " - Verify download and caching options" "download-from-pivnet"
+    OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
+    OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
+        --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+  fi
 fi
 
 
