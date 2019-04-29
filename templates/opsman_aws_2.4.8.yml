@@ -10,9 +10,9 @@ properties-configuration:
     encrypted: ((encrypted))
 
 az-configuration:
-  - name: eu-central-1a
-  - name: eu-central-1b
-  - name: eu-central-1c
+  - name: ((infrastructure_subnet_1_azname))
+  - name: ((infrastructure_subnet_2_azname))
+  - name: ((infrastructure_subnet_3_azname))
 
 properties-configuration:
   singleton_availability_zone: eu-central-1b

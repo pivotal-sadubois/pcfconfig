@@ -1,14 +1,11 @@
 #!/bin/bash
-# ########################################################################
-# File: ........: pcfconfig
+# ############################################################################################
+# File: ........: pcfconfig-opsman / pcfconfig-pks
 # Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: PCF OpsManager Configuration Utility
-# ########################################################################
+# ############################################################################################
 
-#if [ "$1" == "" -o $# -ne 2 ]; then
-#  echo "USAGE: $0 <terraform.tfvars> <terraform.tfstate>"; exit 0
-#fi
 NODE=""
 USER=""
 PASS=""
@@ -19,45 +16,49 @@ NO_APPLY=0
 AWS_CLI_ENABLED=0
 AZURE_CLI_ENABLED=0
 MSG_SILENT=0
+PIVNET_TOKEN=""
 PCFCONFIG_PATH=$(dirname $0)
 PCFCONFIG_BASE=$(basename $0)
 
+##############################################################################################
+############################### COMMAND-LINE ARGS PROCESSING  ################################
+##############################################################################################
+
 while [ "$1" != "" ]; do
   case $1 in
-    -d) DEBUG=1;;
     --debug) DEBUG=1;;
-    -usage) USAGE=1;;
     --usage) USAGE=1;;
     --noapply) NO_APPLY=1;;
-    -u) USER=$2; shift;;
-    -p) PASS=$2; shift;;
-    -dp) DCRY=$2; shift;;
-    opsman) MODE="OPSMAN";;
+    -u) USER=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -p) PASS=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -dp) DCRY=$2; shift;;           # PCFCONFIG-OPSMAN 
+    -pt) PIVNET_TOKEN=$2; shift;;   # PCFCONFIG-PKS
   esac
   shift
 done
 
-if [ "${MODE}" == "" -o "${USAGE}" -eq 1 -o "${USER}" == "" -o "${PASS}" == "" -o "${DCRY}" == "" ]; then
-  echo "USAGE: $PCFCONFIG_BASE <mode> [options]"
-  echo "              MODE:    opsmen       - Configure OpsManager"
-  echo "                       pas          - Configure Pivotal Application Service (PAS)"
-  echo "                       pks          - Configure Pivotal Container Service (PKS)"
+##############################################################################################
+########################################## FUNCTIONS #########################################
+##############################################################################################
+
+usage_opsman() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
   echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
   echo "                       -p <admin>   - OpsManager Amdin Password"
   echo "                       -dp <phrase> - OpsManager Decryption Prhase"
   echo "                       --debug      - Debugging"
   echo "                       --noapply    - Do not Apply changes on OpsManager"
+}
 
-  if [ "${MODE}" == "OPSMAN" ]; then
-    echo "DCRY:$DCRY PASS:$PASS USER:$USER"
-    if [ "${USER}" == "" -o "${PASS}" == "" -o "${DCRY}" == "" ]; then
-      echo ""
-      echo "ERRROR: Mode: opsman requires the options -u <admin> -p <admin> -d <phrase>"; exit 1
-    fi
-  else
-    exit 0
-  fi
-fi
+usage_opspks() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
+  echo "                       -p <admin>   - OpsManager Amdin Password"
+  echo "                       -pt <token>  - Pivnet API Token"
+  echo "                       --debug      - Debugging"
+  echo "                       --noapply    - Do not Apply changes on OpsManager"
+}
+
 
 messagePrint() {
   msg="$1"
@@ -352,11 +353,31 @@ a=1
   fi
 }
 
+##############################################################################################
+######################################## MAIN PROGRAMM #######################################
+##############################################################################################
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
+  if [ "${USER}" == "" -o "${PASS}" == "" -o "${DCRY}" == "" ]; then
+    usage_opsman
+    echo ""
+    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> -dp <phrase>"; exit 1
+  fi
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+  if [ "${USER}" == "" -o "${PASS}" == "" -o "${PIVNET_TOKEN}" == "" ]; then
+    usage_pks
+    echo ""
+    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> -pt <token>"; exit 1
+  fi
+fi
+
 checkEnvironment
 
 # --- CHECK FOR TEMPLATE ---
 OPSMAN_CONFIG="opsman_aws_${OPSMAN_VERSION}.yml"
-if [ "$MODE" == "OPSMAN" ]; then
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   if [ ! -f "$OPSMAN_CONFIG" ]; then
     if [ -f $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml ]; then
       echo ""
@@ -374,7 +395,7 @@ if [ "$MODE" == "OPSMAN" ]; then
   fi
 
   # --- COPY JQ FILES FROM THE TEMPLATES ---
-  if [ -f $PCFCONFIG_PATH/filter/opsman_aws_2.4.8.jq ]; then
+  if [ -f $PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_VERSION}.jq ]; then
     JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_VERSION}.jq
   else
     JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_MINOR_VERSION}.jq
@@ -416,6 +437,18 @@ if [ "$MODE" == "OPSMAN" ]; then
     echo "Applying Changes to OpsManager"
     $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE apply-changes
   fi
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+  echo "Download PKS Image"
+  PKS_VERSION=1.3.6
+  PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ print $NF }')
+  PIVNET_SLAG=pivotal-container-service
+
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+  $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
+      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+
 fi
 
 

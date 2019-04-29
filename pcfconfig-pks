@@ -1,0 +1,455 @@
+#!/bin/bash
+# ############################################################################################
+# File: ........: pcfconfig-opsman / pcfconfig-pks
+# Language .....: bash
+# Author .......: Sacha Dubois, Pivotal
+# Description ..: PCF OpsManager Configuration Utility
+# ############################################################################################
+
+NODE=""
+USER=""
+PASS=""
+DCRY=""
+DEBUG=0
+USAGE=0
+NO_APPLY=0
+AWS_CLI_ENABLED=0
+AZURE_CLI_ENABLED=0
+MSG_SILENT=0
+PIVNET_TOKEN=""
+PCFCONFIG_PATH=$(dirname $0)
+PCFCONFIG_BASE=$(basename $0)
+
+##############################################################################################
+############################### COMMAND-LINE ARGS PROCESSING  ################################
+##############################################################################################
+
+while [ "$1" != "" ]; do
+  case $1 in
+    --debug) DEBUG=1;;
+    --usage) USAGE=1;;
+    --noapply) NO_APPLY=1;;
+    -u) USER=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -p) PASS=$2; shift;;            # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    -dp) DCRY=$2; shift;;           # PCFCONFIG-OPSMAN 
+    -pt) PIVNET_TOKEN=$2; shift;;   # PCFCONFIG-PKS
+  esac
+  shift
+done
+
+##############################################################################################
+########################################## FUNCTIONS #########################################
+##############################################################################################
+
+usage_opsman() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
+  echo "                       -p <admin>   - OpsManager Amdin Password"
+  echo "                       -dp <phrase> - OpsManager Decryption Prhase"
+  echo "                       --debug      - Debugging"
+  echo "                       --noapply    - Do not Apply changes on OpsManager"
+}
+
+usage_opspks() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "              OPTIONS: -u <admin>   - OpsManager Amdin User"
+  echo "                       -p <admin>   - OpsManager Amdin Password"
+  echo "                       -pt <token>  - Pivnet API Token"
+  echo "                       --debug      - Debugging"
+  echo "                       --noapply    - Do not Apply changes on OpsManager"
+}
+
+
+messagePrint() {
+  msg="$1"
+  stt="$2"
+  cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
+
+  str=""
+  while [ $cnt -lt 54 ]; do
+    str="${str}."
+    let cnt=cnt+1
+  done
+  echo "${msg} ${str}: ${stt}"
+}
+
+checkEnvironment() {
+  # --- CHECK FOR OM UTILITY ---
+  OM=$(which om)
+  if [ "${OM}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the om utility from https://github.com/pivotal-cf/om"; exit 0
+  else
+    # --- TEST FOR WORKING OM UTILITY ---
+    OM_VERSION=$(OM version 2>/dev/null); ret=$?
+    if [ ${ret} -ne 0 -o "${OM_VERSION}" == "" ]; then
+      echo ""
+      echo "ERROR: the om utility $(which om) does not seam to be correct"
+      echo "       please install the om utility from https://github.com/pivotal-cf/om"; exit 0
+    else
+      messagePrint "checking for the om utility" "Installed - ${OM_VERSION}"
+    fi
+  fi
+
+  # --- CHECK FOR JQ UTILITY ---
+  JQ=$(which jq)
+  if [ "${JQ}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the jq utility from https://stedolan.github.io/jq/download"; exit 0
+  else
+    # --- TEST FOR WORKING JQ UTILITY ---
+    JQ_VERSION=$(JQ -V 2>/dev/null); ret=$?
+    if [ "$(JQ -V | egrep -c '^jq-')" -eq 1 -a "$(echo '{"foo": 42}' | jq .foo)" != "42" ]; then
+      echo ""
+      echo "ERROR: the jq utility $(which jq) does not seam to be correct"
+      echo "       please install the om utility from https://stedolan.github.io/jq/download/"; exit 0
+    else
+      messagePrint "checking for the jq utility" "Installed - ${JQ_VERSION}"
+    fi
+  fi
+
+  # --- CHECK FOR TERRAFORMS ---
+  TF=$(which terraform)
+  if [ "${TF}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the terraform from https://www.terraform.io/downloads.html"; exit 0
+  else
+    # --- TEST FOR WORKING JQ UTILITY ---
+    TF_VERSION=$($TF -v 2>/dev/null | head -1 | awk '{ print $2 }'); ret=$?
+    if [ ${ret} -ne 0 -o "${TF_VERSION}" == "" ]; then
+      echo ""
+      echo "ERROR: the terraform $(which terraform) does not seam to be correct"
+      echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+    else
+      messagePrint "checking for the terraform " "Installed - ${TF_VERSION}"
+    fi
+  fi
+
+  # --- VERIFY TERRAFORM FILES ---
+  TERRAFORM_VARS=terraform.tfvars
+  TERRAFORM_TFSTATE=terraform.tfstate
+
+  if [ -f main.tf -a -f variables.tf ]; then
+    pks=$(egrep -c "module \"pks\"" main.tf)
+    if [ ${pks} -gt 0 ]; then
+      messagePrint "checking terraform product selection" "Pivotal Container Service (PKS)"
+      product="Pivotal Container Service (PKS)"; productid=PKS
+    fi
+
+    pas=$(egrep -c "module \"pas\"" main.tf)
+    if [ ${pas} -gt 0 ]; then
+      messagePrint "checking terraform product selection" "Pivotal Application Service (PAS)"
+      product="Pivotal Cloud Foundry"; productid=PCF
+    fi
+
+    # --- VERIFY PROVIDER ---
+    CLOUD_PROVIDER=$(egrep "^provider" main.tf | sed 's/"//g' | awk '{ print $2 }')
+    case $CLOUD_PROVIDER in
+      azurerm)
+           messagePrint "checking terraform cloud provider" "Microsoft Azure (AZURE)"
+           cloud="Azure"
+           ;;
+      aws)
+          messagePrint "checking terraform cloud provider" "Amazon WebServices (AWS)"
+          cloud="AWS"
+          ;;
+      gcp)
+          messagePrint "checking terraform cloud provider" "Google Gloud Platform (GCP)"
+          cloud="GCP"
+          ;;
+     *)
+          messagePrint "checking terraform cloud provider" "Unknown Cloud Provider ($CLOUD_PROVIDER)"
+          echo "ERROR: The cloud provider $CLOUD_PROVIDER is currently not supported"; exit 1
+          ;;
+    esac
+
+    if [ "${cloud}" == "AWS" ]; then
+      # --- CHECK FOR AWS CLI ---
+      AWSCLI=$(which aws)
+      if [ "${AWSCLI}" != "" ]; then
+        $AWSCLI --version >/dev/null 2>&1; ret=$?
+        if [ ${ret} -eq 0 ]; then
+          AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
+          AWS_CLI_ENABLED=1
+          messagePrint "checking for $cloud CLI utility" "installed - ${AWS_VERSION}"
+        else
+          echo ""
+          echo "ERROR: the terraform $(which terraform) does not seam to be correct"
+          echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+        fi
+      else
+        messagePrint "checking for $cloud CLI utility" "no installed"
+      fi
+    fi
+
+    if [ "${cloud}" == "Azure" ]; then
+      # --- CHECK FOR AWS CLI ---
+      AZCLI=$(which az)
+      if [ "${AZCLI}" != "" ]; then
+        $AZCLI -v >/dev/null 2>&1; ret=$?
+        if [ ${ret} -eq 0 ]; then
+          AZ_VERSION=$($AZCLI -v 2>/dev/null | egrep "^azure-cli" | awk '{ print $2 }'); ret=$?
+          AZURE_CLI_ENABLED=1
+          messagePrint "checking for $cloud CLI utility" "installed - ${AZ_VERSION}"
+        else
+          echo ""
+          echo "ERROR: the $cloud CLI $(which az) does not seam to be correct"
+          echo "       please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest"; exit 0
+        fi
+      else
+        messagePrint "checking for $cloud CLI utility" "no installed"
+      fi
+    fi
+
+    # --- TERRAFORM NOT CONFIGURED YET ---
+    if [ ! -f $TERRAFORM_VARS -a ! -f $TERRAFORM_TFSTATE ]; then
+      echo ""
+      echo "ERROR: terraform vaiables file $TERRAFORM_VARS has not been created by now."
+      echo "       Please refer to the $product documentation and follow the"
+      echo "       instructions in the section: \"Installing $productid on $cloud using Terraform\""; exit 1
+    fi
+
+    # --- CHECK FO AN INITIAL RUN ---
+    if [ -f $TERRAFORM_VARS -a ! -d .terraform ]; then
+      echo ""
+      echo "ERROR: terraform vaiables file $TERRAFORM_VARS has been created but terraform"
+      echo "       has not yet been initialzed (terraform init)."
+      echo "       Please refer to the $product documentation and follow the"
+      echo "       instructions in the section: \"Installing $productid on $cloud using Terraform\""; exit 1
+    fi
+
+    # --- CHECK FO AN INITIAL RUN ---
+    if [ -f $TERRAFORM_VARS -a -d .terraform -a ! -f plan ]; then
+      echo ""
+      echo "ERROR: Terraform has been initialized already but no plan has been created yet."
+      echo "       Please run \"terraform plan -out=plan\" to create a plan or consult the "
+      echo "       $product documentation and follow the"
+      echo "       instructions in the section: \"Installing $productid on $cloud using Terraform\""; exit 1
+    fi
+
+    # --- TERRAFORM IS READY TO DEPLOY ---
+    if [ -f $TERRAFORM_VARS -a -f plan -a ! -f $TERRAFORM_TFSTATE ]; then
+      echo ""
+      echo "ERROR: Terraform has been initialized and a plan has been deployed."
+      echo "       Please run \"terraform apply\" to deploy installation to $cloud."
+      echo "       On questions please consult the $product documentation and follow the"
+      echo "       instructions in the section: \"Installing $productid on $cloud using Terraform\""; exit 1
+    fi
+
+    ver=`$JQ -r '.terraform_version' $TERRAFORM_TFSTATE 2>/dev/null`
+    if [ "${ver}" == "" ]; then
+      echo ""
+      echo "ERROR: $0 $TERRAFORM_TFSTATES is not a terraform state file"; exit 1
+    fi
+
+    if [ "${cloud}" == "AWS" -a "${AWS_CLI_ENABLED}" -eq 1 ]; then
+      OPSMAN_CONFIG="opsmen_aws.yml"
+      AWS_ACCESS_KEY=$(egrep "^access_key" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      AWS_SECRET_KEY=$(egrep "^secret_key" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      AWS_DNS_SUFFIX=$(egrep "^dns_suffix" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      AWS_REGION=$(egrep "^region" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      AWS_OPS_MANAGER_AMI=$(egrep "^ops_manager_ami" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      AWS_AVAILABILITY_ZONES=$(egrep "^availability_zones" $TERRAFORM_VARS | \
+        sed -e 's/^.*= //g' -e 's/"//g' -e 's/\[//g' -e 's/\]//g')
+      OPSMAN_VERSION=$(egrep ":ami-0796bde3a8a8d48da$" $PCFCONFIG_PATH/files/opsman-release-notes.txt | awk -F: '{ print $1}')
+      OPSMAN_MINOR_VERSION=$(echo $OPSMAN_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+
+      echo "Verify $cloud configuration:"
+      messagePrint " - AWS AccessKey" "$AWS_ACCESS_KEY"
+      messagePrint " - AWS SecretKey" "$AWS_SECRET_KEY"
+      messagePrint " - AWS Region" "$AWS_REGION"
+      messagePrint " - AWS Availabilit Zone" "$AWS_AVAILABILITY_ZONES"
+      messagePrint " - DNS Domain Suffix" "$AWS_DNS_SUFFIX"
+      messagePrint " - OPS Manager AMI" "$AWS_OPS_MANAGER_AMI - $OPSMAN_VERSION"
+
+      echo "Verify $cloud Ops Manager instance"
+      OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
+      OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
+      OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
+      OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
+      DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
+        sed -e 1d -e '$d' -e 's/,//g' -e 's/  *//g' -e 's/	//g' | paste -s -d " " - - - -)
+
+      # --- GET AWS INSTANCE ---
+      if [ $DEBUG -gt 0 ]; then
+        echo "# -------------------------- DEBUGGING START -----------------------------"
+        echo "aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager'"
+        aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager'
+        echo "# -------------------------- DEBUGGING END -------------------------------"
+      fi
+
+      OPS_MANAGER_ID=$($AWSCLI ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager' | \
+      $JQ '.Reservations[0].Instances[0].InstanceId' | sed 's/"//g')
+
+      INSTANCE_STATUS=$($AWSCLI ec2 --region $AWS_REGION describe-instance-status --instance-ids $OPS_MANAGER_ID | \
+      $JQ '.InstanceStatuses[0].InstanceState.Name' | sed 's/"//g')
+
+      messagePrint " - Ops Manager VM Name" "awspas-ops-manager"
+      messagePrint " - Ops Manager Instance" "$OPS_MANAGER_ID - $INSTANCE_STATUS"
+      messagePrint " - AWS DNS Servers" "$DNS_SERVERS"
+      messagePrint " - Ops Manager DNS Name" "$OPS_MANAGER_DNS"
+
+      # --- CHEKING DNS ---
+      nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+      if [ $ret -eq 0 ]; then dns_google_stat="successful"; else dns_google_stat="failed"; fi
+      messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
+
+      for n in $DNS_SERVERS; do
+        nslookup $OPS_MANAGER_DNS $n > /dev/null 2>&1; ret=$?
+        if [ $ret -eq 0 ]; then dns_stat="successful"; else dns_stat="failed"; fi
+        messagePrint "   => Verify DNS lookup ($n)" "$dns_stat"
+      done
+
+      messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
+      messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
+
+      if [ $dns_google_stat == "failed" ]; then
+        messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_stat"
+        DNS1=$(echo $DNS_SERVERS | awk '{ print $1 }')
+        DNS2=$(echo $DNS_SERVERS | awk '{ print $2 }')
+        DNS3=$(echo $DNS_SERVERS | awk '{ print $3 }')
+        DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
+        subdomain=$(echo $OPS_MANAGER_DNS | sed -e 's/\./<1>/' -e 's/^.*<1>//g')
+        sublen=$(echo $subdomain | wc -c | sed 's/ *//g')
+
+        echo ""
+        echo "ERROR: DNS entry for $OPS_MANAGER_DNS external to AWS seams not to be working."
+        echo "       Make sure you add a NS entry for your subdomain $subdomain on your DNS zone"
+        echo "       for $AWS_DNS_SUFFIX."
+        echo ""
+        printf "      %${sublen}s    NS     $DNS1\n" "$subdomain"
+        printf "      %${sublen}s           $DNS2\n" ""
+        printf "      %${sublen}s           $DNS3\n" ""
+        printf "      %${sublen}s           $DNS4\n" ""
+
+        echo ""
+
+        echo "OpsManager Name can not be resolved through DNS"
+        while [ 1 ]; do
+          echo -e "Do you want to configure the OpsManager with its ip-address $OPS_MANAGER_PUBLIC_IP instead <y/n>: \c"; read x
+          if [ $x == "y" -o $x == "n" ]; then break; fi
+        done
+
+        if [ $x == "y" ]; then
+          OPS_MANAGER=$OPS_MANAGER_PUBLIC_IP
+        else
+          echo "$0 - Programm Ended"; exit 1
+        fi
+      else
+        OPS_MANAGER=OPS_MANAGER_DNS
+      fi
+
+      if [ "${INSTANCE_STATUS}" != "running" ]; then
+        echo ""
+        echo "ERROR: OpsManager Instance: $OPS_MANAGER_ID has not status running."
+        echo "       Please manually verify status on AWS Console and start it if necessary"; exit 0
+      fi
+    fi
+  fi
+
+  if [ "${cloud}" == "Azure" -a "${AZURE_CLI_ENABLED}" -eq 1 ]; then
+      OPSMAN_CONFIG="opsmen_aws.yml"
+a=1
+  fi
+}
+
+##############################################################################################
+######################################## MAIN PROGRAMM #######################################
+##############################################################################################
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
+  if [ "${USER}" == "" -o "${PASS}" == "" -o "${DCRY}" == "" ]; then
+    usage_opsman
+    echo ""
+    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> -dp <phrase>"; exit 1
+  fi
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+  if [ "${USER}" == "" -o "${PASS}" == "" -o "${PIVNET_TOKEN}" == "" ]; then
+    usage_pks
+    echo ""
+    echo "ERRROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> -pt <token>"; exit 1
+  fi
+fi
+
+checkEnvironment
+
+# --- CHECK FOR TEMPLATE ---
+OPSMAN_CONFIG="opsman_aws_${OPSMAN_VERSION}.yml"
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
+  if [ ! -f "$OPSMAN_CONFIG" ]; then
+    if [ -f $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml ]; then
+      echo ""
+      echo "ERROR: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet. Please"
+      echo "       copy the template $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml and copy it to the"
+      echo "       local directory as $OPSMAN_CONFIG and modify it as needed."
+      echo "       cp $PCFCONFIG_PATH/templates/${OPSMAN_CONFIG}."
+    else
+      echo ""
+      echo "ERROR: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet. Please"
+      echo "       copy the template $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_MINOR_VERSION}.yml and copy it to the"
+      echo "       local directory as $OPSMAN_CONFIG and modify it as needed."
+      echo "       cp $PCFCONFIG_PATH/templates/${OPSMAN_CONFIG}."
+    fi
+  fi
+
+  # --- COPY JQ FILES FROM THE TEMPLATES ---
+  if [ -f $PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_VERSION}.jq ]; then
+    JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_VERSION}.jq
+  else
+    JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_aws_${OPSMAN_MINOR_VERSION}.jq
+  fi
+
+  # --- GET AWS INSTANCE ---
+  if [ $DEBUG -gt 0 ]; then
+    echo "# -------------------------- DEBUGGING START -----------------------------"
+    $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g'
+    echo "# -------------------------- DEBUGGING END -------------------------------"
+  fi
+
+  VARFILE=./vars.yml
+  echo "# GENERATED BY $0 - $(date)" > $VARFILE
+  echo "access_key_id: $AWS_ACCESS_KEY"               >> $VARFILE
+  echo "secret_access_key: $AWS_SECRET_KEY"           >> $VARFILE
+  $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
+
+  # --- CONFIGURE AUTHENTICFICATION ---
+  echo "Configure OpsManager Authentification"
+  messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
+  messagePrint " - OpsManager Admin User" "$USER"
+  messagePrint " - OpsManager Admin Password" "$PASS"
+  messagePrint " - OpsManager Decryption Passphrase" "$PASS"
+
+  OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
+  $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
+
+  # --- CONFIGURE AUTHENTICFICATION ---
+  echo "Configure OpsManager Parameters"
+  messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
+  messagePrint " - OpsManager Template" "opsman_aws_${OPSMAN_VERSION}.yml"
+  messagePrint " - OpsManager Variable File" "$VARFILE"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+  $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE
+
+  if [ $NO_APPLY -eq 0 ]; then
+    echo "Applying Changes to OpsManager"
+    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE apply-changes
+  fi
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+  echo "Download PKS Image"
+  PKS_VERSION=1.3.6
+  PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ print $NF }')
+  PIVNET_SLAG=pivotal-container-service
+
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+  $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
+      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+
+fi
+
+
+exit

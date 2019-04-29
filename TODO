@@ -1,0 +1,3 @@
+OpsManager
+- pivnet: check for active session (pivnet login --api-token) 
+- availability zones are static in the template - done
