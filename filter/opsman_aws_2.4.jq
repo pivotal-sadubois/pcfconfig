@@ -1,0 +1,90 @@
+# IAAS_CONFIGURATION
+"vms_security_group_id: " + .modules[0].outputs.vms_security_group_id.value,
+"ops_manager_ssh_public_key_name: " + .modules[0].outputs.ops_manager_ssh_public_key_name.value,
+"ops_manager_ssh_private_key: <1>" + .modules[0].outputs.ops_manager_ssh_private_key.value + "<1>",
+"aws-region: " + .modules[0].outputs.region.value,
+"encrypted: false", 
+
+# DIRECTOR_CONFIGURATION
+"ntp_servers_string: 0.amazon.pool.ntp.org",
+"resurrector_enabled: true",
+"allow_legacy_agents: true",
+"max_threads: 5",
+"director_hostname:",
+"bosh_recreate_on_next_deploy: true",
+"bosh_recreate_persistent_disks_on_next_deploy: true",
+"skip_director_drain: true",
+"reimbursable: true",
+"director_worker_count: 5",
+"post_deploy_enabled: true",
+"retry_bosh_deploys: true",
+"keep_unreachable_vms: true",
+"local_blobstore_tls_enabled: true",
+
+# INFRASTRUCTURE-SUBNET
+"infrastructure_subnet_1_cidrs: " + .modules[0].outputs.infrastructure_subnet_cidrs.value[0],
+"infrastructure_subnet_1_azname: " + .modules[0].outputs.infrastructure_subnet_availability_zones.value[0],
+"infrastructure_subnet_1_gateway: " + .modules[0].outputs.infrastructure_subnet_gateways.value[0],
+"infrastructure_subnet_1_ids: " + .modules[0].outputs.infrastructure_subnet_ids.value[0],
+"infrastructure_subnet_1_dns: " + "10.0.0.2",
+"infrastructure_subnet_1_range: " + "10.0.16.0-10.0.16.4",
+
+"infrastructure_subnet_2_cidrs: " + .modules[0].outputs.infrastructure_subnet_cidrs.value[1],
+"infrastructure_subnet_2_azname: " + .modules[0].outputs.infrastructure_subnet_availability_zones.value[1],
+"infrastructure_subnet_2_gateway: " + .modules[0].outputs.infrastructure_subnet_gateways.value[1],
+"infrastructure_subnet_2_ids: " + .modules[0].outputs.infrastructure_subnet_ids.value[1],
+"infrastructure_subnet_2_dns: " + "10.0.0.2",
+"infrastructure_subnet_2_range: " + "10.0.16.16-10.0.16.20",
+
+"infrastructure_subnet_3_cidrs: " + .modules[0].outputs.infrastructure_subnet_cidrs.value[2],
+"infrastructure_subnet_3_azname: " + .modules[0].outputs.infrastructure_subnet_availability_zones.value[2],
+"infrastructure_subnet_3_gateway: " + .modules[0].outputs.infrastructure_subnet_gateways.value[2],
+"infrastructure_subnet_3_ids: " + .modules[0].outputs.infrastructure_subnet_ids.value[2],
+"infrastructure_subnet_3_dns: " + "10.0.0.2",
+"infrastructure_subnet_3_range: " + "10.0.16.32-10.0.16.36",
+
+# PKS-SUBNET
+"pks_subnet_1_cidrs: " + .modules[0].outputs.pks_subnet_cidrs.value[0],
+"pks_subnet_1_azname: " + .modules[0].outputs.pks_subnet_availability_zones.value[0],
+"pks_subnet_1_gateway: " + .modules[0].outputs.pks_subnet_gateways.value[0],
+"pks_subnet_1_ids: " + .modules[0].outputs.pks_subnet_ids.value[0],
+"pks_subnet_1_dns: " + "10.0.0.2",
+"pks_subnet_1_range: " + "10.0.4.0-10.0.4.9",
+
+"pks_subnet_2_cidrs: " + .modules[0].outputs.pks_subnet_cidrs.value[1],
+"pks_subnet_2_azname: " + .modules[0].outputs.pks_subnet_availability_zones.value[1],
+"pks_subnet_2_gateway: " + .modules[0].outputs.pks_subnet_gateways.value[1],
+"pks_subnet_2_ids: " + .modules[0].outputs.pks_subnet_ids.value[1],
+"pks_subnet_2_dns: " + "10.0.0.2",
+"pks_subnet_2_range: " + "10.0.5.0-10.0.5.9",
+
+"pks_subnet_3_cidrs: " + .modules[0].outputs.pks_subnet_cidrs.value[2],
+"pks_subnet_3_azname: " + .modules[0].outputs.pks_subnet_availability_zones.value[2],
+"pks_subnet_3_gateway: " + .modules[0].outputs.pks_subnet_gateways.value[2],
+"pks_subnet_3_ids: " + .modules[0].outputs.pks_subnet_ids.value[2],
+"pks_subnet_3_dns: " + "10.0.0.2",
+"pks_subnet_3_range: " + "10.0.6.0-10.0.6.9",
+
+# SERVICES-SUBNET
+"services_subnet_1_cidrs: " + .modules[0].outputs.services_subnet_cidrs.value[0],
+"services_subnet_1_azname: " + .modules[0].outputs.services_subnet_availability_zones.value[0],
+"services_subnet_1_gateway: " + .modules[0].outputs.services_subnet_gateways.value[0],
+"services_subnet_1_ids: " + .modules[0].outputs.services_subnet_ids.value[0],
+"services_subnet_1_dns: " + "10.0.0.2",
+"services_subnet_1_range: " + "10.0.8.0-10.0.8.9",
+
+"services_subnet_2_cidrs: " + .modules[0].outputs.services_subnet_cidrs.value[1],
+"services_subnet_2_azname: " + .modules[0].outputs.services_subnet_availability_zones.value[1],
+"services_subnet_2_gateway: " + .modules[0].outputs.services_subnet_gateways.value[1],
+"services_subnet_2_ids: " + .modules[0].outputs.services_subnet_ids.value[1],
+"services_subnet_2_dns: " + "10.0.0.2",
+"services_subnet_2_range: " + "10.0.9.0-10.0.9.9",
+
+"services_subnet_3_cidrs: " + .modules[0].outputs.services_subnet_cidrs.value[2],
+"services_subnet_3_azname: " + .modules[0].outputs.services_subnet_availability_zones.value[2],
+"services_subnet_3_gateway: " + .modules[0].outputs.services_subnet_gateways.value[2],
+"services_subnet_3_ids: " + .modules[0].outputs.services_subnet_ids.value[2],
+"services_subnet_3_dns: " + "10.0.0.2",
+"services_subnet_3_range: " + "10.0.10.0-10.0.10.9"
+
+

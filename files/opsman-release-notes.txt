@@ -1,0 +1,778 @@
+2.2.0:292:ap-northeast-1:Tokyo:ami-74412499
+2.2.0:292:ap-northeast-2:Seoul :ami-c6d165a8
+2.2.0:292:ap-south-1:Mumbai:ami-0d1d2a62
+2.2.0:292:ap-southeast-1:Singapore:ami-7cbcc196
+2.2.0:292:ap-southeast-2:Sydney:ami-e701da85
+2.2.0:292:ca-central-1:Central Canada:ami-0d6be969
+2.2.0:292:eu-central-1:Frankfurt :ami-c83f0423
+2.2.0:292:eu-west-1:Ireland:ami-d560743f
+2.2.0:292:eu-west-2:London:ami-0c977f6b
+2.2.0:292:sa-east-1:Sao Paulo:ami-ac1034c0
+2.2.0:292:us-east-1:N. Virginia:ami-63b6961c
+2.2.0:292:us-east-2:Ohio:ami-11e1d974
+2.2.0:292:us-west-1:N. California:ami-19a9497a
+2.2.0:292:us-west-2:Oregon:ami-789dc900
+2.2.0:292:us-gov-west-1:ami-2ea2314f
+2.2.1:296:ap-northeast-1:Tokyo:ami-4f7b12a2
+2.2.1:296:ap-northeast-2:Seoul :ami-18b70076
+2.2.1:296:ap-south-1:Mumbai:ami-ee81b181
+2.2.1:296:ap-southeast-1:Singapore:ami-772f6a9d
+2.2.1:296:ap-southeast-2:Sydney:ami-6105a103
+2.2.1:296:ca-central-1:Central Canada:ami-01890465
+2.2.1:296:eu-central-1:Frankfurt :ami-8726276c
+2.2.1:296:eu-west-1:Ireland:ami-66657b8c
+2.2.1:296:eu-west-2:London:ami-00688367
+2.2.1:296:sa-east-1:Sao Paulo:ami-57f9df3b
+2.2.1:296:us-east-1:N. Virginia:ami-4dcdf632
+2.2.1:296:us-east-2:Ohio:ami-72784217
+2.2.1:296:us-west-1:N. California:ami-2719fb44
+2.2.1:296:us-west-2:Oregon:ami-2893cf50
+2.2.1:296:us-gov-west-1:ami-d1b624b0
+2.2.10:372:ap-northeast-1:Tokyo:ami-0ac8ae388adecb0a4
+2.2.10:372:ap-northeast-2:Seoul :ami-0e5ad1a0dbb835368
+2.2.10:372:ap-south-1:Mumbai:ami-033b6b889faeb4ea3
+2.2.10:372:ap-southeast-1:Singapore:ami-06ea5be787265b5eb
+2.2.10:372:ap-southeast-2:Sydney:ami-0a031e1314c3c59d9
+2.2.10:372:ca-central-1:Central Canada:ami-03c1b2e0746f692ae
+2.2.10:372:eu-central-1:Frankfurt :ami-00d72250a85896d1a
+2.2.10:372:eu-west-1:Ireland:ami-065210dab9b412834
+2.2.10:372:eu-west-2:London:ami-0ced0a0172bbbb7aa
+2.2.10:372:sa-east-1:Sao Paulo:ami-0c6029d3560c0b49f
+2.2.10:372:us-east-1:N. Virginia:ami-02eb1edbe2421cab4
+2.2.10:372:us-east-2:Ohio:ami-0a65224543ce5bbfe
+2.2.10:372:us-west-1:N. California:ami-06cd8e20b25d2739d
+2.2.10:372:us-west-2:Oregon:ami-07212753abb87eac9
+2.2.10:372:us-gov-west-1:ami-a47116c5
+2.2.11:376:ap-northeast-1:Tokyo:ami-0f47e25369937f8ba
+2.2.11:376:ap-northeast-2:Seoul :ami-0f6db0205024bfb54
+2.2.11:376:ap-south-1:Mumbai:ami-0ee36becacf1bd85f
+2.2.11:376:ap-southeast-1:Singapore:ami-0f170fc9fe28d0d89
+2.2.11:376:ap-southeast-2:Sydney:ami-053637e2718821022
+2.2.11:376:ca-central-1:Central Canada:ami-0786ff9b1fb289504
+2.2.11:376:eu-central-1:Frankfurt :ami-0e95379b449df30c1
+2.2.11:376:eu-west-1:Ireland:ami-056e8af5b6d425569
+2.2.11:376:eu-west-2:London:ami-0704f16fe456d89a1
+2.2.11:376:sa-east-1:Sao Paulo:ami-082e15b898499cd60
+2.2.11:376:us-east-1:N. Virginia:ami-07bde933012749e0a
+2.2.11:376:us-east-2:Ohio:ami-0550c8f75e6ddfbff
+2.2.11:376:us-west-1:N. California:ami-0f76bae430e8e830d
+2.2.11:376:us-west-2:Oregon:ami-0161bd040a28461b7
+2.2.11:376:us-gov-west-1:ami-7a0b6d1b
+2.2.12:380:ap-northeast-1:Tokyo:ami-06716739c9791523b
+2.2.12:380:ap-northeast-2:Seoul :ami-07a996487b54bf2bf
+2.2.12:380:ap-south-1:Mumbai:ami-0d93656dc3b8cca13
+2.2.12:380:ap-southeast-1:Singapore:ami-05e1cd5d2f80dad51
+2.2.12:380:ap-southeast-2:Sydney:ami-054514b2395167396
+2.2.12:380:ca-central-1:Central Canada:ami-067a9801bff007aa4
+2.2.12:380:eu-central-1:Frankfurt :ami-0e778447dab872bb2
+2.2.12:380:eu-west-1:Ireland:ami-06de6e6f82832ef25
+2.2.12:380:eu-west-2:London:ami-07580293f2287966e
+2.2.12:380:sa-east-1:Sao Paulo:ami-00c10be68852c9813
+2.2.12:380:us-east-1:N. Virginia:ami-033d33fdbdea86ea5
+2.2.12:380:us-east-2:Ohio:ami-083f9a2818794ce54
+2.2.12:380:us-west-1:N. California:ami-096cff33b46dba519
+2.2.12:380:us-west-2:Oregon:ami-01bc7c68564cad972
+2.2.12:380:us-gov-west-1:ami-93f89ef2
+2.2.13:382:ap-northeast-1:Tokyo:ami-0656f940748d00ca4
+2.2.13:382:ap-northeast-2:Seoul :ami-0a722f77cf3448bc3
+2.2.13:382:ap-south-1:Mumbai:ami-0073de949dd24d425
+2.2.13:382:ap-southeast-1:Singapore:ami-0a3ab1d9ccb6bdc79
+2.2.13:382:ap-southeast-2:Sydney:ami-00acde9581e774a7c
+2.2.13:382:ca-central-1:Central Canada:ami-005b3e118b0344a3e
+2.2.13:382:eu-central-1:Frankfurt :ami-02ce74b4f31049eb8
+2.2.13:382:eu-west-1:Ireland:ami-07650a7f0b40770d7
+2.2.13:382:eu-west-2:London:ami-00add163ef6825c70
+2.2.13:382:sa-east-1:Sao Paulo:ami-0423e876d9ed541b2
+2.2.13:382:us-east-1:N. Virginia:ami-022ba580eca647965
+2.2.13:382:us-east-2:Ohio:ami-03427041cbde724b6
+2.2.13:382:us-west-1:N. California:ami-0d63882b8ea916f64
+2.2.13:382:us-west-2:Oregon:ami-0c9aa64b56cad90a3
+2.2.13:382:us-gov-west-1:ami-4391f022
+2.2.14:386:ap-northeast-1:Tokyo:ami-00ceaefafd32d6e93
+2.2.14:386:ap-northeast-2:Seoul :ami-058df322d732f918f
+2.2.14:386:ap-south-1:Mumbai:ami-085442809f23d6c8f
+2.2.14:386:ap-southeast-1:Singapore:ami-07e715f73cedefd13
+2.2.14:386:ap-southeast-2:Sydney:ami-07e6b88e68e2ba2c8
+2.2.14:386:ca-central-1:Central Canada:ami-0da002596e766faf7
+2.2.14:386:eu-central-1:Frankfurt :ami-07bcbef857de107b1
+2.2.14:386:eu-west-1:Ireland:ami-066fdf2763acb40b9
+2.2.14:386:eu-west-2:London:ami-003b786fe227e5b74
+2.2.14:386:sa-east-1:Sao Paulo:ami-06c2e9a563c2fca0c
+2.2.14:386:us-east-1:N. Virginia:ami-0d37aa53a96ce792e
+2.2.14:386:us-east-2:Ohio:ami-020dcf7cbc9b96723
+2.2.14:386:us-west-1:N. California:ami-0329bf76c16a4040e
+2.2.14:386:us-west-2:Oregon:ami-0425b8a6ce3101040
+2.2.14:386:us-gov-west-1:ami-bfb5d5de
+2.2.15:398:ap-northeast-1:Tokyo:ami-0eb5ffea87b3510a6
+2.2.15:398:ap-northeast-2:Seoul :ami-09dca652b060d6d81
+2.2.15:398:ap-south-1:Mumbai:ami-073617a0a2588b962
+2.2.15:398:ap-southeast-1:Singapore:ami-0400cdfee9bf2f6fd
+2.2.15:398:ap-southeast-2:Sydney:ami-0ebc6f2182b4c2745
+2.2.15:398:ca-central-1:Central Canada:ami-093e8b6913f635fa0
+2.2.15:398:eu-central-1:Frankfurt :ami-0b3ac1fdb5b2b4de8
+2.2.15:398:eu-west-1:Ireland:ami-085dc0880c328f85e
+2.2.15:398:eu-west-2:London:ami-0e255107657231d8d
+2.2.15:398:sa-east-1:Sao Paulo:ami-0f022c8b83a003fda
+2.2.15:398:us-east-1:N. Virginia:ami-098afc82dc00b9f2e
+2.2.15:398:us-east-2:Ohio:ami-026c396d58fe59d9d
+2.2.15:398:us-west-1:N. California:ami-0d85071fb516d57bf
+2.2.15:398:us-west-2:Oregon:ami-05f6154687e8ced6c
+2.2.15:398:us-gov-west-1:ami-539bf932
+2.2.16:406:ap-northeast-1:Tokyo:ami-0a7e90fe2cab4b079
+2.2.16:406:ap-northeast-2:Seoul :ami-057ecca51da8f6390
+2.2.16:406:ap-south-1:Mumbai:ami-010455006e3744033
+2.2.16:406:ap-southeast-1:Singapore:ami-029b1335e79a2b326
+2.2.16:406:ap-southeast-2:Sydney:ami-0c6ebab8db8cb3e86
+2.2.16:406:ca-central-1:Central Canada:ami-02c71b62975c33ece
+2.2.16:406:eu-central-1:Frankfurt :ami-0436002e00b61d809
+2.2.16:406:eu-west-1:Ireland:ami-0a030bee4251efe12
+2.2.16:406:eu-west-2:London:ami-04e5041fb71d85c1a
+2.2.16:406:sa-east-1:Sao Paulo:ami-01f4940b62aa5d3d7
+2.2.16:406:us-east-1:N. Virginia:ami-08641f87580d6825a
+2.2.16:406:us-east-2:Ohio:ami-09a3893d8ce51b0b9
+2.2.16:406:us-west-1:N. California:ami-08e27c12c514d8ee7
+2.2.16:406:us-west-2:Oregon:ami-0b732c307a88fac9c
+2.2.16:406:us-gov-west-1:ami-896408e8
+2.2.17:414:ap-northeast-1:Tokyo:ami-087bd98f7675243a9
+2.2.17:414:ap-northeast-2:Seoul :ami-0ec9d432542617c1e
+2.2.17:414:ap-south-1:Mumbai:ami-0645143744eb7651b
+2.2.17:414:ap-southeast-1:Singapore:ami-0963e4d288d52991e
+2.2.17:414:ap-southeast-2:Sydney:ami-08aed40425d6292a2
+2.2.17:414:ca-central-1:Central Canada:ami-0f6c482b902859659
+2.2.17:414:eu-central-1:Frankfurt :ami-020d6ea9b2b8ee286
+2.2.17:414:eu-west-1:Ireland:ami-0e0add6980061bb67
+2.2.17:414:eu-west-2:London:ami-0ae2123ddd3db1464
+2.2.17:414:sa-east-1:Sao Paulo:ami-003c1bde114670488
+2.2.17:414:us-east-1:N. Virginia:ami-087239eac7e7358b3
+2.2.17:414:us-east-2:Ohio:ami-0db278c775bd707cd
+2.2.17:414:us-west-1:N. California:ami-0b924eba82b97cfc2
+2.2.17:414:us-west-2:Oregon:ami-066f9b8f79046bfe8
+2.2.17:414:us-gov-west-1:ami-9d3f51fc
+2.2.18:418:ap-northeast-1:Tokyo:ami-051def5f90e44bf63
+2.2.18:418:ap-northeast-2:Seoul :ami-0958c235e2b255449
+2.2.18:418:ap-south-1:Mumbai:ami-0a2a3fcdd513c306b
+2.2.18:418:ap-southeast-1:Singapore:ami-01c791c1b0b486bd0
+2.2.18:418:ap-southeast-2:Sydney:ami-078c1b43daea834af
+2.2.18:418:ca-central-1:Central Canada:ami-06a7f2800ea919ad6
+2.2.18:418:eu-central-1:Frankfurt :ami-02de48bf7fb04f58d
+2.2.18:418:eu-west-1:Ireland:ami-006f8f5aa67b7e35f
+2.2.18:418:eu-west-2:London:ami-04c73f1e3b25512ad
+2.2.18:418:sa-east-1:Sao Paulo:ami-0527455f6ab2e2a42
+2.2.18:418:us-east-1:N. Virginia:ami-0f27625f682a4e2ff
+2.2.18:418:us-east-2:Ohio:ami-0d725b78d9a96798a
+2.2.18:418:us-west-1:N. California:ami-0968d578e6f1f7660
+2.2.18:418:us-west-2:Oregon:ami-0b7b4858fb525800c
+2.2.18:418:us-gov-west-1:ami-a3771ec2
+2.2.19:424:ap-northeast-1:Tokyo:ami-05d09b0023a934637
+2.2.19:424:ap-northeast-2:Seoul :ami-02d4464323dce6e96
+2.2.19:424:ap-south-1:Mumbai:ami-045935c4cdfee06f6
+2.2.19:424:ap-southeast-1:Singapore:ami-012dbff597b2716f3
+2.2.19:424:ap-southeast-2:Sydney:ami-02f16b4be2aa72f6e
+2.2.19:424:ca-central-1:Central Canada:ami-0a79778eed1c3b257
+2.2.19:424:eu-central-1:Frankfurt :ami-03b3f6742ed4f68de
+2.2.19:424:eu-west-1:Ireland:ami-0dd3494f2debbd0bf
+2.2.19:424:eu-west-2:London:ami-01659fb292261037a
+2.2.19:424:sa-east-1:Sao Paulo:ami-07cb2b16aca693bea
+2.2.19:424:us-east-1:N. Virginia:ami-0f4d86eec2c4ffe30
+2.2.19:424:us-east-2:Ohio:ami-01c44db1fee0c83d8
+2.2.19:424:us-west-1:N. California:ami-0d838b499318ab0ba
+2.2.19:424:us-west-2:Oregon:ami-009c4f31fd72cf165
+2.2.19:424:us-gov-west-1:ami-b47b10d5
+2.2.2:300:ap-northeast-1:Tokyo:ami-02415c0dcc1327064
+2.2.2:300:ap-northeast-2:Seoul :ami-0de1613d042d1943a
+2.2.2:300:ap-south-1:Mumbai:ami-0b53581d16823b8aa
+2.2.2:300:ap-southeast-1:Singapore:ami-0cdce57d293758e51
+2.2.2:300:ap-southeast-2:Sydney:ami-0dcbbeac43626891f
+2.2.2:300:ca-central-1:Central Canada:ami-3c2aa758
+2.2.2:300:eu-central-1:Frankfurt :ami-0a57397b3d34911e4
+2.2.2:300:eu-west-1:Ireland:ami-0f52694414398e778
+2.2.2:300:eu-west-2:London:ami-09cf3a6e
+2.2.2:300:sa-east-1:Sao Paulo:ami-0dc7273534b2f5822
+2.2.2:300:us-east-1:N. Virginia:ami-06fda71c06de829c7
+2.2.2:300:us-east-2:Ohio:ami-0a2929d0d7700b989
+2.2.2:300:us-west-1:N. California:ami-08a78003480a51476
+2.2.2:300:us-west-2:Oregon:ami-f87a5980
+2.2.2:300:us-gov-west-1:ami-a82ab6c9
+2.2.20:427:ap-northeast-1:Tokyo:ami-0ce5f9bc31282046e
+2.2.20:427:ap-northeast-2:Seoul :ami-09d33a03d128e902b
+2.2.20:427:ap-south-1:Mumbai:ami-0b8a300a8a91af507
+2.2.20:427:ap-southeast-1:Singapore:ami-08e874b52d2d4efe0
+2.2.20:427:ap-southeast-2:Sydney:ami-03cc6ef67b2cea542
+2.2.20:427:ca-central-1:Central Canada:ami-016fa913473466dc1
+2.2.20:427:eu-central-1:Frankfurt :ami-0f62c1045b8c800f7
+2.2.20:427:eu-west-1:Ireland:ami-01526bfe9222e59ff
+2.2.20:427:eu-west-2:London:ami-017a8d09f2ed0be78
+2.2.20:427:sa-east-1:Sao Paulo:ami-01d003a1084e91a2c
+2.2.20:427:us-east-1:N. Virginia:ami-0e544227935e8133b
+2.2.20:427:us-east-2:Ohio:ami-0037f0deda7367ed1
+2.2.20:427:us-west-1:N. California:ami-011d3170e86682ec0
+2.2.20:427:us-west-2:Oregon:ami-0066bded035df4954
+2.2.20:427:us-gov-west-1:ami-c1a8c2a0
+2.2.21:436:ap-northeast-1:Tokyo:ami-08a4e0a09b9486e51
+2.2.21:436:ap-northeast-2:Seoul :ami-0561c50e7daab7ace
+2.2.21:436:ap-south-1:Mumbai:ami-0138e52e6d9595739
+2.2.21:436:ap-southeast-1:Singapore:ami-037e8988847ddb5cc
+2.2.21:436:ap-southeast-2:Sydney:ami-02ef1b45d98c4c52e
+2.2.21:436:ca-central-1:Central Canada:ami-05215817885d07f49
+2.2.21:436:eu-central-1:Frankfurt :ami-0cb706cff93b86984
+2.2.21:436:eu-west-1:Ireland:ami-0c8742f66e4eb3404
+2.2.21:436:eu-west-2:London:ami-079fffb1d44e12882
+2.2.21:436:sa-east-1:Sao Paulo:ami-07fb776ac0b0b3895
+2.2.21:436:us-east-1:N. Virginia:ami-0679fde50bbe04d20
+2.2.21:436:us-east-2:Ohio:ami-0473f4382beb6977a
+2.2.21:436:us-west-1:N. California:ami-072a583d8f976c91a
+2.2.21:436:us-west-2:Oregon:ami-0df0be30f4d27f10c
+2.2.21:436:us-gov-west-1:ami-9a285efb
+2.2.3:305:ap-northeast-1:Tokyo:ami-0dfe3227989e6fe65
+2.2.3:305:ap-northeast-2:Seoul :ami-031f6bfab29799d69
+2.2.3:305:ap-south-1:Mumbai:ami-06c1d1d003cde5a36
+2.2.3:305:ap-southeast-1:Singapore:ami-0edd0c2621cd65c2b
+2.2.3:305:ap-southeast-2:Sydney:ami-0517a69955c795a44
+2.2.3:305:ca-central-1:Central Canada:ami-01a8ea161258db377
+2.2.3:305:eu-central-1:Frankfurt :ami-0b85b6e9b172fef0d
+2.2.3:305:eu-west-1:Ireland:ami-04eb07a80e8eddd14
+2.2.3:305:eu-west-2:London:ami-0fa5fbc630477be56
+2.2.3:305:sa-east-1:Sao Paulo:ami-0aef9b262966eb435
+2.2.3:305:us-east-1:N. Virginia:ami-0d959f056387bd6bd
+2.2.3:305:us-east-2:Ohio:ami-0b7fe422763a50e34
+2.2.3:305:us-west-1:N. California:ami-09c7373b3fa1b5c7e
+2.2.3:305:us-west-2:Oregon:ami-0deb8b5c730468953
+2.2.3:305:us-gov-west-1:ami-d4a53ab5
+2.2.4:312:ap-northeast-1:Tokyo:ami-0769b2cee030103e8
+2.2.4:312:ap-northeast-2:Seoul :ami-0dc37ea133fb6cb0c
+2.2.4:312:ap-south-1:Mumbai:ami-08b41c59517c4cfc0
+2.2.4:312:ap-southeast-1:Singapore:ami-021ef6b8732f0108e
+2.2.4:312:ap-southeast-2:Sydney:ami-06fd086223b17e712
+2.2.4:312:ca-central-1:Central Canada:ami-005ed4b4b2bbe4c51
+2.2.4:312:eu-central-1:Frankfurt :ami-06ea68b61fbad783d
+2.2.4:312:eu-west-1:Ireland:ami-04bf5ae5eb63e1c10
+2.2.4:312:eu-west-2:London:ami-054481574db6791bc
+2.2.4:312:sa-east-1:Sao Paulo:ami-0d75409a3b83f8d0a
+2.2.4:312:us-east-1:N. Virginia:ami-078d5e0fe7169281d
+2.2.4:312:us-east-2:Ohio:ami-074781dd12eb7f137
+2.2.4:312:us-west-1:N. California:ami-0a1586e79af149aa3
+2.2.4:312:us-west-2:Oregon:ami-0fa16c167471f2d8f
+2.2.4:312:us-gov-west-1:ami-52eb7533
+2.2.5:316:ap-northeast-1:Tokyo:ami-072c1f10f57af23bc
+2.2.5:316:ap-northeast-2:Seoul :ami-04116254b00493b84
+2.2.5:316:ap-south-1:Mumbai:ami-0b585ee204f3fa2cd
+2.2.5:316:ap-southeast-1:Singapore:ami-0162da93648f60949
+2.2.5:316:ap-southeast-2:Sydney:ami-061270f598027a19e
+2.2.5:316:ca-central-1:Central Canada:ami-090e65a7ef965e852
+2.2.5:316:eu-central-1:Frankfurt :ami-04af669ce4d0c4b4c
+2.2.5:316:eu-west-1:Ireland:ami-0ec95b27d29fca54c
+2.2.5:316:eu-west-2:London:ami-0a060b19e85464501
+2.2.5:316:sa-east-1:Sao Paulo:ami-0325d4fc73fbe847d
+2.2.5:316:us-east-1:N. Virginia:ami-07c9ef9d95473ff8a
+2.2.5:316:us-east-2:Ohio:ami-07edc8f91c0f7f555
+2.2.5:316:us-west-1:N. California:ami-080733965e2db7f06
+2.2.5:316:us-west-2:Oregon:ami-0fa539b013fdd4290
+2.2.5:316:us-gov-west-1:ami-7f7fe11e
+2.2.6:319:ap-northeast-1:Tokyo:ami-0af5230ec8639847f
+2.2.6:319:ap-northeast-2:Seoul :ami-0ab658e6d0ae80f27
+2.2.6:319:ap-south-1:Mumbai:ami-08e877fda7d00b5f2
+2.2.6:319:ap-southeast-1:Singapore:ami-0d236cb0998a5eaf4
+2.2.6:319:ap-southeast-2:Sydney:ami-0ac5161191179db03
+2.2.6:319:ca-central-1:Central Canada:ami-07af85f35a52622b8
+2.2.6:319:eu-central-1:Frankfurt :ami-0267762a96e5cb44b
+2.2.6:319:eu-west-1:Ireland:ami-01ec57c2665453dcf
+2.2.6:319:eu-west-2:London:ami-00227d03e2e8cc568
+2.2.6:319:sa-east-1:Sao Paulo:ami-0717898dcc417b297
+2.2.6:319:us-east-1:N. Virginia:ami-04d072f56d775e24f
+2.2.6:319:us-east-2:Ohio:ami-03496c69af441829c
+2.2.6:319:us-west-1:N. California:ami-0a073a805412627b2
+2.2.6:319:us-west-2:Oregon:ami-070f09eb520986c39
+2.2.6:319:us-gov-west-1:ami-4523bd24
+2.2.7:334:ap-northeast-1:Tokyo:ami-005b5bbf128a66c8f
+2.2.7:334:ap-northeast-2:Seoul :ami-0659dd3d6bb89859c
+2.2.7:334:ap-south-1:Mumbai:ami-0d84ed3d8dc56e2ad
+2.2.7:334:ap-southeast-1:Singapore:ami-0d8f8bda5d48754a4
+2.2.7:334:ap-southeast-2:Sydney:ami-03e58f4f2585a803a
+2.2.7:334:ca-central-1:Central Canada:ami-0374ce5945bf0beb0
+2.2.7:334:eu-central-1:Frankfurt :ami-0f22225c5073b1854
+2.2.7:334:eu-west-1:Ireland:ami-0af0306e8dc807480
+2.2.7:334:eu-west-2:London:ami-0f0776f5ef12aa7a8
+2.2.7:334:sa-east-1:Sao Paulo:ami-0b10f0c6ad17b3dd9
+2.2.7:334:us-east-1:N. Virginia:ami-0dbfacef0646b02f3
+2.2.7:334:us-east-2:Ohio:ami-0c8347bdd42f36abf
+2.2.7:334:us-west-1:N. California:ami-0305514d11fdbcf37
+2.2.7:334:us-west-2:Oregon:ami-006d65f26e1c1af66
+2.2.7:334:us-gov-west-1:ami-91821af0
+2.2.8:352:ap-northeast-1:Tokyo:ami-053a1afc830f0d871
+2.2.8:352:ap-northeast-2:Seoul :ami-07f56a59920928d87
+2.2.8:352:ap-south-1:Mumbai:ami-03a574f14fc28adcc
+2.2.8:352:ap-southeast-1:Singapore:ami-028aac59b1d82948e
+2.2.8:352:ap-southeast-2:Sydney:ami-04e34ef247fa7f398
+2.2.8:352:ca-central-1:Central Canada:ami-0dfbf11e6c0c36c68
+2.2.8:352:eu-central-1:Frankfurt :ami-0463b90ac92131c20
+2.2.8:352:eu-west-1:Ireland:ami-08188e493e4b6667d
+2.2.8:352:eu-west-2:London:ami-031c06ecf767999f8
+2.2.8:352:sa-east-1:Sao Paulo:ami-05ffaad97f964a464
+2.2.8:352:us-east-1:N. Virginia:ami-0ba9bd54a21e01ed9
+2.2.8:352:us-east-2:Ohio:ami-0b0310d8876e8fb51
+2.2.8:352:us-west-1:N. California:ami-0d09518078dcc445c
+2.2.8:352:us-west-2:Oregon:ami-0acaa515761405bf3
+2.2.8:352:us-gov-west-1:ami-1af06a7b
+2.2.9:359:ap-northeast-1:Tokyo:ami-0593eec9f9754ed1a
+2.2.9:359:ap-northeast-2:Seoul :ami-00e09faeba5a043d0
+2.2.9:359:ap-south-1:Mumbai:ami-03bd6c3e38e337db2
+2.2.9:359:ap-southeast-1:Singapore:ami-07340fd2d94ec581e
+2.2.9:359:ap-southeast-2:Sydney:ami-051c315b94c66a750
+2.2.9:359:ca-central-1:Central Canada:ami-0df3187df14357b6f
+2.2.9:359:eu-central-1:Frankfurt :ami-0e9f094d3961037dd
+2.2.9:359:eu-west-1:Ireland:ami-05b33ad157d9b6ee5
+2.2.9:359:eu-west-2:London:ami-0a265d06ed01f2749
+2.2.9:359:sa-east-1:Sao Paulo:ami-00b6d9d0272147f5c
+2.2.9:359:us-east-1:N. Virginia:ami-08c1a0ee3fccd14c3
+2.2.9:359:us-east-2:Ohio:ami-0143fc41a569b879f
+2.2.9:359:us-west-1:N. California:ami-0de5f4f315b2044ec
+2.2.9:359:us-west-2:Oregon:ami-06a8ae6b91c8fb239
+2.2.9:359:us-gov-west-1:ami-2c9aff4d
+2.3.0:146:ap-northeast-1:Tokyo:ami-06193020787382c4e
+2.3.0:146:ap-northeast-2:Seoul :ami-0f8e52d969f6ff6c5
+2.3.0:146:ap-south-1:Mumbai:ami-06972e85ab33de40a
+2.3.0:146:ap-southeast-1:Singapore:ami-0bb1c12f89c6c99b4
+2.3.0:146:ap-southeast-2:Sydney:ami-0076e2c670684447f
+2.3.0:146:ca-central-1:Central Canada:ami-0f9973bdfd5acb03b
+2.3.0:146:eu-central-1:Frankfurt :ami-09fbad73592feead8
+2.3.0:146:eu-west-1:Ireland:ami-04000c78e357f9e13
+2.3.0:146:eu-west-2:London:ami-0d0b44ac0713204da
+2.3.0:146:sa-east-1:Sao Paulo:ami-01d39dcf4bc4ba635
+2.3.0:146:us-east-1:N. Virginia:ami-0b7c047289ce09311
+2.3.0:146:us-east-2:Ohio:ami-0c8b8fbc16dda7527
+2.3.0:146:us-west-1:N. California:ami-028a08e96de689cd0
+2.3.0:146:us-west-2:Oregon:ami-07e863d41f7e11175
+2.3.0:146:us-gov-west-1:ami-38148a59
+2.3.1:167:ap-northeast-1:Tokyo:ami-0c94c92ee43d55e92
+2.3.1:167:ap-northeast-2:Seoul :ami-06f2e432886acce94
+2.3.1:167:ap-south-1:Mumbai:ami-06a3e4cfdf60eaf5e
+2.3.1:167:ap-southeast-1:Singapore:ami-0e6072355dcb9d000
+2.3.1:167:ap-southeast-2:Sydney:ami-0db7611e247aa9ac0
+2.3.1:167:ca-central-1:Central Canada:ami-0272f5b67023e6738
+2.3.1:167:eu-central-1:Frankfurt :ami-06c0a77825a4412e5
+2.3.1:167:eu-west-1:Ireland:ami-0350e91884933e1a0
+2.3.1:167:eu-west-2:London:ami-08aa52eecda7e731d
+2.3.1:167:sa-east-1:Sao Paulo:ami-06adb1c781389bc93
+2.3.1:167:us-east-1:N. Virginia:ami-06e6f6588cd9ddf98
+2.3.1:167:us-east-2:Ohio:ami-092a34c37a9fc39df
+2.3.1:167:us-west-1:N. California:ami-0fd2b9fe4c77cb281
+2.3.1:167:us-west-2:Oregon:ami-0808e871b67a648ea
+2.3.1:167:us-gov-west-1:ami-118f1770
+2.3.10:250:ap-northeast-1:Tokyo:ami-0f6a43fa4000a8a18
+2.3.10:250:ap-northeast-2:Seoul :ami-0e11896a65c2f2fb1
+2.3.10:250:ap-south-1:Mumbai:ami-0b6544992a0313c3d
+2.3.10:250:ap-southeast-1:Singapore:ami-06413ea31e41389ee
+2.3.10:250:ap-southeast-2:Sydney:ami-09e17de546be1315b
+2.3.10:250:ca-central-1:Central Canada:ami-052050e26edda6412
+2.3.10:250:eu-central-1:Frankfurt :ami-02b52d01edc2c44fb
+2.3.10:250:eu-west-1:Ireland:ami-057542838fa1f4c2d
+2.3.10:250:eu-west-2:London:ami-0f748da353717fb33
+2.3.10:250:sa-east-1:Sao Paulo:ami-0568f6c602b7f4e4e
+2.3.10:250:us-east-1:N. Virginia:ami-02576635f3ac50127
+2.3.10:250:us-east-2:Ohio:ami-05b8efa792b507ff6
+2.3.10:250:us-west-1:N. California:ami-08f8dadf753603251
+2.3.10:250:us-west-2:Oregon:ami-0566efe83dc7311d2
+2.3.10:250:us-gov-west-1:ami-ee3a548f
+2.3.11:258:ap-northeast-1:Tokyo:ami-0677948528a0969bd
+2.3.11:258:ap-northeast-2:Seoul :ami-08ad28101cbe49155
+2.3.11:258:ap-south-1:Mumbai:ami-0ec3eafa02ebe55bd
+2.3.11:258:ap-southeast-1:Singapore:ami-0e12baaf87ff05ffc
+2.3.11:258:ap-southeast-2:Sydney:ami-09d97bf987aba3f17
+2.3.11:258:ca-central-1:Central Canada:ami-0c9d7d48393cbbb9b
+2.3.11:258:eu-central-1:Frankfurt :ami-0b3ff264357489f49
+2.3.11:258:eu-west-1:Ireland:ami-0060e665c2e9c2746
+2.3.11:258:eu-west-2:London:ami-0fbb6bc17010c8e6b
+2.3.11:258:sa-east-1:Sao Paulo:ami-0c536f9d40389e858
+2.3.11:258:us-east-1:N. Virginia:ami-0e99b4a536b8de548
+2.3.11:258:us-east-2:Ohio:ami-05846af6422d48f12
+2.3.11:258:us-west-1:N. California:ami-0a4739f5e4868d22c
+2.3.11:258:us-west-2:Oregon:ami-0eefc68a5b57e6302
+2.3.11:258:us-gov-west-1:ami-d7bad2b6
+2.3.12:268:ap-northeast-1:Tokyo:ami-0192c02e1a09cb3d1
+2.3.12:268:ap-northeast-2:Seoul :ami-0b203aab1027f494b
+2.3.12:268:ap-south-1:Mumbai:ami-0d8d6e3a6657797d4
+2.3.12:268:ap-southeast-1:Singapore:ami-047cc20856511ef74
+2.3.12:268:ap-southeast-2:Sydney:ami-03f0ae682ce49aea7
+2.3.12:268:ca-central-1:Central Canada:ami-06a2bfe5c9c58ac12
+2.3.12:268:eu-central-1:Frankfurt :ami-0d9b10b0d09d07795
+2.3.12:268:eu-west-1:Ireland:ami-0a94753c6848440e9
+2.3.12:268:eu-west-2:London:ami-09869ba8e7bf2758d
+2.3.12:268:sa-east-1:Sao Paulo:ami-0c17fc92b2870a6f1
+2.3.12:268:us-east-1:N. Virginia:ami-04f932481fe3d43a8
+2.3.12:268:us-east-2:Ohio:ami-068e4482c3831eab5
+2.3.12:268:us-west-1:N. California:ami-06adeed652490c798
+2.3.12:268:us-west-2:Oregon:ami-0b65032dc20f917b6
+2.3.12:268:us-gov-west-1:ami-890b61e8
+2.3.13:274:ap-northeast-1:Tokyo:ami-031c7122d06ecf4ef
+2.3.13:274:ap-northeast-2:Seoul :ami-0d880484d25b37bd0
+2.3.13:274:ap-south-1:Mumbai:ami-0a577c256ffaef735
+2.3.13:274:ap-southeast-1:Singapore:ami-0fcee404be7f3924a
+2.3.13:274:ap-southeast-2:Sydney:ami-060a4e372f15891a8
+2.3.13:274:ca-central-1:Central Canada:ami-08ceebaf76e226dff
+2.3.13:274:eu-central-1:Frankfurt :ami-0eeb8413e73d7570d
+2.3.13:274:eu-west-1:Ireland:ami-01ad9f0113da0beee
+2.3.13:274:eu-west-2:London:ami-04abb0ba3b9944478
+2.3.13:274:sa-east-1:Sao Paulo:ami-0388e8115f83a011b
+2.3.13:274:us-east-1:N. Virginia:ami-0d8476a07fa4e831b
+2.3.13:274:us-east-2:Ohio:ami-066c9f4885bb63b54
+2.3.13:274:us-west-1:N. California:ami-0b42d64224b3df2ca
+2.3.13:274:us-west-2:Oregon:ami-01a04ae3cc4fb475a
+2.3.13:274:us-gov-west-1:ami-58e08a39
+2.3.14:281:ap-northeast-1:Tokyo:ami-06d40bab1466dade1
+2.3.14:281:ap-northeast-2:Seoul :ami-068b7f7f9e536f333
+2.3.14:281:ap-south-1:Mumbai:ami-031c34e09a97b7512
+2.3.14:281:ap-southeast-1:Singapore:ami-0fd6ca6a358467059
+2.3.14:281:ap-southeast-2:Sydney:ami-028d94b05ca174cff
+2.3.14:281:ca-central-1:Central Canada:ami-0ea8a224656a881f0
+2.3.14:281:eu-central-1:Frankfurt :ami-0c5ad3976538af912
+2.3.14:281:eu-west-1:Ireland:ami-0bcb4b6afaf19f9bf
+2.3.14:281:eu-west-2:London:ami-04ba711de19498690
+2.3.14:281:sa-east-1:Sao Paulo:ami-0b603fef29c778558
+2.3.14:281:us-east-1:N. Virginia:ami-0776efe396fa1c9f5
+2.3.14:281:us-east-2:Ohio:ami-07d0614180bdbcd61
+2.3.14:281:us-west-1:N. California:ami-0501bb3dca0276568
+2.3.14:281:us-west-2:Oregon:ami-031d91d266e69f5ee
+2.3.14:281:us-gov-west-1:ami-6bf98c0a
+2.3.15:287:ap-northeast-1:Tokyo:ami-091c51aeda71c6967
+2.3.15:287:ap-northeast-2:Seoul :ami-002a919dcc6a8f19f
+2.3.15:287:ap-south-1:Mumbai:ami-0be597e260bd25c29
+2.3.15:287:ap-southeast-1:Singapore:ami-0ec5de612ac8667ce
+2.3.15:287:ap-southeast-2:Sydney:ami-0b83171ccb5e89aa2
+2.3.15:287:ca-central-1:Central Canada:ami-0662bcb4e106327da
+2.3.15:287:eu-central-1:Frankfurt :ami-00ef12ab05c55e39c
+2.3.15:287:eu-west-1:Ireland:ami-033a1b10abfced7d8
+2.3.15:287:eu-west-2:London:ami-0e4b71b5d5961d6ef
+2.3.15:287:sa-east-1:Sao Paulo:ami-0ecd39242e71f7fdc
+2.3.15:287:us-east-1:N. Virginia:ami-00c928cf0f65cbbf5
+2.3.15:287:us-east-2:Ohio:ami-01d0879473048ba58
+2.3.15:287:us-west-1:N. California:ami-03451c362f544e8e0
+2.3.15:287:us-west-2:Oregon:ami-060b6ededb9556a45
+2.3.15:287:us-gov-west-1:ami-622b5d03
+2.3.2:170:ap-northeast-1:Tokyo:ami-09b1d9edcd6b2fda6
+2.3.2:170:ap-northeast-2:Seoul :ami-0ef5a3ec8b83b3def
+2.3.2:170:ap-south-1:Mumbai:ami-07872b6801ab4e7a8
+2.3.2:170:ap-southeast-1:Singapore:ami-07aae9f0e39a4f35a
+2.3.2:170:ap-southeast-2:Sydney:ami-0406c2f36859b9fa8
+2.3.2:170:ca-central-1:Central Canada:ami-0b3dfdf29721d99c3
+2.3.2:170:eu-central-1:Frankfurt :ami-0e743dad0d0e77ef4
+2.3.2:170:eu-west-1:Ireland:ami-0bc06eabf4d11e61c
+2.3.2:170:eu-west-2:London:ami-0167568effa6ceea2
+2.3.2:170:sa-east-1:Sao Paulo:ami-0e982a41294eb62eb
+2.3.2:170:us-east-1:N. Virginia:ami-011904d42bc526d1d
+2.3.2:170:us-east-2:Ohio:ami-0af8611563c4da56c
+2.3.2:170:us-west-1:N. California:ami-04a8801414b27f6be
+2.3.2:170:us-west-2:Oregon:ami-068be499134752fe9
+2.3.2:170:us-gov-west-1:ami-b226bed3
+2.3.3:184:ap-northeast-1:Tokyo:ami-026088e5135b7674d
+2.3.3:184:ap-northeast-2:Seoul :ami-0427698fe7c944a4d
+2.3.3:184:ap-south-1:Mumbai:ami-0c65591f2e1c2bc4e
+2.3.3:184:ap-southeast-1:Singapore:ami-098032cb2bdaf98fe
+2.3.3:184:ap-southeast-2:Sydney:ami-03d990b904f059632
+2.3.3:184:ca-central-1:Central Canada:ami-0c012c4980cbb1291
+2.3.3:184:eu-central-1:Frankfurt :ami-0b48db956f603a302
+2.3.3:184:eu-west-1:Ireland:ami-004c578325ccfa3ee
+2.3.3:184:eu-west-2:London:ami-0701a56d9ced224e8
+2.3.3:184:sa-east-1:Sao Paulo:ami-02052c7b247f3aa19
+2.3.3:184:us-east-1:N. Virginia:ami-0574f4501548715b4
+2.3.3:184:us-east-2:Ohio:ami-043b01a42b20aeb6e
+2.3.3:184:us-west-1:N. California:ami-0fb20bc70e7b27f6a
+2.3.3:184:us-west-2:Oregon:ami-078d8d15b8d238ef3
+2.3.3:184:us-gov-west-1:ami-92ff65f3
+2.3.4:188:ap-northeast-1:Tokyo:ami-0f343950081f2a497
+2.3.4:188:ap-northeast-2:Seoul :ami-0d51e3204fbbf9376
+2.3.4:188:ap-south-1:Mumbai:ami-046281a830cfdb371
+2.3.4:188:ap-southeast-1:Singapore:ami-00ce9e04ab82343bd
+2.3.4:188:ap-southeast-2:Sydney:ami-0c3792b8e1f12430c
+2.3.4:188:ca-central-1:Central Canada:ami-09f0ae80f84cc3d42
+2.3.4:188:eu-central-1:Frankfurt :ami-0af2fd2dd7d237eb0
+2.3.4:188:eu-west-1:Ireland:ami-042cf2befd439635c
+2.3.4:188:eu-west-2:London:ami-0f1e79c6790ded80e
+2.3.4:188:sa-east-1:Sao Paulo:ami-0dbb1971d3950ef2c
+2.3.4:188:us-east-1:N. Virginia:ami-07256b9d765d56df9
+2.3.4:188:us-east-2:Ohio:ami-08fb5965e9b729726
+2.3.4:188:us-west-1:N. California:ami-06ed586006e904651
+2.3.4:188:us-west-2:Oregon:ami-0ae9c5289b7930896
+2.3.4:188:us-gov-west-1:ami-1875ef79
+2.3.5:194:ap-northeast-1:Tokyo:ami-07502c2886a90e5f0
+2.3.5:194:ap-northeast-2:Seoul :ami-0eb5966e9f25bb86c
+2.3.5:194:ap-south-1:Mumbai:ami-0a9015e8d5ff3e094
+2.3.5:194:ap-southeast-1:Singapore:ami-06c52383a5ca46c0d
+2.3.5:194:ap-southeast-2:Sydney:ami-0110c9f0186d9c502
+2.3.5:194:ca-central-1:Central Canada:ami-0ad265deec9a7e72c
+2.3.5:194:eu-central-1:Frankfurt :ami-0fdd698a3e631a480
+2.3.5:194:eu-west-1:Ireland:ami-037d3feca075d34f2
+2.3.5:194:eu-west-2:London:ami-0d7b59f3e81bdc9f1
+2.3.5:194:sa-east-1:Sao Paulo:ami-0358dd5af669ee292
+2.3.5:194:us-east-1:N. Virginia:ami-0536197382b025a6c
+2.3.5:194:us-east-2:Ohio:ami-06c9610169c1e5d69
+2.3.5:194:us-west-1:N. California:ami-0e23bfe00650dab1e
+2.3.5:194:us-west-2:Oregon:ami-057fe3bdefd2dedb9
+2.3.5:194:us-gov-west-1:ami-8298fde3
+2.3.6:212:ap-northeast-1:Tokyo:ami-0b6e4b0fbff25c5a7
+2.3.6:212:ap-northeast-2:Seoul :ami-051459e9d174c2f56
+2.3.6:212:ap-south-1:Mumbai:ami-0c0a4556b6ba0af3c
+2.3.6:212:ap-southeast-1:Singapore:ami-0059e780d77345a4c
+2.3.6:212:ap-southeast-2:Sydney:ami-0ee5b99de09178162
+2.3.6:212:ca-central-1:Central Canada:ami-0bf270c812e2829f2
+2.3.6:212:eu-central-1:Frankfurt :ami-013c47ff30983f539
+2.3.6:212:eu-west-1:Ireland:ami-0943a289cfa05efc2
+2.3.6:212:eu-west-2:London:ami-0e49c609928e631e0
+2.3.6:212:sa-east-1:Sao Paulo:ami-0999dba8170b9c3d0
+2.3.6:212:us-east-1:N. Virginia:ami-09835b33c82dab97b
+2.3.6:212:us-east-2:Ohio:ami-00c3e493ad71f9b41
+2.3.6:212:us-west-1:N. California:ami-0249568320532c788
+2.3.6:212:us-west-2:Oregon:ami-0a44501f21c06e487
+2.3.6:212:us-gov-west-1:ami-4b22432a
+2.3.7:224:ap-northeast-1:Tokyo:ami-0f845e8d33ab025bd
+2.3.7:224:ap-northeast-2:Seoul :ami-0d7c196427bb7bf19
+2.3.7:224:ap-south-1:Mumbai:ami-081a2b0e3d19fbdc3
+2.3.7:224:ap-southeast-1:Singapore:ami-0b30b50d4f591ade0
+2.3.7:224:ap-southeast-2:Sydney:ami-063429fced37c79a9
+2.3.7:224:ca-central-1:Central Canada:ami-075ba20e5b6d0bac0
+2.3.7:224:eu-central-1:Frankfurt :ami-0e4afb95aae92b4c9
+2.3.7:224:eu-west-1:Ireland:ami-0b38cecfc0f76cde4
+2.3.7:224:eu-west-2:London:ami-0fb0aac2ced36726e
+2.3.7:224:sa-east-1:Sao Paulo:ami-0b7270c644807e440
+2.3.7:224:us-east-1:N. Virginia:ami-0901f899def3f493c
+2.3.7:224:us-east-2:Ohio:ami-0a269939c28585344
+2.3.7:224:us-west-1:N. California:ami-073302fa9f084e41a
+2.3.7:224:us-west-2:Oregon:ami-0d09267b017dc659b
+2.3.7:224:us-gov-west-1:ami-14b4d475
+2.3.8:237:ap-northeast-1:Tokyo:ami-0150c01431d35d5e9
+2.3.8:237:ap-northeast-2:Seoul :ami-003938144294272b2
+2.3.8:237:ap-south-1:Mumbai:ami-0c5710eb3119703d1
+2.3.8:237:ap-southeast-1:Singapore:ami-02b6d108c3d3797d6
+2.3.8:237:ap-southeast-2:Sydney:ami-0d43bd780fd4555e5
+2.3.8:237:ca-central-1:Central Canada:ami-097d02f27a7267479
+2.3.8:237:eu-central-1:Frankfurt :ami-0c6f8cdf6884a8dd9
+2.3.8:237:eu-west-1:Ireland:ami-0590a9342bb404ccb
+2.3.8:237:eu-west-2:London:ami-0458cb315020dcf67
+2.3.8:237:sa-east-1:Sao Paulo:ami-0f46d2f430cc9bf25
+2.3.8:237:us-east-1:N. Virginia:ami-04ff573ea65968869
+2.3.8:237:us-east-2:Ohio:ami-0c99d6ce9860dff36
+2.3.8:237:us-west-1:N. California:ami-029a7587478c51983
+2.3.8:237:us-west-2:Oregon:ami-018d258da69551412
+2.3.8:237:us-gov-west-1:ami-3bb1d35a
+2.3.9:244:ap-northeast-1:Tokyo:ami-0d92137c086288f3c
+2.3.9:244:ap-northeast-2:Seoul :ami-0d97b5386c3e0d7bd
+2.3.9:244:ap-south-1:Mumbai:ami-01e5a864babaf9841
+2.3.9:244:ap-southeast-1:Singapore:ami-0140d37db03da754a
+2.3.9:244:ap-southeast-2:Sydney:ami-088a33d870a2891ee
+2.3.9:244:ca-central-1:Central Canada:ami-09a6ef24d90e8a9c3
+2.3.9:244:eu-central-1:Frankfurt :ami-062f47e2816b55dd8
+2.3.9:244:eu-west-1:Ireland:ami-06ec7882699045e32
+2.3.9:244:eu-west-2:London:ami-071872702b14d8c44
+2.3.9:244:sa-east-1:Sao Paulo:ami-0161f20537133c500
+2.3.9:244:us-east-1:N. Virginia:ami-010fa2690de750800
+2.3.9:244:us-east-2:Ohio:ami-0be79307776094599
+2.3.9:244:us-west-1:N. California:ami-0152d7e5ce8381892
+2.3.9:244:us-west-2:Oregon:ami-01275e460f5878f20
+2.3.9:244:us-gov-west-1:ami-756a0614
+2.4.0:117:ap-northeast-1:Tokyo:ami-02bc9d07d478c4bfe
+2.4.0:117:ap-northeast-2:Seoul :ami-04301e10136f195cd
+2.4.0:117:ap-south-1:Mumbai:ami-032a89456d602e62a
+2.4.0:117:ap-southeast-1:Singapore:ami-0a4c31b7fff919752
+2.4.0:117:ap-southeast-2:Sydney:ami-0d4cf9d94567eb179
+2.4.0:117:ca-central-1:Central Canada:ami-0c9cc6f947b9a1a6d
+2.4.0:117:eu-central-1:Frankfurt :ami-03740df70ef5f9891
+2.4.0:117:eu-west-1:Ireland:ami-0adf93156ea102e50
+2.4.0:117:eu-west-2:London:ami-0b265f214dad220c2
+2.4.0:117:sa-east-1:Sao Paulo:ami-0e94dc0bf087c183e
+2.4.0:117:us-east-1:N. Virginia:ami-0984e1a9e46239f49
+2.4.0:117:us-east-2:Ohio:ami-0461373f1e0ab20fa
+2.4.0:117:us-west-1:N. California:ami-0ef006c9f8db54bd3
+2.4.0:117:us-west-2:Oregon:ami-01286b96620a8b3d7
+2.4.0:117:us-gov-west-1:ami-953d5bf4
+2.4.0:117:cn-north-1:Beijing:ami-052e6f545a1e9c835
+2.4.1:131:ap-northeast-1:Tokyo:ami-0ab711e98a284459e
+2.4.1:131:ap-northeast-2:Seoul :ami-012e9b4f269fe1338
+2.4.1:131:ap-south-1:Mumbai:ami-08f0d06e48094ecd5
+2.4.1:131:ap-southeast-1:Singapore:ami-01064b3bbf89d4ebe
+2.4.1:131:ap-southeast-2:Sydney:ami-02cf0143d80d8e97c
+2.4.1:131:ca-central-1:Central Canada:ami-06b32996b09044dd7
+2.4.1:131:eu-central-1:Frankfurt :ami-0d1c975a00128d356
+2.4.1:131:eu-west-1:Ireland:ami-022edb40013af2a5b
+2.4.1:131:eu-west-2:London:ami-09c17667b78a04801
+2.4.1:131:sa-east-1:Sao Paulo:ami-0ffaf8d69f78e93c1
+2.4.1:131:us-east-1:N. Virginia:ami-059a9848fa53ffaf9
+2.4.1:131:us-east-2:Ohio:ami-057fe4d24bfb5d174
+2.4.1:131:us-west-1:N. California:ami-0ead22957d6d66575
+2.4.1:131:us-west-2:Oregon:ami-099209efd6d1bdaf3
+2.4.1:131:us-gov-west-1:ami-69b0d008
+2.4.1:131:cn-north-1:Beijing:ami-0aa566374fcbae54c
+2.4.2:142:ap-northeast-1:Tokyo:ami-0c2425e8c6228a34d
+2.4.2:142:ap-northeast-2:Seoul :ami-0cf2d0c237c8c7526
+2.4.2:142:ap-south-1:Mumbai:ami-0629b9c88a9399d72
+2.4.2:142:ap-southeast-1:Singapore:ami-0502a15b49cabff19
+2.4.2:142:ap-southeast-2:Sydney:ami-0ac2da63e8c182d60
+2.4.2:142:ca-central-1:Central Canada:ami-0a0f7c22f94d15573
+2.4.2:142:eu-central-1:Frankfurt :ami-0205d396f9ac6fcad
+2.4.2:142:eu-west-1:Ireland:ami-06a8c0d46155de7d2
+2.4.2:142:eu-west-2:London:ami-003afb7fe02fdaa4a
+2.4.2:142:sa-east-1:Sao Paulo:ami-02843def4d5fb731f
+2.4.2:142:us-east-1:N. Virginia:ami-04044f989a5fb928f
+2.4.2:142:us-east-2:Ohio:ami-02c5c781d5c762d1a
+2.4.2:142:us-west-1:N. California:ami-0b62b3c48ea87fec4
+2.4.2:142:us-west-2:Oregon:ami-00f6d7f1c9a5c33eb
+2.4.2:142:us-gov-west-1:ami-67c9ab06
+2.4.2:142:cn-north-1:Beijing:ami-00d141775f5e3ccf6
+2.4.3:145:ap-northeast-1:Tokyo:ami-0de1a5f949b383f8b
+2.4.3:145:ap-northeast-2:Seoul :ami-058c41a524217a4ef
+2.4.3:145:ap-south-1:Mumbai:ami-03fc8048dc1272533
+2.4.3:145:ap-southeast-1:Singapore:ami-020ac285c7f63c9d1
+2.4.3:145:ap-southeast-2:Sydney:ami-050eb81e63d238fe3
+2.4.3:145:ca-central-1:Central Canada:ami-0e760c6bff72fd937
+2.4.3:145:eu-central-1:Frankfurt :ami-0464f49a60aed324d
+2.4.3:145:eu-west-1:Ireland:ami-056187d095288feec
+2.4.3:145:eu-west-2:London:ami-0b66fb75a09fe46a0
+2.4.3:145:sa-east-1:Sao Paulo:ami-0d0700612c0c8c558
+2.4.3:145:us-east-1:N. Virginia:ami-0b645653a62c45603
+2.4.3:145:us-east-2:Ohio:ami-0a936c3c351a3ca59
+2.4.3:145:us-west-1:N. California:ami-09bf2024c183e6e8b
+2.4.3:145:us-west-2:Oregon:ami-0ec09762afad112d1
+2.4.3:145:us-gov-west-1:ami-726a0613
+2.4.3:145:cn-north-1:Beijing:ami-054c8535ab5a66646
+2.4.4:152:ap-northeast-1:Tokyo:ami-0de63c9c0b79da25c
+2.4.4:152:ap-northeast-2:Seoul :ami-0bc5514c9dfef7c21
+2.4.4:152:ap-south-1:Mumbai:ami-0afacefd7374d90df
+2.4.4:152:ap-southeast-1:Singapore:ami-0f8eb097f01b8c217
+2.4.4:152:ap-southeast-2:Sydney:ami-07ae1406ae22ef6ed
+2.4.4:152:ca-central-1:Central Canada:ami-07f45cccd28bb5c33
+2.4.4:152:eu-central-1:Frankfurt :ami-02564f5e6f14440df
+2.4.4:152:eu-west-1:Ireland:ami-0f5b4d7d832682d0a
+2.4.4:152:eu-west-2:London:ami-07b5670b50684659c
+2.4.4:152:sa-east-1:Sao Paulo:ami-03e9f500932a877c6
+2.4.4:152:us-east-1:N. Virginia:ami-0b4e720c1858f1786
+2.4.4:152:us-east-2:Ohio:ami-05814caa3518ca474
+2.4.4:152:us-west-1:N. California:ami-0b6770c7a4e348b48
+2.4.4:152:us-west-2:Oregon:ami-0188894bfbb20f453
+2.4.4:152:us-gov-west-1:ami-0b67096a
+2.4.4:152:cn-north-1:Beijing:ami-0c90745dc83b8b125
+2.4.5:163:ap-northeast-1:Tokyo:ami-0e19bbc40aae251aa
+2.4.5:163:ap-northeast-2:Seoul :ami-02bdae78520aa510a
+2.4.5:163:ap-south-1:Mumbai:ami-0e5781d2ed81a8b9a
+2.4.5:163:ap-southeast-1:Singapore:ami-05c98d054f2f4197d
+2.4.5:163:ap-southeast-2:Sydney:ami-015fc50d8480ed6b1
+2.4.5:163:ca-central-1:Central Canada:ami-0c7aa7a691ac95e25
+2.4.5:163:eu-central-1:Frankfurt :ami-01ab6fecb9a7a4043
+2.4.5:163:eu-west-1:Ireland:ami-0220108c800e4948e
+2.4.5:163:eu-west-2:London:ami-0f4130cc56d688234
+2.4.5:163:sa-east-1:Sao Paulo:ami-0682c02184fd408d8
+2.4.5:163:us-east-1:N. Virginia:ami-0e808a8943bccb9dc
+2.4.5:163:us-east-2:Ohio:ami-01922bd015878689b
+2.4.5:163:us-west-1:N. California:ami-097969eacc5e7dbe8
+2.4.5:163:us-west-2:Oregon:ami-0175893354d580253
+2.4.5:163:us-gov-west-1:ami-857b10e4
+2.4.5:163:cn-north-1:Beijing:ami-0973f1f7fc8255407
+2.4.6:168:ap-northeast-1:Tokyo:ami-04e16d204e36d5d3b
+2.4.6:168:ap-northeast-2:Seoul :ami-045c58bf3429d8ef4
+2.4.6:168:ap-south-1:Mumbai:ami-0ef0961e0c1b952c2
+2.4.6:168:ap-southeast-1:Singapore:ami-0b15fc33b6451d21e
+2.4.6:168:ap-southeast-2:Sydney:ami-0a600cf03b4f115f6
+2.4.6:168:ca-central-1:Central Canada:ami-0af6a974d3c93bb80
+2.4.6:168:eu-central-1:Frankfurt :ami-018766dbfe4b40c6e
+2.4.6:168:eu-west-1:Ireland:ami-0083164eaa6f29b2c
+2.4.6:168:eu-west-2:London:ami-08594cc681c8e86e7
+2.4.6:168:sa-east-1:Sao Paulo:ami-006ef32adc78f5e69
+2.4.6:168:us-east-1:N. Virginia:ami-032b64ce5178748fe
+2.4.6:168:us-east-2:Ohio:ami-09ab54d22eb65d581
+2.4.6:168:us-west-1:N. California:ami-01b9c5d4ca3b79616
+2.4.6:168:us-west-2:Oregon:ami-027ca36ab6cb7b5a7
+2.4.6:168:us-gov-west-1:ami-34aac055
+2.4.6:168:cn-north-1:Beijing:ami-09fdb925b36a7c826
+2.4.7:171:ap-northeast-1:Tokyo:ami-04153fdf7b18e8415
+2.4.7:171:ap-northeast-2:Seoul :ami-06398125bae70a9b3
+2.4.7:171:ap-south-1:Mumbai:ami-08a8a1ba0f91855a7
+2.4.7:171:ap-southeast-1:Singapore:ami-0632d4b0daf36cbf9
+2.4.7:171:ap-southeast-2:Sydney:ami-007ea9ca1c91e5d76
+2.4.7:171:ca-central-1:Central Canada:ami-0a7201bbfed1ff31b
+2.4.7:171:eu-central-1:Frankfurt :ami-059dbb12a358c9707
+2.4.7:171:eu-west-1:Ireland:ami-025c054f3f2ac1caa
+2.4.7:171:eu-west-2:London:ami-0fc390abecbbcee1d
+2.4.7:171:sa-east-1:Sao Paulo:ami-07ce60e3bf354322b
+2.4.7:171:us-east-1:N. Virginia:ami-08289d900a42c2454
+2.4.7:171:us-east-2:Ohio:ami-046f2d7209f69f21f
+2.4.7:171:us-west-1:N. California:ami-04c6e3464064def2c
+2.4.7:171:us-west-2:Oregon:ami-0ce18b30fee4e16aa
+2.4.7:171:us-gov-west-1:ami-b06612d1
+2.4.7:171:cn-north-1:Beijing:ami-09c3b8b605cc0a4d3
+2.4.8:177:ap-northeast-1:Tokyo:ami-031bf24dbb90201db
+2.4.8:177:ap-northeast-2:Seoul :ami-09e4f37300936d035
+2.4.8:177:ap-south-1:Mumbai:ami-0cad5e1874efe0d8a
+2.4.8:177:ap-southeast-1:Singapore:ami-0ed73d1834e7480f6
+2.4.8:177:ap-southeast-2:Sydney:ami-04719e314cb7f0b99
+2.4.8:177:ca-central-1:Central Canada:ami-004d2822a0ac67152
+2.4.8:177:eu-central-1:Frankfurt :ami-0796bde3a8a8d48da
+2.4.8:177:eu-west-1:Ireland:ami-00c65eac3b7cce6b3
+2.4.8:177:eu-west-2:London:ami-0c7c7f7edc5fd47a1
+2.4.8:177:sa-east-1:Sao Paulo:ami-03c55fd5c76d6758c
+2.4.8:177:us-east-1:N. Virginia:ami-0650348884e0c6b07
+2.4.8:177:us-east-2:Ohio:ami-0ea3ee1aece1f2572
+2.4.8:177:us-west-1:N. California:ami-0952dc5b4c14b6e40
+2.4.8:177:us-west-2:Oregon:ami-0bfaf5cd26ad74d9e
+2.4.8:177:us-gov-west-1:ami-3c2a5c5d
+2.4.8:177:cn-north-1:Beijing:ami-0b6fe456ad72bf348
+2.4.9:180:ap-northeast-1:Tokyo:ami-0db1a333df44df305
+2.4.9:180:ap-northeast-2:Seoul :ami-0534776a7d4ee9b09
+2.4.9:180:ap-south-1:Mumbai:ami-08b26d6b55f65b025
+2.4.9:180:ap-southeast-1:Singapore:ami-031ba16cde3ce1fb1
+2.4.9:180:ap-southeast-2:Sydney:ami-0637a967aa870683a
+2.4.9:180:ca-central-1:Central Canada:ami-071adfb79b806e019
+2.4.9:180:eu-central-1:Frankfurt :ami-066bdcc82b11f2a85
+2.4.9:180:eu-west-1:Ireland:ami-0b0523bb25b04d9ab
+2.4.9:180:eu-west-2:London:ami-0f5b352b68b7037ea
+2.4.9:180:sa-east-1:Sao Paulo:ami-02fe5521da7114602
+2.4.9:180:us-east-1:N. Virginia:ami-0560f06cb4786a9c4
+2.4.9:180:us-east-2:Ohio:ami-086daea9600b71afe
+2.4.9:180:us-west-1:N. California:ami-0ed3cd40fbb4783b6
+2.4.9:180:us-west-2:Oregon:ami-0db84c69fa408a247
+2.4.9:180:us-gov-west-1:ami-43423222
+2.4.9:180:cn-north-1:Beijing:ami-094dff81625af32b4
+2.5.0:158:ap-northeast-1:Tokyo:ami-0a871ef4bc52332be
+2.5.0:158:ap-northeast-2:Seoul :ami-044d37f360fa8e4f0
+2.5.0:158:ap-south-1:Mumbai:ami-0c32dffbe516e12a3
+2.5.0:158:ap-southeast-1:Singapore:ami-0512880e017931833
+2.5.0:158:ap-southeast-2:Sydney:ami-092c5f39cdb9910ec
+2.5.0:158:ca-central-1:Central Canada:ami-09963202de7229ee0
+2.5.0:158:eu-central-1:Frankfurt :ami-0ddeca97ce1dc906b
+2.5.0:158:eu-west-1:Ireland:ami-0457b0d55d64c9f51
+2.5.0:158:eu-west-2:London:ami-0f0288566cdc19e4d
+2.5.0:158:sa-east-1:Sao Paulo:ami-00924c59ae9efb7c4
+2.5.0:158:us-east-1:N. Virginia:ami-095944f47f80f61a3
+2.5.0:158:us-east-2:Ohio:ami-01ef505e19fca5403
+2.5.0:158:us-west-1:N. California:ami-0f3224add02157ae7
+2.5.0:158:us-west-2:Oregon:ami-05b202fc47b0a1543
+2.5.0:158:us-gov-west-1:ami-87abc1e6
+2.5.0:158:cn-north-1:Beijing:ami-0be7ba56497c83d2b
+2.5.1:169:ap-northeast-1:Tokyo:ami-06f9091fffff17e5b
+2.5.1:169:ap-northeast-2:Seoul :ami-0306cc469dc786dbc
+2.5.1:169:ap-south-1:Mumbai:ami-043f9e1b56a6e1474
+2.5.1:169:ap-southeast-1:Singapore:ami-06bfcb0cfbb129a97
+2.5.1:169:ap-southeast-2:Sydney:ami-0fc314ba66f32619b
+2.5.1:169:ca-central-1:Central Canada:ami-02714033de10ef618
+2.5.1:169:eu-central-1:Frankfurt :ami-0f22ff8ece549d3b2
+2.5.1:169:eu-west-1:Ireland:ami-0ed28afef2abd9e11
+2.5.1:169:eu-west-2:London:ami-0292da1af38a73467
+2.5.1:169:sa-east-1:Sao Paulo:ami-0bc50fcf362d845ac
+2.5.1:169:us-east-1:N. Virginia:ami-05d88dd438fac4a9b
+2.5.1:169:us-east-2:Ohio:ami-0b7bd23c555411f96
+2.5.1:169:us-west-1:N. California:ami-0827ca34240bfcd9d
+2.5.1:169:us-west-2:Oregon:ami-09201d7ccf337025d
+2.5.1:169:us-gov-west-1:ami-1cc2b57d
+2.5.1:169:cn-north-1:Beijing:ami-0ee0f7ece116cedfc
+2.5.2:172:ap-northeast-1:Tokyo:ami-0ffebf815443c8255
+2.5.2:172:ap-northeast-2:Seoul :ami-0306521deebf899d9
+2.5.2:172:ap-south-1:Mumbai:ami-050f6d110211d65dd
+2.5.2:172:ap-southeast-1:Singapore:ami-0ac8874d8e95cac9a
+2.5.2:172:ap-southeast-2:Sydney:ami-0ced32066698021d0
+2.5.2:172:ca-central-1:Central Canada:ami-05f5534970447ad85
+2.5.2:172:eu-central-1:Frankfurt :ami-08b2c876ce37ca8d3
+2.5.2:172:eu-west-1:Ireland:ami-05c4b89cd05e32127
+2.5.2:172:eu-west-2:London:ami-0834c2b91d4630c2d
+2.5.2:172:sa-east-1:Sao Paulo:ami-0e0645cac6febe9a1
+2.5.2:172:us-east-1:N. Virginia:ami-004bc41dc92c02714
+2.5.2:172:us-east-2:Ohio:ami-011972049273ba44e
+2.5.2:172:us-west-1:N. California:ami-0b5e28c2f7e5da3ef
+2.5.2:172:us-west-2:Oregon:ami-0d8d844809fc5e1ec
+2.5.2:172:us-gov-west-1:ami-b84535d9
+2.5.2:172:cn-north-1:Beijing:ami-0a02da463cbf11b90

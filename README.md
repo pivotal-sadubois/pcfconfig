@@ -12,22 +12,33 @@ and its software tiles over its API interface.
 Prerequisites:
 * om - https://github.com/pivotal-cf/om
 * jq - https://stedolan.github.io/jq/download/
+* terraform - https://www.terraform.io/downloads.html
 
+PCF Config Installation:
 ```
 mkdir ~/workspace && cd ~/workspace
 git clone https://github.com/pivotal-sadubois/pcfconfig.git
+export PATH=~/workspace/pcfconfig:$PATH
 ```
 
-* Then we should update the versions used in our app
+Runing PCF Config
+Change into your Terraform directory for PKS/PAS and execute pcfconfig 
 
 ```
-update pcf_versions
-set script_version = 'v1.0.12'
-where script_version = 'v1.0.11'
+$ cd ~/workspace/pivotal-cf-terraforming-azure-370b741/terraforming-pks
+$ pcfconfig
+USAGE: pcfconfig <mode> [options]
+              MODE:    opsmen       - Configure OpsManager
+                       pas          - Configure Pivotal Application Service (PAS)
+                       pks          - Configure Pivotal Container Service (PKS)
+              OPTIONS: -u <admin>   - OpsManager Amdin User
+                       -p <admin>   - OpsManager Amdin Password
+                       -dp <phrase> - OpsManager Decryption Prhase
+                       --debug      - Debugging
+                       --noapply    - Do not Apply changes on OpsManager
+
+$ pcfconfig opsman --noapply -u admin -p pivotal -dp pivotal
 ```
-AND
-```
-update pks_versions
-set script_version = 'v1.0.12'
-where script_version = 'v1.0.11'
-```
+
+
+
