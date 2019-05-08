@@ -144,5 +144,5 @@ resource-config:
       id: automatic
     internet_connected: true
     elb_names:
-    - pks-api
+    - ((pks_api_endpoint))
 

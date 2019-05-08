@@ -1,14 +1,25 @@
 # IAAS_CONFIGURATION
 "vms_security_group_id: " + .modules[].outputs.vms_security_group_id.value,
-#"ops_manager_ssh_public_key_name: " + .modules[].outputs.ops_manager_ssh_public_key_name.value,
-"ops_manager_ssh_public_key_name: " + .modules[].outputs.ssh_public_key_name.value,
-#"ops_manager_ssh_private_key: <1>" + .modules[].outputs.ops_manager_ssh_private_key.value + "<1>",
-"ops_manager_ssh_private_key: <1>" + .modules[].outputs.ssh_private_key.value + "<1>",
-#"aws-region: " + .modules[].outputs.region.value,
+"ops_manager_ssh_public_key_name: " + .modules[].outputs.ops_manager_ssh_public_key_name.value,
+"ops_manager_ssh_private_key: <1>" + .modules[].outputs.ops_manager_ssh_private_key.value + "<1>",
+"aws-region: " + .modules[].outputs.region.value,
 "encrypted: false", 
 
 # DIRECTOR_CONFIGURATION
 "ntp_servers_string: 0.amazon.pool.ntp.org",
+"resurrector_enabled: true",
+"allow_legacy_agents: true",
+"max_threads: 5",
+"director_hostname:",
+"bosh_recreate_on_next_deploy: true",
+"bosh_recreate_persistent_disks_on_next_deploy: true",
+"skip_director_drain: true",
+"reimbursable: true",
+"director_worker_count: 5",
+"post_deploy_enabled: true",
+"retry_bosh_deploys: true",
+"keep_unreachable_vms: true",
+"local_blobstore_tls_enabled: true",
 
 # INFRASTRUCTURE-SUBNET
 "infrastructure_subnet_1_cidrs: " + .modules[].outputs.infrastructure_subnet_cidrs.value[0],

@@ -15,26 +15,26 @@ az-configuration:
   - name: ((infrastructure_subnet_3_azname))
 
 properties-configuration:
-  singleton_availability_zone: eu-central-1b
+  singleton_availability_zone: ((infrastructure_subnet_1_azname))
   director_configuration:
     ntp_servers_string: ((ntp_servers_string))
-    resurrector_enabled: ((resurrector_enabled))
-    allow_legacy_agents: ((allow_legacy_agents))
-    max_threads: ((max_threads))
-    director_hostname: ((director_hostname))
-    bosh_recreate_on_next_deploy: ((bosh_recreate_on_next_deploy))
-    bosh_recreate_persistent_disks_on_next_deploy: ((bosh_recreate_persistent_disks_on_next_deploy))
+    resurrector_enabled: true
+    allow_legacy_agents: true
+    max_threads: 5
+    director_hostname: 
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
     database_type: internal
-    skip_director_drain: ((skip_director_drain))
-    reimbursable: ((reimbursable))
-    director_worker_count: ((director_worker_count))
-    post_deploy_enabled: ((post_deploy_enabled))
-    retry_bosh_deploys: ((retry_bosh_deploys))
-    keep_unreachable_vms: ((keep_unreachable_vms))
+    skip_director_drain: true
+    reimbursable: true
+    director_worker_count: 5
+    post_deploy_enabled: true
+    retry_bosh_deploys: false
+    keep_unreachable_vms: false
     # LOCAL BLOBSTORE
     blobstore_type: local
     local_blobstore_options:
-      tls_enabled: ((local_blobstore_tls_enabled))
+      tls_enabled: true
     # S3-BLOBSTORE
     #blobstore_type: s3
     #s3_blobstore_options: 

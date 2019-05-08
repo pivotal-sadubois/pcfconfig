@@ -6,6 +6,8 @@
 # Description ..: PCF OpsManager Configuration Utility
 # ############################################################################################
 
+# jq -e -f ~/workspace/pcfconfig/filter/opsman_aws_2.4.jq  terraform.tfstate
+
 NODE=""
 USER=""
 PASS=""
@@ -38,6 +40,7 @@ TF_PKS_VARFILE=""
 TF_PAS_VARFILE=""
 TF_WORKDIR="~/workspace"
 TF_PREFIX=pivotal-cf-terraforming
+TF_DIR_MODE=""
 
 ##############################################################################################
 ############################### COMMAND-LINE ARGS PROCESSING  ################################
@@ -62,9 +65,10 @@ while [ "$1" != "" ]; do
     --pks-tfvars) TF_PKS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
     --pas-tfvars) TF_PAS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;        # TERRAFORM VARIABLE FILE
-    --opsmgr-version) TF_OPSMAN_VERSION=$2; shift;; # TERRAFORM VARIABLE FILE
+    --cf-terraform) TF_OPSMAN_VERSION=$2; shift;;   # TERRAFORM VARIABLE FILE
     --deployment) TF_DEPLOYMENT=$2; shift;;         # TERRAFORM VARIABLE FILE
     --directory-prefix) TF_PREFIX=$2; shift;;       # DIRECTORY PREFIX
+    --directory-mode) TF_DIR_MODE=$2; shift;;       # DIRECTORY MODE (clean, preserve, delete)
   esac
   shift
 done
@@ -81,25 +85,33 @@ echo "-------------------------------------------------------------------------"
 usage_terraform() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
   echo "              OPTIONS: --pks-tfvars <terraform.tfvars>  - Terraform Variable File for PKS"
-  echo "                       --pas-tfvars <terraform.tfvars>  - Terraform Variable File for PKS"
+  echo "                       --pas-tfvars <terraform.tfvars>  - Terraform Variable File for PAS"
   echo "                       --pivnet-token <token>           - Pivnet API Token"
   echo "                       --workdir <directory>            - Working Directory (default: ~/workspace)"
-  echo "                       --opsmgr-version <version>       - OpsManager Version (ie. 2.4.6)"
+  echo "                       --cf-terraform <version>         - CF Terraform Version (ie. 2.4.6)"
   echo "                       --deployment <cloud-env>         - Deployment (awx, gcp or azure)"
   echo "                       --directory-prefix <prefix>      - Directory Prefix (default: pivotal-cf-terraforming)"
+  echo "                       --directory-mode <mode>          - Mode if Terraform target directory already exists"
+  echo "                                                            => delete - remove old directory" 
+  echo "                                                            => preserve - rename it to dir.YYYYMMDD"
+  echo "                                                            => clean - clean from old terraform deployments"
   echo "                       --noapply                        - Do not Apply changes on OpsManager"
   echo "                       --debug                          - Debugging"
 }
 
 usage_opsman() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
-  echo "              OPTIONS: -u <admin>                 - OpsManager Amdin User"
-  echo "                       -p <admin>                 - OpsManager Amdin Password"
-  echo "                       --decryption-key <phrase>  - OpsManager Decryption Prhase"
-  echo "                       --pivnet-token <token>     - Pivnet API Token"
-  echo "                       --aws-route53 <token>      - AWS Route53 Token"
-  echo "                       --debug                    - Debugging"
-  echo "                       --noapply                  - Do not Apply changes on OpsManager"
+  echo "              OPTIONS: -u <admin>                       - OpsManager Amdin User"
+  echo "                       -p <admin>                       - OpsManager Amdin Password"
+  echo "                       --decryption-key <phrase>        - OpsManager Decryption Prhase"
+  echo "                       --pivnet-token <token>           - Pivnet API Token"
+  echo "                       --aws-route53 <token>            - AWS Route53 Token"
+  echo "                       --terraform-directory <dir>      - Specify the Terraform Directory"
+  echo "                       --terraform-mode <pks/pas>       - Specify the Terraform Mode"
+  echo "                                                          => pas - Pivotal Application Platform (PAS)"
+  echo "                                                          => pks - Pivotal Container Service (PKS)"
+  echo "                       --debug                          - Debugging"
+  echo "                       --noapply                        - Do not Apply changes on OpsManager"
 }
 
 usage_pks() {
@@ -335,9 +347,17 @@ checkEnvironment() {
     if [ -f $TERRAFORM_VARS -a -f plan -a ! -f $TERRAFORM_TFSTATE ]; then
       echo ""
       echo "ERROR: Terraform has been initialized and a plan has been deployed."
-      echo "       Please run \"terraform apply\" to deploy installation to $cloud."
+      echo "       Please run \"terraform apply 'plan'\" to deploy installation to $cloud."
       echo "       On questions please consult the $product documentation and follow the"
       echo "       instructions in the section: \"Installing $productid on $cloud using Terraform\""; exit 1
+    fi
+
+    if [ -f $TERRAFORM_TFSTATE ]; then
+      cnt=$($JQ -r '.modules[0].outputs.ops_manager_ssh_public_key_name.value' $TERRAFORM_TFSTATE | grep -v "null" | wc -l | sed 's/ *//g')
+      if [ $cnt -eq 0 ]; then 
+        echo "ERROR: not entry found for 'ops_manager_ssh_public_key_name' in the $TERRAFORM_TFSTATE" 
+        echo "       something probably wrong with the terraform deployment"
+      fi
     fi
 
     ver=`$JQ -r '.terraform_version' $TERRAFORM_TFSTATE 2>/dev/null`
@@ -378,28 +398,44 @@ checkEnvironment() {
       fi
 
       echo "Verify $cloud Ops Manager instance"
-      OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
-      OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
-      OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
-      OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
-      DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
-        sed -e 1d -e '$d' -e 's/,//g' -e 's/  *//g' -e 's/	//g' | paste -s -d " " - - - -)
-      DNS1=$(echo $DNS_SERVERS | awk '{ print $1 }')
-      DNS2=$(echo $DNS_SERVERS | awk '{ print $2 }')
-      DNS3=$(echo $DNS_SERVERS | awk '{ print $3 }')
-      DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
+      $TF output > /dev/null 2>&1; ret=$?
+      if [ $ret -eq 0 ]; then 
+        OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
+        OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
+        OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
+        OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
+        DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
+          sed -e 1d -e '$d' -e 's/,//g' -e 's/  *//g' -e 's/	//g' | paste -s -d " " - - - -)
+        DNS1=$(echo $DNS_SERVERS | awk '{ print $1 }')
+        DNS2=$(echo $DNS_SERVERS | awk '{ print $2 }')
+        DNS3=$(echo $DNS_SERVERS | awk '{ print $3 }')
+        DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
+      else
+        OPS_MANAGER_INSTANCE=$($JQ -r '.modules[].outputs.ops_manager_iam_instance_profile_name.value' $TERRAFORM_TFSTATE | grep -v null)
+        OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
+        OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+        OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+        DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+
+        DNS1=$($JQ -r '.modules[2].outputs.name_servers.value[0]' $TERRAFORM_TFSTATE)
+        DNS2=$($JQ -r '.modules[2].outputs.name_servers.value[1]' $TERRAFORM_TFSTATE)
+        DNS3=$($JQ -r '.modules[2].outputs.name_servers.value[2]' $TERRAFORM_TFSTATE)
+        DNS4=$($JQ -r '.modules[2].outputs.name_servers.value[3]' $TERRAFORM_TFSTATE)
+        DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
+      fi
 
       # --- GET AWS INSTANCE ---
       if [ $DEBUG -gt 0 ]; then
         echo "# -------------------------- DEBUGGING START -----------------------------"
-        echo "aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager'"
-        aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager'
+        echo "aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=${AWS_DNS_PREFIX}-ops-manager'"
+        aws ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=${AWS_DNS_PREFIX}-ops-manager'
         echo "# -------------------------- DEBUGGING END -------------------------------"
       fi
 
       #aws ec2 --region eu-central-1 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=awspas-ops-manager"
-      OPS_MANAGER_ID=$($AWSCLI ec2 --region $AWS_REGION describe-instances --filters 'Name=tag:Name,Values=awspas-ops-manager' "Name=instance-state-name,Values=running"| \
-      $JQ '.Reservations[0].Instances[0].InstanceId' | sed 's/"//g')
+      OPS_MANAGER_ID=$($AWSCLI ec2 --region $AWS_REGION describe-instances \
+         --filters "Name=tag:Name,Values=${AWS_DNS_PREFIX}-ops-manager" "Name=instance-state-name,Values=running"| \
+         $JQ '.Reservations[0].Instances[0].InstanceId' | sed 's/"//g')
 
       INSTANCE_STATUS=$($AWSCLI ec2 --region $AWS_REGION describe-instance-status --instance-ids $OPS_MANAGER_ID | \
       $JQ '.InstanceStatuses[0].InstanceState.Name' | sed 's/"//g')
@@ -482,15 +518,19 @@ checkEnvironment() {
           echo "         please try manually"
         fi
 
-        wait_loop 30 "Waiting for DNS records to be pushed"
+        wait_loop 60 "Waiting for DNS records to be pushed"
       fi
 
       # --- CHEKING DNS ---
       echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
-
-      nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
-      if [ $ret -eq 0 ]; then dns_google_stat="successful"; else dns_google_stat="failed"; fi
-      messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
+      i=1; ret="failed"
+       while [ $i -lt 10 -a ${ret} == "failed" ]; do
+        sleep 10
+        nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+        if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+        messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
+        let i=i+1
+      done
 
       for n in $DNS_SERVERS; do
         nslookup $OPS_MANAGER_DNS $n > /dev/null 2>&1; ret=$?
@@ -541,11 +581,15 @@ checkEnvironment() {
 #        echo "       Please manually verify status on AWS Console and start it if necessary"; exit 0
 #      fi
     fi
-  fi
 
-  if [ "${cloud}" == "Azure" -a "${AZURE_CLI_ENABLED}" -eq 1 ]; then
-      OPSMAN_CONFIG="opsmen_aws.yml"
+    if [ "${cloud}" == "Azure" -a "${AZURE_CLI_ENABLED}" -eq 1 ]; then
+        OPSMAN_CONFIG="opsmen_aws.yml"
 a=1
+    fi
+
+  else
+    echo "ERROR: Please chagnge to the CF_TERRAFORM/terraforming-pks or CF_TERRAFORM/terraforming-pks"
+    echo "       directory to proceede with the installation"; exit 1
   fi
 }
 
@@ -559,11 +603,17 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
     usage_terraform
     echo ""
     echo "ERROR: $PCFCONFIG_BASE requires the options --pivnet-token <token> --workdir <directory>"
-    echo "       --pks-tfvars | --pas-tfvars <terraform.tfvars> --opsmgr-version <version>"
+    echo "       --pks-tfvars | --pas-tfvars <terraform.tfvars> --cf-terraform <version>"
     echo "       --deployment <aws|gcp|azure>"; exit 1
   else
     if [ "${TF_PKS_VARFILE}" == "" -a "${TF_PAS_VARFILE}" == "" ]; then
       echo "ERROR: ether --pks-tfvars or --pas-tfvars needs to be set"; exit 1
+    fi
+  fi
+
+  if [ "${TF_DIR_MODE}" != "" ]; then
+    if [ "${TF_DIR_MODE}" != "delete" -a "${TF_DIR_MODE}" != "preserve" -a "${TF_DIR_MODE}" != "clean" ]; then
+      echo "ERROR: --directory-mode has arguments (delete or preserve or clean)"; exit 1
     fi
   fi
 fi
@@ -606,24 +656,55 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
           egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $4 }')
 
     if [ -d "${TF_HOME}" ]; then 
-      echo "ERROR: Directory $TF_HOME does already exist, remove or rename it first"; exit 1  
+      if [ "${TF_DIR_MODE}" != "" ]; then 
+        if [ "${TF_DIR_MODE}" == "delete" ]; then 
+          messagePrint " - Deleting existing instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}-${TF_OPSMAN_VERSION}"
+          rm -rf "${TF_HOME}"
+        fi
+
+        if [ "${TF_DIR_MODE}" == "preserve" ]; then 
+          PRESERVE=$(date "+%Y%m%d")
+          if [ -d ${TF_HOME}-${PRESERVE} ]; then 
+            PRESERVE=$(date "+%Y%m%d%M%S")
+          fi
+          messagePrint " - Preserving old Instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}-${TF_OPSMAN_VERSION}-${PRESERVE}"
+          mv "${TF_HOME}" "${TF_HOME}-${PRESERVE}"
+        fi
+
+        if [ "${TF_DIR_MODE}" == "clean" ]; then 
+          messagePrint " - Target directory already exists" "Cleaning up terraform files from las run"
+          for n in terraforming-pas terraforming-pks; do
+            if [ -d ${TF_HOME}/${n} ]; then 
+              rm -rf ${TF_HOME}/${n}/.terraform
+              rm -f ${TF_HOME}/${n}/terraform.tfstate
+              rm -f ${TF_HOME}/${n}/terraform.tfstate.backup
+              rm -f ${TF_HOME}/${n}/plan
+              rm -f ${TF_HOME}/${n}/outputs.tf
+            fi
+          done
+        fi
+      else
+        echo "ERROR: Directory $TF_HOME does already exist, remove or rename it first"; exit 1  
+      fi
     fi
 
-    rm -f /tmp/$dat
-    $OM --skip-ssl-validation download-product --output-directory=/tmp --pivnet-file-glob ${dat} \
+    if [ "${TF_DIR_MODE}" != "clean" ]; then 
+      rm -f /tmp/$dat
+      $OM --skip-ssl-validation download-product --output-directory=/tmp --pivnet-file-glob ${dat} \
         --pivnet-product-slug "elastic-runtime" --pivnet-api-token "${PIVNET_TOKEN}" \
-        --product-version "${TF_OPSMAN_VERSION}" > /dev/null 2>&1; ret=$?
-
-    if [ $ret -ne 0 ]; then 
-      echo "ERROR: download of file: $dat has been failed"; exit 1
-    else
-      tmpname=$(zipinfo /tmp/${dat} | grep pivotal-cf-terraforming | head -1 | awk '{ print $NF }' | awk -F'/' '{ print $1 }')
-      if [ "${tmpname}" != "" ]; then
-        unzip -oq /tmp/$dat -d /tmp 
-        mkdir -p $TF_HOME
-        cd /tmp/${tmpname}; tar -cf - . | (cd $TF_HOME; tar -xpf -)
+          --product-version "${TF_OPSMAN_VERSION}" > /dev/null 2>&1; ret=$?
+  
+      if [ $ret -ne 0 ]; then 
+        echo "ERROR: download of file: $dat has been failed"; exit 1
       else
-        echo "ERROR: can not determain unzip directory from file $dat"; exit 1
+        tmpname=$(zipinfo /tmp/${dat} | grep pivotal-cf-terraforming | head -1 | awk '{ print $NF }' | awk -F'/' '{ print $1 }')
+        if [ "${tmpname}" != "" ]; then
+          unzip -oq /tmp/$dat -d /tmp 
+          mkdir -p $TF_HOME
+          cd /tmp/${tmpname}; tar -cf - . | (cd $TF_HOME; tar -xpf -)
+        else
+          echo "ERROR: can not determain unzip directory from file $dat"; exit 1
+        fi
       fi
     fi
   else
@@ -665,24 +746,26 @@ fi
 # --- CHECK FOR TEMPLATE ---
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   checkEnvironment
+#gaga
 
   OPSMAN_CONFIG=opsman_${PCF_CLOUD_NAME}_${OPSMAN_VERSION}.yml
 
   if [ ! -f "$OPSMAN_CONFIG" ]; then
     if [ -f $PCFCONFIG_PATH/templates/{OPSMAN_CONFIG} ]; then
       echo ""
-      echo "ERROR: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet. Please"
-      echo "       copy the template $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml and copy it to the"
-      echo "       local directory as $OPSMAN_CONFIG and modify it as needed."
-      echo "       => cp $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml ./opsman_aws_${OPSMAN_VERSION}.yml"
+      echo "INFO: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet"
+      echo "      No template for version $OPSMAN_MINOR_VERSION has found in the pcfconfig/templates directory"
+      echo "      Taking the closedst minor version $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml instead"
+
+      cp $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_VERSION}.yml $OPSMAN_CONFIG
     else
       echo ""
-      echo "ERROR: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet. Please"
-      echo "       copy the template $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_MINOR_VERSION}.yml and copy it to the"
-      echo "       local directory as $OPSMAN_CONFIG and modify it as needed."
-      echo "       => cp $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_MINOR_VERSION}.yml ./opsman_aws_${OPSMAN_VERSION}.yml"
+      echo "INFO: OpsManager $OPSMAN_VERSION configuration file ($OPSMAN_CONFIG) has not been created yet."
+      echo "      Taking it from the pcfconfig/templates $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_MINOR_VERSION}.yml"
+
+      cp $PCFCONFIG_PATH/templates/opsman_aws_${OPSMAN_MINOR_VERSION}.yml $OPSMAN_CONFIG
     fi
-    exit 1
+#gaga
   fi
 
   # --- COPY JQ FILES FROM THE TEMPLATES ---
@@ -695,7 +778,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   # --- GET AWS INSTANCE ---
   if [ $DEBUG -gt 0 ]; then
     echo "# -------------------------- DEBUGGING START -----------------------------"
-    $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g'
+    $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | sort -u
     echo "# -------------------------- DEBUGGING END -------------------------------"
   fi
 
@@ -710,7 +793,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 echo changeme
 exit 1
   fi
-  $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
+  #$JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
+  $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | \
+      sort -u >> $VARFILE
+  echo "aws-region: ${AWS_REGION}" >> $VARFILE
 
   # --- CONFIGURE AUTHENTICFICATION ---
   echo "Configure OpsManager Authentification"
@@ -734,22 +820,13 @@ exit 1
   # --- DO FIRST ONLY IAAS-CONFIGURATION (TWO-STEPS-REQUIRED) --
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
   sed -n '1,/^az/p' $OPSMAN_CONFIG | sed '$d' > /tmp/$$_tmpcfg.yml
-  if [ $DEBUG -gt 0 ]; then
-    $OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
-    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
-  else
-    $OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE > /dev/null 2>&1
-    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE > /dev/null 2>&1; ret=$?
-  fi
 
-  # --- CLEANUP ---
-  rm -f /tmp/$$_tmpcfg.yml
+  pending=$($OM $OM_LOGIN pending-changes | grep "p-bosh" | awk '{ print $4 }')
+  if [ "${pending}" != "unchanged" ]; then
+    echo "WARNING: Your have pending changes '${pending}' for the OpsManager:"
+    $OM $OM_LOGIN pending-changes
 
-  if [ $ret -ne 0 ]; then
-    echo "ERROR: Updating OpsManager via API failed"; exit 1
-  fi
-  
-  if [ $NO_APPLY -eq 0 ]; then
+    echo ""
     echo "Applying Changes to OpsManager"
     if [ $DEBUG -gt 0 ]; then
       echo "-----------------------------------------------------------------------------------------------------------"
@@ -757,6 +834,30 @@ exit 1
       echo "-----------------------------------------------------------------------------------------------------------"
     else
       $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+    fi
+  else
+    echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-1 ------------------------------------------"
+    $OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
+    echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-2 ------------------------------------------"
+    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+    # --- CLEANUP ---
+    rm -f /tmp/$$_tmpcfg.yml
+
+    if [ $ret -ne 0 ]; then
+      echo "ERROR: Updating OpsManager via API failed"; exit 1
+    fi
+  
+    if [ $NO_APPLY -eq 0 ]; then
+      echo "Applying Changes to OpsManager"
+      if [ $DEBUG -gt 0 ]; then
+        echo "-----------------------------------------------------------------------------------------------------------"
+        $OM $OM_LOGIN apply-changes
+        echo "-----------------------------------------------------------------------------------------------------------"
+      else
+        $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+      fi
     fi
   fi
 
@@ -781,7 +882,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
   AWS_INSTANCE_OPSMAN=$(aws ec2 --region $AWS_REGION  describe-instances \
      --query 'Reservations[].Instances[].{id: InstanceId, tagvalue: Tags[*][?Key==`Name`].Value}' \
-     --filters "Name=tag:Name,Values=awspas-ops-manager" --output text)
+     --filters "Name=tag:Name,Values=${AWS_DNS_PREFIX}-ops-manager" --output text)
   AWS_INSTANCE_BOSH0=$(aws ec2 --region $AWS_REGION  describe-instances \
      --query 'Reservations[].Instances[].{id: InstanceId, tagvalue: Tags[*][?Key==`Name`].Value}' \
      --filters "Name=tag:Name,Values=bosh/0" --output text)
@@ -803,8 +904,8 @@ if [ 1 -eq 1 ]; then
   # --- USE OPS-MANAGER AS JUMPHOST ---
   if [ $OPS_UPLOAD -eq 1 ]; then 
     TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
-    $JQ -r '.modules[0].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE > $TMP_OPSMAN
-    $JQ -r '.modules[0].outputs.ops_manager_ssh_public_key.value'  $TERRAFORM_TFSTATE > $TMP_OPSMAN_PUB
+    $JQ -r '.modules[].outputs.ssh_private_key.value' terraform.tfstate $TERRAFORM_TFSTATE | grep -v null > $TMP_OPSMAN
+    #$JQ -r '.modules[].outputs.ops_manager_ssh_public_key.value'  $TERRAFORM_TFSTATE > $TMP_OPSMAN_PUB
     touch $TMP_SCRIPT
     chmod 600 $TMP_OPSMAN
     chmod 777 $TMP_SCRIPT
@@ -862,8 +963,10 @@ if [ 1 -eq 1 ]; then
         messagePrint " - Verify download and caching options" "local-cache"
       else
         messagePrint " - Verify download and caching options" "download-from-pivnet"
+        echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
           --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+        echo "-----------------------------------------------------------------------------------------------------------"
       fi
 
       echo "Uploading PKS Product Image ($PKS_VERSION)"
@@ -895,7 +998,9 @@ if [ 1 -eq 1 ]; then
         exit 1
       fi
 
+      echo "-----------------------------------------------------------------------------------------------------------"
       ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+      echo "-----------------------------------------------------------------------------------------------------------"
       if [ ${ret} -ne 0 ]; then
         echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
         echo "       Please try manually:"
@@ -920,13 +1025,13 @@ fi
   messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
 
   if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
-    TLS_HOST_NAME=*.pks.awspas.pcfsdu.com
+    TLS_HOST_NAME=*.pks.${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}
     messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
     TLS_CERTIFICATE=/tmp/$$_tls.crt
     TLS_PRIVATE_KEY=/tmp/$$_tls.key
 
-    echo -e ".\n.\n.\n.\n.\n*.pks.awspas.pcfsdu.com\n" | \
+    echo -e ".\n.\n.\n.\n.\n${TLS_HOST_NAME}\n" | \
     openssl req -x509 -newkey rsa:2048 -keyout $TLS_PRIVATE_KEY -out $TLS_CERTIFICATE -nodes -days 365 > /dev/null 2>&1
 
     cp $TLS_PRIVATE_KEY ~/Certificates/self/tls.crt
@@ -966,16 +1071,18 @@ fi
     echo "       TLS certificate"; exit 1
   fi
 
-  $JQ -r '"pks_master_iam_instance_profile_name: " + .modules[0].outputs.pks_master_iam_instance_profile_name.value' \
-  $TERRAFORM_TFSTATE >> $VARFILE
-  $JQ -r '"pks_worker_iam_instance_profile_name: " + .modules[0].outputs.pks_worker_iam_instance_profile_name.value' \
-  $TERRAFORM_TFSTATE >> $VARFILE
-  $JQ -r '"pks_api_endpoint: " + .modules[0].outputs.pks_api_endpoint.value' \
-  $TERRAFORM_TFSTATE >> $VARFILE
+  $JQ -r '"pks_master_iam_instance_profile_name: " + .modules[].outputs.pks_master_iam_instance_profile_name.value' \
+  $TERRAFORM_TFSTATE | sed '/: $/d' >> $VARFILE
+  $JQ -r '"pks_worker_iam_instance_profile_name: " + .modules[].outputs.pks_worker_iam_instance_profile_name.value' \
+  $TERRAFORM_TFSTATE | sed '/: $/d' >> $VARFILE
+  tg1=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[0]' terraform.tfstate | grep -v null)
+  tg2=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[1]' terraform.tfstate | grep -v null)
+  echo "pks_api_endpoint: alb:${tg1},alb:${tg2}" >> $VARFILE
 
   messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
   messagePrint " - PKS Variable File" "$VARFILE"
 
+  wait_loop 60 "Waiting product to be ready to stage"
   OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
 
   if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
@@ -984,7 +1091,6 @@ fi
       messagePrint " - Staging PKS Tile:" "$OPSMAN_PRODUCT"
       echo "-----------------------------------------------------------------------------------------------------------"
       $OM $OM_LOGIN stage-product --product-name pivotal-container-service --product-version ${OPSMAN_PRODUCT}
-      echo "-----------------------------------------------------------------------------------------------------------"
     else
       echo "ERROR: No product to stage found"; exit 0
     fi
