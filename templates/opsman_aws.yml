@@ -9,6 +9,7 @@ properties-configuration:
     region: ((aws-region))
     encrypted: ((encrypted))
 
+#END-STAGE-1
 az-configuration:
   - name: ((infrastructure_subnet_1_azname))
   - name: ((infrastructure_subnet_2_azname))

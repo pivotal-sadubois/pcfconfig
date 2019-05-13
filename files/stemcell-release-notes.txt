@@ -1,0 +1,61 @@
+# GENETATED BY getStemcellsReleases.sh (Fri May 10 22:50:37 CEST 2019)
+366064:97.82:vsphere:Ubuntu Xenial Stemcell for vSphere 97.82:bosh-stemcell-97.82-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+366063:97.82:vcloud:Ubuntu Xenial Stemcell for vCloud 97.82:bosh-stemcell-97.82-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+366060:97.82:osp:Ubuntu Xenial Stemcell for Openstack 97.82:bosh-stemcell-97.82-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+366059:97.82:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 97.82:light-bosh-stemcell-97.82-google-kvm-ubuntu-xenial-go_agent.tgz
+366058:97.82:azure:Ubuntu Xenial Stemcell for Azure 97.82:bosh-stemcell-97.82-azure-hyperv-ubuntu-xenial-go_agent.tgz
+366057:97.82:aws:Ubuntu Xenial Stemcell for AWS 97.82:light-bosh-stemcell-97.82-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+366018:250.38:vsphere:Ubuntu Xenial Stemcell for vSphere 250.38:bosh-stemcell-250.38-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+366016:250.38:vcloud:Ubuntu Xenial Stemcell for vCloud 250.38:bosh-stemcell-250.38-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+366014:250.38:osp:Ubuntu Xenial Stemcell for Openstack 250.38:bosh-stemcell-250.38-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+366013:250.38:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 250.38:light-bosh-stemcell-250.38-google-kvm-ubuntu-xenial-go_agent.tgz
+366012:250.38:azure:Ubuntu Xenial Stemcell for Azure 250.38:bosh-stemcell-250.38-azure-hyperv-ubuntu-xenial-go_agent.tgz
+366010:250.38:aws:Ubuntu Xenial Stemcell for AWS 250.38:light-bosh-stemcell-250.38-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+364456:170.51:vsphere:Ubuntu Xenial Stemcell for vSphere 170.51:bosh-stemcell-170.51-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+364455:170.51:vcloud:Ubuntu Xenial Stemcell for vCloud 170.51:bosh-stemcell-170.51-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+364453:170.51:osp:Ubuntu Xenial Stemcell for Openstack 170.51:bosh-stemcell-170.51-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+364452:170.51:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 170.51:light-bosh-stemcell-170.51-google-kvm-ubuntu-xenial-go_agent.tgz
+364450:170.51:azure:Ubuntu Xenial Stemcell for Azure 170.51:bosh-stemcell-170.51-azure-hyperv-ubuntu-xenial-go_agent.tgz
+364449:170.51:aws:Ubuntu Xenial Stemcell for AWS 170.51:light-bosh-stemcell-170.51-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+352509:250.29:vsphere:Ubuntu Xenial Stemcell for vSphere 250.29:bosh-stemcell-250.29-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+352505:250.29:vcloud:Ubuntu Xenial Stemcell for vCloud 250.29:bosh-stemcell-250.29-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+352503:250.29:osp:Ubuntu Xenial Stemcell for Openstack 250.29:bosh-stemcell-250.29-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+352501:250.29:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 250.29:light-bosh-stemcell-250.29-google-kvm-ubuntu-xenial-go_agent.tgz
+352498:250.29:azure:Ubuntu Xenial Stemcell for Azure 250.29:bosh-stemcell-250.29-azure-hyperv-ubuntu-xenial-go_agent.tgz
+352497:250.29:aws:Ubuntu Xenial Stemcell for AWS 250.29:light-bosh-stemcell-250.29-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+351898:170.48:vsphere:Ubuntu Xenial Stemcell for vSphere 170.48:bosh-stemcell-170.48-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+351896:170.48:vcloud:Ubuntu Xenial Stemcell for vCloud 170.48:bosh-stemcell-170.48-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+351880:170.48:osp:Ubuntu Xenial Stemcell for Openstack 170.48:bosh-stemcell-170.48-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+351876:170.48:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 170.48:light-bosh-stemcell-170.48-google-kvm-ubuntu-xenial-go_agent.tgz
+351874:170.48:azure:Ubuntu Xenial Stemcell for Azure 170.48:bosh-stemcell-170.48-azure-hyperv-ubuntu-xenial-go_agent.tgz
+351873:170.48:aws:Ubuntu Xenial Stemcell for AWS 170.48:light-bosh-stemcell-170.48-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+351863:97.74:vsphere:Ubuntu Xenial Stemcell for vSphere 97.74:bosh-stemcell-97.74-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+351862:97.74:vcloud:Ubuntu Xenial Stemcell for vCloud 97.74:bosh-stemcell-97.74-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+351860:97.74:osp:Ubuntu Xenial Stemcell for Openstack 97.74:bosh-stemcell-97.74-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+351858:97.74:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 97.74:light-bosh-stemcell-97.74-google-kvm-ubuntu-xenial-go_agent.tgz
+351856:97.74:azure:Ubuntu Xenial Stemcell for Azure 97.74:bosh-stemcell-97.74-azure-hyperv-ubuntu-xenial-go_agent.tgz
+351855:97.74:aws:Ubuntu Xenial Stemcell for AWS 97.74:light-bosh-stemcell-97.74-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+340999:170.45:vsphere:Ubuntu Xenial Stemcell for vSphere 170.45:bosh-stemcell-170.45-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+340996:170.45:vcloud:Ubuntu Xenial Stemcell for vCloud 170.45:bosh-stemcell-170.45-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+340995:170.45:osp:Ubuntu Xenial Stemcell for Openstack 170.45:bosh-stemcell-170.45-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+340994:170.45:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 170.45:light-bosh-stemcell-170.45-google-kvm-ubuntu-xenial-go_agent.tgz
+340993:170.45:azure:Ubuntu Xenial Stemcell for Azure 170.45:bosh-stemcell-170.45-azure-hyperv-ubuntu-xenial-go_agent.tgz
+340992:170.45:aws:Ubuntu Xenial Stemcell for AWS 170.45:light-bosh-stemcell-170.45-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+340988:250.25:vsphere:Ubuntu Xenial Stemcell for vSphere 250.25:bosh-stemcell-250.25-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+340985:250.25:vcloud:Ubuntu Xenial Stemcell for vCloud 250.25:bosh-stemcell-250.25-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+340984:250.25:osp:Ubuntu Xenial Stemcell for Openstack 250.25:bosh-stemcell-250.25-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+340983:250.25:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 250.25:light-bosh-stemcell-250.25-google-kvm-ubuntu-xenial-go_agent.tgz
+340982:250.25:azure:Ubuntu Xenial Stemcell for Azure 250.25:bosh-stemcell-250.25-azure-hyperv-ubuntu-xenial-go_agent.tgz
+340980:250.25:aws:Ubuntu Xenial Stemcell for AWS 250.25:light-bosh-stemcell-250.25-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+340978:97.71:vsphere:Ubuntu Xenial Stemcell for vSphere 97.71:bosh-stemcell-97.71-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+340976:97.71:vcloud:Ubuntu Xenial Stemcell for vCloud 97.71:bosh-stemcell-97.71-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+340973:97.71:osp:Ubuntu Xenial Stemcell for Openstack 97.71:bosh-stemcell-97.71-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+340972:97.71:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 97.71:light-bosh-stemcell-97.71-google-kvm-ubuntu-xenial-go_agent.tgz
+340971:97.71:azure:Ubuntu Xenial Stemcell for Azure 97.71:bosh-stemcell-97.71-azure-hyperv-ubuntu-xenial-go_agent.tgz
+340969:97.71:aws:Ubuntu Xenial Stemcell for AWS 97.71:light-bosh-stemcell-97.71-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+337883:97.67:vsphere:Ubuntu Xenial Stemcell for vSphere 97.67:bosh-stemcell-97.67-vsphere-esxi-ubuntu-xenial-go_agent.tgz
+337882:97.67:vcloud:Ubuntu Xenial Stemcell for vCloud 97.67:bosh-stemcell-97.67-vcloud-esxi-ubuntu-xenial-go_agent.tgz
+337878:97.67:osp:Ubuntu Xenial Stemcell for Openstack 97.67:bosh-stemcell-97.67-openstack-kvm-ubuntu-xenial-go_agent-raw.tgz
+337876:97.67:gcp:Ubuntu Xenial Stemcell for Google Cloud Platform 97.67:light-bosh-stemcell-97.67-google-kvm-ubuntu-xenial-go_agent.tgz
+337874:97.67:azure:Ubuntu Xenial Stemcell for Azure 97.67:bosh-stemcell-97.67-azure-hyperv-ubuntu-xenial-go_agent.tgz
+337873:97.67:aws:Ubuntu Xenial Stemcell for AWS 97.67:light-bosh-stemcell-97.67-aws-xen-hvm-ubuntu-xenial-go_agent.tgz

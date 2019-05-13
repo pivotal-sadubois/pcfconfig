@@ -1,0 +1,96 @@
+---
+az-configuration:
+- name: zone-1
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+- name: zone-2
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+- name: zone-3
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+network-assignment:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: zone-1
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: infrastructure
+    subnets:
+    - iaas_identifier: az-virtual-network/az-infrastructure-subnet
+      cidr: 10.0.8.0/26
+      dns: 168.63.129.16
+      gateway: 10.0.8.1
+      reserved_ip_ranges: 10.0.8.1-10.0.8.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+  - name: pks
+    subnets:
+    - iaas_identifier: az-virtual-network/az-pks-subnet
+      cidr: 10.0.12.0/26
+      dns: 168.63.129.16
+      gateway: 10.0.12.1
+      reserved_ip_ranges: 10.0.12.1-10.0.12.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+  - name: services
+    subnets:
+    - iaas_identifier: az-virtual-network/az-pks-services-subnet
+      cidr: 10.0.16.0/22
+      dns: 168.63.129.16
+      gateway: 10.0.16.1
+      reserved_ip_ranges: 10.0.16.1-10.0.16.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+properties-configuration:
+  director_configuration:
+    blobstore_type: local
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    director_worker_count: 5
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: true
+    keep_unreachable_vms: false
+    local_blobstore_options:
+      tls_enabled: true
+    ntp_servers_string: 0.ch.pool.ntp.org, 1.ch.pool.ntp.org
+    post_deploy_enabled: true
+    resurrector_enabled: true
+    retry_bosh_deploys: true
+    skip_director_drain: true
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: false
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+vmextensions-configuration: []

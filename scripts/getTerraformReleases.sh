@@ -6,12 +6,11 @@
 # Description ..: Dump Terraform Release information into ../files/terraform-release-notes.txt
 # ############################################################################################
 
+DIRNAME=$(dirname $0)
 PRODUCT_SLUG=elastic-runtime
-RELEASE_FILE=../files/terraform-release-notes.txt
+RELEASE_FILE=${DIRNAME}/../files/terraform-release-notes.txt
 LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
        egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
-
-mkdir -p /tmp/$0_pdf_$$
 
 echo "# GENETATED BY getTerraformReleases.sh (`date`)" > $RELEASE_FILE
 
@@ -44,15 +43,23 @@ for rel in $LIST; do
     aws=$(echo ${nm} | egrep -c "AWS Terraform Templates")
     gcp=$(echo ${nm} | egrep -c "GCP Terraform Templates")
     azc=$(echo ${nm} | egrep -c "Azure Terraform Templates")
+    [ ${aws} -gt 0 ] && cld="aws"
+    [ ${gcp} -gt 0 ] && cld="gcp"
+    [ ${azc} -gt 0 ] && cld="azure"
+
+    pivnet --format=json release --product-slug $PRODUCT_SLUG -r $rel > /tmp/$$_rel 2>/dev/null
+    rdt=$(jq -r '.release_date' /tmp/$$_rel)
+    eos=$(jq -r '.end_of_support_date' /tmp/$$_rel)
+    des=$(jq -r '.release_type' /tmp/$$_rel)
+
 
     if [ ${aws} -gt 0 -o ${gcp} -gt 0 -o ${azc} -gt 0 ]; then
-      echo "$id:$rel:$nm:$pf" >> $RELEASE_FILE
+      echo "$id:$rel:$cld:$nm:$pf:$rdt:$eos:$des" >> $RELEASE_FILE
     fi
 
     let i=i+1
   done
   
-  rm -f /tmp/$0_$$
+  rm -f /tmp/$0_$$ /tmp/$$_rel 
 done
-rmdir /tmp/$0_pdf_$$
 
