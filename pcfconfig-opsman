@@ -1505,20 +1505,23 @@ echo "AWS_DNS_PREFIX:$AWS_DNS_PREFIX"
     # --- ROUTE53 TOKEN SPECIDIED ---
     if [ "${ROUTE53_TOKEN}" != "" ]; then 
       DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
-       jq -r '.LoadBalancerDescriptions[0].DNSName')
+        jq -r '.LoadBalancerDescriptions[0].DNSName')
+      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 
       #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL" --query "ResourceRecordSets[?Name == 'api.pks.aws.pcfsdu.com.']" | jq -r '.[].AliasTarget.HostedZoneId'
 
 
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-      RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
-          --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
+      #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
+      #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
       messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
       messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
 
       if [ "${ZONE_ID}" != "" ]; then 
-    cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$RECORD_ID/g" > /tmp/$$_zone_record
+    cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
             "Comment": "CREATE/DELETE/UPSERT a record ",
             "Changes": [{
@@ -1535,6 +1538,7 @@ echo "AWS_DNS_PREFIX:$AWS_DNS_PREFIX"
 }
 EOF
 
+echo "ZONE_ID:$ZONE_ID"
         echo "-----------------------------------------------------------------------------------------------------------"
         aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
         echo "-----------------------------------------------------------------------------------------------------------"
@@ -1567,7 +1571,7 @@ EOF
 
   if [ $NO_APPLY -eq 0 ]; then
     echo "Applying Changes to OpsManager"
-    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE apply-changes
+    $OM $OM_LOGIN apply-changes
   fi
 
   echo ""
