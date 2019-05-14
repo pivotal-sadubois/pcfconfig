@@ -536,7 +536,7 @@ checkEnvironment() {
 
       # --- CHEKING DNS ---
       echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
-      i=1; ret="failed"
+      i=1; ret="failed"; dns_google_stat="failed"
        while [ $i -lt 10 -a ${ret} == "failed" ]; do
         sleep 10
         nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
@@ -554,7 +554,7 @@ checkEnvironment() {
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
-      if [ $dns_google_stat == "failed" ]; then
+      if [ "${dns_google_stat}" == "failed" ]; then
         messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_stat"
         subdomain=$(echo $OPS_MANAGER_DNS | sed -e 's/\./<1>/' -e 's/^.*<1>//g')
         sublen=$(echo $subdomain | wc -c | sed 's/ *//g')
@@ -1356,8 +1356,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "      --product-version \"${PKS_VERSION}\""                                                     >> $TMP_SCRIPT
       echo "fi"                                                                                             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
-      echo "echo \"Uploading PKS Product Image ($PKS_VERSION)\""                                            >> $TMP_SCRIPT
-      echo "echo \" - PKS Product Image .................................: /tmp/$PIVNET_GLOB\""             >> $TMP_SCRIPT
+      #echo "echo \"Uploading PKS Product Image ($PKS_VERSION)\""                                            >> $TMP_SCRIPT
+      #echo "echo \" - PKS Product Image .................................: /tmp/$PIVNET_GLOB\""             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
       echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"    >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                  >> $TMP_SCRIPT
@@ -1409,8 +1409,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
   fi
 
-  echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> VARFILE
-  echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> VARFILE
+  echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+  echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
 
   $JQ -r '"pks_api_hostname: " + .modules[].outputs.domain.value' \
   $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
@@ -1492,7 +1492,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
     ELBDNS=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
         $JQ -r '.LoadBalancerDescriptions[0].DNSName')
-    messagePrint " - DNS Name::" "$ELBDNS"
+    messagePrint " - DNS Name:" "$ELBDNS"
 
 echo "ROUTE53_TOKEN:$ROUTE53_TOKEN"
 echo "AWS_DNS_SUFFIX:$AWS_DNS_SUFFIX"
@@ -1514,6 +1514,8 @@ echo "AWS_DNS_PREFIX:$AWS_DNS_PREFIX"
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
       RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
           --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
+      messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
+      messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
 
       if [ "${ZONE_ID}" != "" ]; then 
     cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$RECORD_ID/g" > /tmp/$$_zone_record
@@ -1541,9 +1543,10 @@ EOF
         rm -f /tmp/$$_zone_record
       fi
 
-      echo "INFO: Pleae set an alias in the DNS Record of your domain ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} in the record"
-      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
     fi
+  else
+    echo "INFO: Pleae set an alias in the DNS Record of your domain ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} in the record"
+    echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
   fi
 
   echo "Uploading Stemcell for PKS"
@@ -1562,10 +1565,10 @@ EOF
   echo "-----------------------------------------------------------------------------------------------------------"
 
 
-  #if [ $NO_APPLY -eq 0 ]; then
-  #  echo "Applying Changes to OpsManager"
-  #  $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE apply-changes
-  #fi
+  if [ $NO_APPLY -eq 0 ]; then
+    echo "Applying Changes to OpsManager"
+    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE apply-changes
+  fi
 
   echo ""
   echo "Configuration of the PKS Tile is completed."
