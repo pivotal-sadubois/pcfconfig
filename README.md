@@ -64,15 +64,16 @@ To perform a fully unattended installation. You need to create a script containi
 your environment. Currently only PKS is supported for AWS and GCP Cloud. 
 
 ...
+
 $ vi install-gcp-pks-1.4.sh
 #!/bin/bash
 export PATH=~/workspace/pcfconfig:$PATH
-PIVNET_TOKEN="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-r"
+PIVNET_TOKEN=""
 LOCATION="europe-west4"
 DNS_DOMAIN="pcfsdu.com"
-AWS_ROUTE53_TOKEN="XXXXXXXXXXXXXX"
+AWS_ROUTE53_TOKEN=""
 OPSMAN_USER="admin"
-OPSMAN_PASS="pivotal"
+OPSMAN_PASS=""
 OPSMAN_DECRYPTION_KEY="pivotal"
 PKS_VERISON="1.4.0"
 ENV_NAME="gcppks"
