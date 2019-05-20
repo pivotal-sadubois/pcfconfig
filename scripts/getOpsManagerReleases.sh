@@ -9,10 +9,8 @@
 DIRNAME=$(dirname $0)
 RELEASE_FILE=${DIRNAME}/../files/opsman-release-notes.txt
 PRODUCT_SLUG=ops-manager
-LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
-     egrep "^\| [0-9]* \|" | awk '{ print $4 }' | head -10) 
 
-echo "# GENETATED BY getOpsManagerReleases.sh (`date`)" > $RELEASE_FILE
+
 
 PIVNET=$(which pivnet)
 if [ "${PIVNET}" == "" ]; then
@@ -27,6 +25,17 @@ else
     echo "       please install the om utility from https://github.com/pivotal-cf/pivnet-cli"; exit 0
   fi
 fi
+
+pivnet products > /dev/null 2>&1
+if [ $? -ne 0 ]; then 
+  echo ""
+  echo "ERROR: not logged in in PIVNET, please login with a new pivnet token"
+  echo "       => pivnet login --api-token \"XXXXXXXXXXXXXXXXXXXXXXXXXXX\""
+fi
+
+echo "# GENETATED BY getOpsManagerReleases.sh (`date`)" > $RELEASE_FILE
+LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
+     egrep "^\| [0-9]* \|" | awk '{ print $4 }') 
 
 pivnet --format=json releases --product-slug $PRODUCT_SLUG > /tmp/$$_rel
 cp /tmp/$$_rel /tmp/rel

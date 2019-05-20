@@ -1,0 +1,19 @@
+#https://docs.pivotal.io/pivotalcf/2-5/pcf-release-notes/opsmanager-rn.html#2-5-2
+# opsmanager:stemcell:cloud:cpi:
+2.5.2:2.5.2-build.172:250.17:aws:73
+2.5.2:2.5.2-build.172:250.17:azure:35.4.0
+2.5.2:2.5.2-build.172:250.17:gcp:29.0.1
+2.5.2:2.5.2-build.172:250.17:openstack:42
+2.5.2:2.5.2-build.172:250.17:vsphere:52.1.0
+2.5.1:2.5.1-build.169:250.17:aws:73
+2.5.1:2.5.1-build.169:250.17:azure:35.4.0
+2.5.1:2.5.1-build.169:250.17:gcp:29.0.1
+2.5.1:2.5.1-build.169:250.17:openstack:42
+2.5.1:2.5.1-build.169:250.17:vsphere:52.1.0
+2.5.0:2.5.0-build.158:250.17:aws:73
+2.5.0:2.5.0-build.158:250.17:azure:35.4.0
+2.5.0:2.5.0-build.158:250.17:gcp:29.0.1
+2.5.0:2.5.0-build.158:250.17:openstack:42
+2.5.0:2.5.0-build.158:250.17:vsphere:52.1.0
+
+

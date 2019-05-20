@@ -1,0 +1,89 @@
+checkCloudCLI() {
+  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
+    # --- CHECK FOR AWS CLI ---
+    GCLOUD=$(which gcloud)
+    if [ "${GCLOUD}" != "" ]; then
+      $GCLOUD --version >/dev/null 2>&1; ret=$?
+      if [ ${ret} -eq 0 ]; then
+        GCLOUD_VERSION=$($GCLOUD --version 2>/dev/null | grep "Google Cloud SDK" | awk '{ print $NF}')
+        GCP_CLI_ENABLED=1
+        messagePrint "checking for $cloud CLI utility" "installed - ${GCLOUD_VERSION}"
+      else
+        echo ""
+        echo "ERROR: the terraform $(which terraform) does not seam to be correct"
+        echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+      fi
+    else
+      messagePrint "checking for $cloud CLI utility" "not installed"
+    fi
+  fi
+
+  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
+    # --- CHECK FOR AWS CLI ---
+    AWSCLI=$(which aws)
+    if [ "${AWSCLI}" != "" ]; then
+      $AWSCLI --version >/dev/null 2>&1; ret=$?
+      if [ ${ret} -eq 0 ]; then
+        AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
+        AWS_CLI_ENABLED=1
+        messagePrint "checking for $cloud CLI utility" "installed - ${AWS_VERSION}"
+      else
+        echo ""
+        echo "ERROR: the terraform $(which terraform) does not seam to be correct"
+        echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+      fi
+    else
+      messagePrint "checking for $cloud CLI utility" "no installed"
+    fi
+  fi
+
+  if [ "${cloud}" == "Azure" -o "${TF_DEPLOYMENT}" == "azure" ]; then
+    # --- CHECK FOR AWS CLI ---
+    AZCLI=$(which az)
+    if [ "${AZCLI}" != "" ]; then
+      $AZCLI -v >/dev/null 2>&1; ret=$?
+      if [ ${ret} -eq 0 ]; then
+        AZ_VERSION=$($AZCLI -v 2>/dev/null | egrep "^azure-cli" | awk '{ print $2 }'); ret=$?
+        AZURE_CLI_ENABLED=1
+        messagePrint "checking for $cloud CLI utility" "installed - ${AZ_VERSION}"
+      else
+        echo ""
+        echo "ERROR: the $cloud CLI $(which az) does not seam to be correct"
+        echo "       please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest"; exit 0
+      fi
+    else
+      messagePrint "checking for $cloud CLI utility" "no installed"
+    fi
+  fi
+}
+
+wait_loop() {
+  TIME=$1
+  MESSAGE="$2"
+  echo -e "$2 \c"
+
+  n=1
+  while [ $n -le $TIME ]; do
+    str=$(printf "[%03d/%03d]" $n $TIME)
+    echo -e ". $str\c"
+    sleep 1
+    echo -e "\b\b\b\b\b\b\b\b\b\b\c       "
+    let n=n+1
+  done
+
+  echo -e "\n"
+}
+
+messagePrint() {
+  msg="$1"
+  stt="$2"
+  cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
+
+  str=""
+  while [ $cnt -lt 58 ]; do
+    str="${str}."
+    let cnt=cnt+1
+  done
+  echo "${msg} ${str}: ${stt}"
+}
+

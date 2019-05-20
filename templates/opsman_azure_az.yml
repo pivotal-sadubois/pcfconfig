@@ -1,17 +1,24 @@
 ---
-az-configuration:
-- name: zone-1
-  iaas_configuration_guid: 5d61b0d25e22d3f5985d
-- name: zone-2
-  iaas_configuration_guid: 5d61b0d25e22d3f5985d
-- name: zone-3
-  iaas_configuration_guid: 5d61b0d25e22d3f5985d
-network-assignment:
-  network:
-    name: infrastructure
-  other_availability_zones: []
-  singleton_availability_zone:
-    name: zone-1
+properties-configuration:
+  iaas_configuration:
+    subscription_id: ((subscription_id))
+    tenant_id: ((tenant_id))
+    client_id: ((client_id))
+    client_secret: ((client_secret))
+    bosh_storage_account_name: ((bosh_root_storage_account))
+    #key_pair_name: ((ops_manager_ssh_public_key_name))
+    ssh_private_key: ((ops_manager_ssh_private_key))
+    resource_group_name: ((pcf_resource_group_name))
+    ssh_public_key: ((ops_manager_ssh_public_key))
+    default_security_group:
+    environment: AzureCloud
+    availability_mode: availability_zones
+    cloud_storage_type: managed_disks
+    storage_account_type: Premium_LRS
+    deployed_cloud_storage_type: 
+    deployments_storage_account_name: 
+
+#END-STAGE-1
 networks-configuration:
   icmp_checks_enabled: false
   networks:
@@ -72,25 +79,10 @@ properties-configuration:
     resurrector_enabled: true
     retry_bosh_deploys: true
     skip_director_drain: true
-  dns_configuration:
-    excluded_recursors: []
-    handlers: []
-  security_configuration:
-    generate_vm_passwords: true
-    opsmanager_root_ca_trusted_certs: false
-  syslog_configuration:
-    enabled: false
-resource-configuration:
-  compilation:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  director:
-    instances: automatic
-    persistent_disk:
-      size_mb: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-vmextensions-configuration: []
+network-assignment:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: zone-1
+

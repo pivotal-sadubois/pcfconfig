@@ -9,10 +9,7 @@
 DIRNAME=$(dirname $0)
 PRODUCT_SLUG=elastic-runtime
 RELEASE_FILE=${DIRNAME}/../files/terraform-release-notes.txt
-LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
-       egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
 
-echo "# GENETATED BY getTerraformReleases.sh (`date`)" > $RELEASE_FILE
 
 PIVNET=$(which pivnet)
 if [ "${PIVNET}" == "" ]; then
@@ -28,10 +25,19 @@ else
   fi
 fi
 
+pivnet products > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "ERROR: not logged in in PIVNET, please login with a new pivnet token"
+  echo "       => pivnet login --api-token \"XXXXXXXXXXXXXXXXXXXXXXXXXXX\""
+fi
+
+LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
+       egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
+echo "# GENETATED BY getTerraformReleases.sh (`date`)" > $RELEASE_FILE
 for rel in $LIST; do
   echo "Colecting information for $PRODUCT_SLUG release: $rel"
   $PIVNET --format=json product-files --product-slug $PRODUCT_SLUG -r $rel | jq > /tmp/$0_$$
-
   
   i=0; cnt=$(grep -c id /tmp/$0_$$)
   while [ $i -lt $cnt ]; do

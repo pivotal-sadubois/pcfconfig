@@ -6,8 +6,6 @@
 # Description ..: PCF OpsManager Configuration Utility
 # ############################################################################################
 
-# jq -e -f ~/workspace/pcfconfig/filter/opsman_aws_2.4.jq  terraform.tfstate
-
 NODE=""
 USER=""
 PASS=""
@@ -17,12 +15,16 @@ USAGE=0
 NO_APPLY=0
 NO_DOWNLOAD=0
 AWS_CLI_ENABLED=0
+GCP_CLI_ENABLED=0
 AZURE_CLI_ENABLED=0
 MSG_SILENT=0
 PIVNET_TOKEN=""
 PCFCONFIG_PATH=$(dirname $0)
 PCFCONFIG_BASE=$(basename $0)
 ROUTE53_TOKEN=""
+
+# --- SOURCE FUNCTIONS---
+. ${PCFCONFIG_PATH}/functions
 
 # --- OPSMAN ---
 OPSMAN_TEMPLATE=""
@@ -82,7 +84,7 @@ done
 ##############################################################################################
 
 echo ""
-echo "PCF Configuration Utility"
+echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
 echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -145,75 +147,35 @@ usage_pas() {
   echo "                       --nodownload               - No software download from pivnet if copy local is available"
 }
 
-wait_loop() {
-  TIME=$1
-  MESSAGE="$2"
-  echo -e "$2 \c"
+environmentCleanUp() {
+  TFDIR="$1"
 
-  n=1
-  while [ $n -le $TIME ]; do
-    str=$(printf "[%03d/%03d]" $n $TIME)
-    echo -e ". $str\c"
-    sleep 1
-    echo -e "\b\b\b\b\b\b\b\b\b\b\c       "
-    let n=n+1
-  done
+ echo "-----------------------------------------------------------------------------------------------------------"
 
-  echo -e "\n"
-}
+  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
+    ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+    ENV_REGO=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
 
-messagePrint() {
-  msg="$1"
-  stt="$2"
-  cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
+    cnt=$(gcloud compute networks subnets list --filter="name:gcppks* region:$ENV_REGO" 2>/dev/null | wc -l | sed 's/ *//g')
+    if [ $cnt -gt 0 ]; then
+      list=$(gcloud compute networks subnets list --filter="name:gcppks* region:$ENV_REGO" | grep -v "NAME" | awk '{ print $1 '})
+      echo "ERROR: Subnets from previous installation are still there, to delete: "
+      for n in $list; do
+        echo "       => gcloud -q compute networks subnets delete --region=$ENV_REGO $n"
+      done
+    fi
 
-  str=""
-  while [ $cnt -lt 58 ]; do
-    str="${str}."
-    let cnt=cnt+1
-  done
-  echo "${msg} ${str}: ${stt}"
-}
+    cnt=$(gcloud compute networks list 2>/dev/null | egrep -c "^gcppks-")
+    if [ $cnt -gt 0 ]; then
+      list=$(gcloud compute networks list | egrep "^gcppks-" | awk '{ print $1 '})
+      echo "ERROR: Network from previous installation are still there, to delete: "
+      for n in $list; do
+        echo "       => gcloud -q compute networks delete $n"
+      done
 
-checkCloudCLI() {
-  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
-    # --- CHECK FOR AWS CLI ---
-    AWSCLI=$(which aws)
-    if [ "${AWSCLI}" != "" ]; then
-      $AWSCLI --version >/dev/null 2>&1; ret=$?
-      if [ ${ret} -eq 0 ]; then
-        AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
-        AWS_CLI_ENABLED=1
-        messagePrint "checking for $cloud CLI utility" "installed - ${AWS_VERSION}"
-      else
-        echo ""
-        echo "ERROR: the terraform $(which terraform) does not seam to be correct"
-        echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
-      fi
-    else
-      messagePrint "checking for $cloud CLI utility" "no installed"
     fi
   fi
-
-  if [ "${cloud}" == "Azure" -o "${TF_DEPLOYMENT}" == "azure" ]; then
-    # --- CHECK FOR AWS CLI ---
-    AZCLI=$(which az)
-    if [ "${AZCLI}" != "" ]; then
-      $AZCLI -v >/dev/null 2>&1; ret=$?
-      if [ ${ret} -eq 0 ]; then
-        AZ_VERSION=$($AZCLI -v 2>/dev/null | egrep "^azure-cli" | awk '{ print $2 }'); ret=$?
-        AZURE_CLI_ENABLED=1
-        messagePrint "checking for $cloud CLI utility" "installed - ${AZ_VERSION}"
-      else
-        echo ""
-        echo "ERROR: the $cloud CLI $(which az) does not seam to be correct"
-        echo "       please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest"; exit 0
-      fi
-    else
-      messagePrint "checking for $cloud CLI utility" "no installed"
-    fi
-  fi
-} 
+}
 
 checkPKStools() {
   # --- CHECK FOR OM UTILITY ---
@@ -316,7 +278,7 @@ checkEnvironment() {
           messagePrint "checking terraform cloud provider" "Amazon WebServices (AWS)"
           cloud="AWS"; PCF_CLOUD_NAME=aws
           ;;
-      gcp)
+      google)
           messagePrint "checking terraform cloud provider" "Google Gloud Platform (GCP)"
           cloud="GCP"; PCF_CLOUD_NAME=gcp
           ;;
@@ -377,6 +339,232 @@ checkEnvironment() {
       echo "ERROR: $0 $TERRAFORM_TFSTATES is not a terraform state file"; exit 1
     fi
 
+    if [ "${cloud}" == "GCP" -a "${GCP_CLI_ENABLED}" -eq 1 ]; then
+      OPSMAN_CONFIG="opsmen_gcp.yml"
+      GCP_DNS_SUFFIX=$(egrep "^dns_suffix" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      GCP_DNS_PREFIX=$(egrep "^env_name" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      GCP_PROJECT_ID=$(egrep "^project" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      GCP_DNS_SUBDOMAIN="${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}"
+      GCP_REGION=$(egrep "^region" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      GCP_OPS_MANAGER_URL=$(egrep "^opsman_image_url" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      GCP_AVAILABILITY_ZONES=$(egrep "^zones" $TERRAFORM_VARS | \
+        sed -e 's/^.*= //g' -e 's/"//g' -e 's/\[//g' -e 's/\]//g')
+      OPSMAN_VERSION=$(egrep ",${GCP_OPS_MANAGER_URL}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | \
+        head -1 | awk -F',' '{ print $1}')
+      OPSMAN_MINOR_VERSION=$(echo $OPSMAN_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+      DNS_SUFFIX=$GCP_DNS_SUFFIX
+      DNS_PREFIX=$GCP_DNS_PREFIX
+      AVAILABILITY_ZONES="$(egrep "^zones" $TERRAFORM_VARS | sed -e 's/^.*\[//g' -e 's/"//g' -e 's/,//g' -e 's/\]//g')"
+      AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
+      AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
+      AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
+
+      # --- CHECK THE AVAILABILITY_ZONE ---
+      for n in $AVAILABILITY_ZONE1 $AVAILABILITY_ZONE2 $AVAILABILITY_ZONE3; do
+        cnt=$($GCLOUD compute zones list | grep "${GCP_REGION}" | grep -c "${n}")
+        if [ $cnt -eq 0 ]; then 
+          echo "ERROR: GCP Availability Region: ${GCP_REGION} does not have a Availability Zone: $n"
+          echo "       => gcloud compute zones list"
+          echo ""
+          $GCLOUD compute zones list | egrep "NAME|$GCP_REGION" | sed 's/^/       /g'
+          echo ""
+          exit 1
+        fi
+      done
+
+      GCP_SVC_NAME=$(sed -n '/^service_account_key/,/^SERVICE_ACCOUNT_KEY/p' $TERRAFORM_VARS | grep "client_email" | \
+         sed -e 's/"//g' -e 's/,//g' | awk '{ print $NF }')
+      GCP_SVC_PRJID=$(sed -n '/^service_account_key/,/^SERVICE_ACCOUNT_KEY/p' $TERRAFORM_VARS | grep "project_id" | \
+         sed -e 's/"//g' -e 's/,//g' | awk '{ print $NF }')
+
+      if [ "${GCP_PROJECT_ID}" != "${GCP_SVC_PRJID}" ]; then 
+        echo "ERROR: GCP ProjectID ($GCP_PROJECT_ID) in $TERRAFORM_VARS does not match the Project ID ($GCP_SVC_PRJID)"
+        echo "       in the Service Account definition"; exit 1
+      fi
+
+      echo "Verify $cloud configuration:"
+      messagePrint " - GCP ServiceAccount" "$GCP_SVC_NAME"
+      messagePrint " - GCP ServiceAccount ProjectID" "$GCP_SVC_PRJID"
+      messagePrint " - GCP Region" "$GCP_REGION"
+      messagePrint " - GCP Availability Zone" "$GCP_AVAILABILITY_ZONES"
+      messagePrint " - DNS Domain Suffix" "$GCP_DNS_SUFFIX"
+      messagePrint " - DNS Domain Prefix" "$GCP_DNS_PREFIX"
+      messagePrint " - DNS SubDomain" "$GCP_DNS_SUBDOMAIN"
+      messagePrint " - OPS Manager AMI" "$GCP_OPS_MANAGER_URL - $OPSMAN_VERSION"
+
+      # --- TEST ACCESS TO AWS ---
+      gcloud projects list > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Accessing GCP with the gcloud utility has been failed"
+        exit
+      fi
+
+      echo "Verify $cloud Ops Manager instance"
+      $TF output > /dev/null 2>&1; ret=$?
+      if [ $ret -eq 0 ]; then
+        OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
+        OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
+        OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
+        DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
+          sed -e 1d -e '$d' -e 's/,//g' -e 's/  *//g' -e 's/    //g' | paste -s -d " " - - - -)
+        DNS1=$(echo $DNS_SERVERS | awk '{ print $1 }')
+        DNS2=$(echo $DNS_SERVERS | awk '{ print $2 }')
+        DNS3=$(echo $DNS_SERVERS | awk '{ print $3 }')
+        DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
+      else
+        OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
+        OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+        OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+        DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
+
+        DNS1=$($JQ -r '.modules[2].outputs.name_servers.value[0]' $TERRAFORM_TFSTATE)
+        DNS2=$($JQ -r '.modules[2].outputs.name_servers.value[1]' $TERRAFORM_TFSTATE)
+        DNS3=$($JQ -r '.modules[2].outputs.name_servers.value[2]' $TERRAFORM_TFSTATE)
+        DNS4=$($JQ -r '.modules[2].outputs.name_servers.value[3]' $TERRAFORM_TFSTATE)
+        DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
+      fi
+
+      #gcloud compute instances describe gcp-ops-manager --zone europe-west3-b
+      instance_status=$(gcloud compute instances list --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
+            grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
+      
+      messagePrint " - Ops Manager VM Name" "${GCP_DNS_PREFIX}-ops-manager"
+      messagePrint " - Ops Manager Instance" "$instance_status"
+      messagePrint " - DNS Servers" "$DNS_SERVERS"
+      messagePrint " - Ops Manager DNS Name" "$OPS_MANAGER_DNS"
+
+      # --- DNS PRECHECK ---
+      nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+      if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then
+        # --- CHECK IF ZONE RECORDS ARE AVAILABLE ---
+        aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          ROUTE53_STAT="zone managed by route53"
+        else
+          ROUTE53_STAT="no dns zone found"
+          ROUTE53_ZONEID=""
+        fi
+
+        echo "Updating AWS Route53 DNS records:"
+        messagePrint " - Validating AWS Route53 ZoneID" "$ROUTE53_TOKEN"
+        messagePrint " - Validating AWS Route53 Zone: (${GCP_DNS_SUFFIX})" "$ROUTE53_STAT"
+        messagePrint " - Define DNS Record for (${GCP_DNS_SUBDOMAIN})" ""
+        sublen=$(echo $GCP_DNS_SUBDOMAIN | wc -c | sed 's/ *//g')
+
+        printf "      %${sublen}s    NS     $DNS1\n" "$GCP_DNS_SUBDOMAIN"
+        printf "      %${sublen}s           $DNS2\n" ""
+        printf "      %${sublen}s           $DNS3\n" ""
+        printf "      %${sublen}s           $DNS4\n" ""
+
+        TMPROUTE53=/tmp/$$_tmp_route53.json
+        echo "{"                                                   >  $TMPROUTE53
+        echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+        echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+        echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+        echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+        echo "    \"Name\": \"${GCP_DNS_SUBDOMAIN}\","             >> $TMPROUTE53
+        echo "    \"Type\": \"NS\","                               >> $TMPROUTE53
+        echo "    \"TTL\": 300,"                                   >> $TMPROUTE53
+        echo "    \"ResourceRecords\": [ "                         >> $TMPROUTE53
+        echo "      { \"Value\": \"${DNS1}\" },"                   >> $TMPROUTE53
+        echo "      { \"Value\": \"${DNS2}\" },"                   >> $TMPROUTE53
+        echo "      { \"Value\": \"${DNS3}\" },"                   >> $TMPROUTE53
+        echo "      { \"Value\": \"${DNS4}\" }"                    >> $TMPROUTE53
+        echo "    ]"                                               >> $TMPROUTE53
+        echo "}}]"                                                 >> $TMPROUTE53
+        echo "}"                                                   >> $TMPROUTE53
+
+        # --- GET AWS INSTANCE ---
+        if [ $DEBUG -gt 0 ]; then
+          echo "# -------------------------- DEBUGGING START -----------------------------"
+          cat $TMPROUTE53
+          echo "# -------------------------- DEBUGGING END -------------------------------"
+        fi
+
+
+        aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
+            --change-batch file://${TMPROUTE53} > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          messagePrint " - Updating AWS Route53 Record for (${GCP_DNS_SUBDOMAIN})" "succeeded"
+        else
+          messagePrint " - Updating AWS Route53 Record for (${GCP_DNS_SUBDOMAIN})" "failed"
+          echo "WARNING: Unable to update AWS Route53 record $GCP_DNS_SUBDOMAIN for zone $GCP_DNS_SUFFIX"
+          echo "         please try manually"
+        fi
+
+        wait_loop 60 "Waiting for DNS records to be pushed"
+      fi
+
+      # --- CHEKING DNS ---
+      echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
+      nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+      if [ $ret -ne 0 ]; then 
+        i=1; ret="failed"; dns_google_stat="failed"
+         while [ $i -lt 10 -a ${ret} == "failed" ]; do
+          sleep 10
+          nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+          if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+          messagePrint "   => Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
+          let i=i+1
+        done
+      else
+        messagePrint "   => Verify DNS lookup Google (8.8.8.8)" "successful"
+      fi
+
+      for n in $DNS_SERVERS; do
+        nslookup $OPS_MANAGER_DNS $n > /dev/null 2>&1; ret=$?
+        if [ $ret -eq 0 ]; then dns_stat="successful"; else dns_stat="failed"; fi
+        messagePrint "   => Verify DNS lookup ($n)" "$dns_stat"
+      done
+
+      localdns=$(nslookup localhost | grep Server:  | awk '{ print $2 }')
+      i=1; ret="failed"; dns_google_stat="failed"
+       while [ $i -lt 30 -a ${ret} == "failed" ]; do
+        sleep 10
+        nslookup $OPS_MANAGER_DNS > /dev/null 2>&1; ret=$?
+        if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+        messagePrint "   => Verify DNS lookup localhost ($localdns)" "$dns_google_stat"
+        let i=i+1
+      done
+
+#gaga-gcp
+
+      messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
+      messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
+
+      if [ "${dns_google_stat}" == "failed" ]; then
+        messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_stat"
+        subdomain=$(echo $OPS_MANAGER_DNS | sed -e 's/\./<1>/' -e 's/^.*<1>//g')
+        sublen=$(echo $subdomain | wc -c | sed 's/ *//g')
+
+        echo ""
+        echo "ERROR: DNS entry for $OPS_MANAGER_DNS external to AWS seams not to be working."
+        echo "       Make sure you add a NS entry for your subdomain $subdomain on your DNS zone"
+        echo "       for $AWS_DNS_SUFFIX."
+        echo ""
+        printf "      %${sublen}s    NS     $DNS1\n" "$subdomain"
+        printf "      %${sublen}s           $DNS2\n" ""
+        printf "      %${sublen}s           $DNS3\n" ""
+        printf "      %${sublen}s           $DNS4\n" ""
+
+        echo ""
+
+        echo "OpsManager Name can not be resolved through DNS"
+        while [ 1 ]; do
+          echo -e "Do you want to configure the OpsManager with its ip-address $OPS_MANAGER_PUBLIC_IP instead <y/n>: \c"; read x
+          if [ "$x" == "y" -o "$x" == "n" ]; then break; fi
+        done
+
+        if [ $x == "y" ]; then
+          OPS_MANAGER=$OPS_MANAGER_PUBLIC_IP
+        else
+          echo "$0 - Programm Ended"; exit 1
+        fi
+      else
+        OPS_MANAGER=OPS_MANAGER_DNS
+      fi
+    fi
+
     if [ "${cloud}" == "AWS" -a "${AWS_CLI_ENABLED}" -eq 1 ]; then
       OPSMAN_CONFIG="opsmen_aws.yml"
       AWS_ACCESS_KEY=$(egrep "^access_key" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
@@ -388,8 +576,15 @@ checkEnvironment() {
       AWS_OPS_MANAGER_AMI=$(egrep "^ops_manager_ami" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
       AWS_AVAILABILITY_ZONES=$(egrep "^availability_zones" $TERRAFORM_VARS | \
         sed -e 's/^.*= //g' -e 's/"//g' -e 's/\[//g' -e 's/\]//g')
-      OPSMAN_VERSION=$(egrep ":${AWS_OPS_MANAGER_AMI}$" $PCFCONFIG_PATH/files/opsman-release-notes.txt | awk -F: '{ print $1}')
+      OPSMAN_VERSION=$(egrep ",${AWS_OPS_MANAGER_AMI}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | \
+        head -1 | awk -F',' '{ print $1}')
       OPSMAN_MINOR_VERSION=$(echo $OPSMAN_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+      DNS_SUFFIX=$AWS_DNS_SUFFIX
+      DNS_PREFIX=$AWS_DNS_PREFIX
+      AVAILABILITY_ZONES="$(egrep "^availability_zones" $TERRAFORM_VARS | sed -e 's/^.*\[//g' -e 's/"//g' -e 's/,//g' -e 's/\]//g')"
+      AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }') 
+      AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }') 
+      AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }') 
 
       echo "Verify $cloud configuration:"
       messagePrint " - AWS AccessKey" "$AWS_ACCESS_KEY"
@@ -461,24 +656,9 @@ checkEnvironment() {
 
       if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then 
         # --- CHECK IF ZONE RECORDS ARE AVAILABLE ---
-#gaga
         aws route53 list-hosted-zones-by-name --dns-name $AWS_DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
           ROUTE53_STAT="zone managed by route53"
-#          ROUTE53_ZONEID=$(aws route53 list-hosted-zones-by-name --dns-name $AWS_DNS_SUFFIX \
-#                           --hosted-zone-id $ROUTE53_TOKEN | jq -r '.HostedZoneId')
-#
-#          i=0 
-#          ROUTE53_ZONES=$(aws route53 list-hosted-zones-by-name --dns-name pcfsdu.com \
-#            --hosted-zone-id xxx | egrep  "/hostedzone/" | sed -e 's/"//g' -e 's/,//g' | awk '{ print $NF }')
-#
-#          for zone in $ROUTE53_ZONES; do
-#            aws route53 get-hosted-zone --id "${zone}" > /tmp/$$_route53_zone
-#            name=$(jq -r '.HostedZone.Name' /tmp/$$_route53_zone)
-#            if [ "${name}" = "${AWS_DNS_SUBDOMAIN}." ]; then 
-#              ROUTE53_DNS1=$($(jq -r '.DelegationSet.NameServers.[0]' /tmp/$$_route53_zone))
-#            fi
-#          done
         else
           ROUTE53_STAT="no zone found"
           ROUTE53_ZONEID=""
@@ -551,6 +731,18 @@ checkEnvironment() {
         messagePrint "   => Verify DNS lookup ($n)" "$dns_stat"
       done
 
+      localdns=$(nslookup localhost | grep Server:  | awk '{ print $2 }')
+      i=1; ret="failed"; dns_google_stat="failed"
+       while [ $i -lt 30 -a ${ret} == "failed" ]; do
+        sleep 10
+        nslookup $OPS_MANAGER_DNS > /dev/null 2>&1; ret=$?
+        if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+        messagePrint "   => Verify DNS lookup localhost ($localdns)" "$dns_google_stat"
+        let i=i+1
+      done
+
+#gaga-aws
+
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
@@ -605,6 +797,8 @@ checkEnvironment() {
       AZURE_DNS_SUBDOMAIN="${AZURE_DNS_PREFIX}.${AZURE_DNS_SUFFIX}"
       AZURE_REGION=$(egrep "^location" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
       AZURE_OPS_MANAGER_IMAGE=$(egrep "^ops_manager_image_uri" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
+      DNS_SUFFIX=$AZURE_DNS_SUFFIX
+      DNS_PREFIX=$AZURE_DNS_PREFIX
 
       echo "Verify $cloud configuration:"
       messagePrint " - Azure SubscriptionId" "$AZURE_SUBSCRIPTION"
@@ -656,6 +850,8 @@ checkEnvironment() {
 
       # --- DNS PRECHECK ---
       nslookup $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
+
+      #az vm show --resource-group az --name az-ops-manager-vm
 
       if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then
         # --- CHECK IF ZONE RECORDS ARE AVAILABLE ---
@@ -874,9 +1070,20 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   fi
 
   # --- CHECK OPSMANAGER VERSION ---
-  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami)" $TERRAFORM_VARS_ORIG | awk '{ print $NF }' | sed 's/"//g')
+  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS_ORIG | awk '{ print $NF }' | sed 's/"//g')
   region=$(egrep "^(region|location)" $TERRAFORM_VARS_ORIG | awk '{ print $NF }' | sed 's/"//g')
+  opsmanver=$(grep "${opsman}" $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }') 
   PCF_REGION=$region
+
+  # --- REGION FIX ---
+  if [ "${TF_DEPLOYMENT}" == "gcp" ]; then
+    cnt=$(echo "$region" | grep -c "europe")
+    if [ $cnt -gt 0 ]; then PCF_REGION="eu"; fi
+    cnt=$(echo "$region" | grep -c "asia")
+    if [ $cnt -gt 0 ]; then PCF_REGION="asia"; fi
+    cnt=$(echo "$region" | egrep -c "northamerica|us")
+    if [ $cnt -gt 0 ]; then PCF_REGION="us"; fi
+  fi
 
   # --- HACK FOR PIVOTAL NAMES THE AZURE LOCATIONS DIFFEREN ---
   if [ "${TF_DEPLOYMENT}" == "azure" ]; then
@@ -904,17 +1111,17 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   messagePrint " - Terraform Variable File (Source)" "$TERRAFORM_VARS_ORIG"
   messagePrint " - Terraform Variable File (Local)" "$TERRAFORM_VARS"
   messagePrint " - OpsManager Image" "$opsman"
-  messagePrint " - OpsManager Version" "$opsman"
+  messagePrint " - OpsManager Version" "$opsmanver"
   messagePrint " - PCF Cloud" "$TF_DEPLOYMENT"
   messagePrint " - PCF Region" "$region"
 
-  if [ "${TF_DEPLOYMENT}" == "azure" ]; then
-    cnt=$(echo "${opsman}" | grep -c "${region}")
-    if [ "${cnt}" -eq 0 ]; then
-      echo "WARNING: OpsManager Image will be downloaded from another location as your currect"
-      echo "         Installation region: ${region}"
-    fi
-  fi
+#  if [ "${TF_DEPLOYMENT}" == "azure" ]; then
+#    cnt=$(echo "${opsman}" | grep -c "${region}")
+#    if [ "${cnt}" -eq 0 ]; then
+#      echo "WARNING: OpsManager Image will be downloaded from another location as your currect"
+#      echo "         Installation region: ${region}"
+#    fi
+#  fi
 
   TF_HOME=$(eval echo "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}")
   idx=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
@@ -997,6 +1204,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
         --product-version "${PCF_VERSION}" > /dev/null 2>&1; ret=$?
   
     if [ $ret -ne 0 ]; then 
+      $OM --skip-ssl-validation download-product --output-directory=/tmp --pivnet-file-glob ${dat} \
+          --pivnet-product-slug "elastic-runtime" --pivnet-api-token "${PIVNET_TOKEN}" \
+          --product-version "${PCF_VERSION}" 
       echo "ERROR: download of file: $dat has been failed"; exit 1
     else
       tmpname=$(zipinfo /tmp/${dat} | grep pivotal-cf-terraforming | head -1 | awk '{ print $NF }' | awk -F'/' '{ print $1 }')
@@ -1039,11 +1249,17 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
     fi
   fi
 
+
   echo ""
-  echo "Terraform configuration completed. Change to the terraform directory:"
   if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
+    environmentCleanUp $TF_HOME/terraforming-pks
+
+    echo "Terraform configuration completed. Change to the terraform directory:"
     echo "=> $TF_HOME/terraforming-pks for PKS and proceed with pcfconfig-opsman" 
   else
+    environmentCleanUp $TF_HOME/terraforming-pas
+
+    echo "Terraform configuration completed. Change to the terraform directory:"
     echo "=> $TF_HOME/terraforming-pas for PAS and proceed with pcfconfig-opsman"
   fi
 
@@ -1098,28 +1314,31 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     exit 1
   fi
 
-  cld=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $2 }') 
-  ver=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $3 }') 
-  st1=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $4 }') 
-  tby=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $5 }') 
-  twn=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $6 }') 
-  des=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | awk -F: '{ print $7 }') 
+  cld=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $2 }') 
+  ver=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $3 }') 
+  st1=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $4 }') 
+  tby=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $5 }') 
+  twn=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $6 }') 
+  des=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $7 }') 
 
   # --- CHECK OPSMANAGER VERSION ---
-  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
   region=$(egrep "^(region|location)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
 
   if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
-    bld=$(echo "${opsman}" | sed -e 's/^.*ops-manager-//g' -e 's/\.vhd//g')
+    #bld=$(echo "${opsman}" | sed -e 's/^.*ops-manager-//g' -e 's/\.vhd//g')
+    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
-    echo "changeme"
+    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
-    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | awk -F',' '{ print $2 }')
-    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | awk -F',' '{ print $1 }')
+    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
   fi
 
   if [ "${cld}" != "${PCF_CLOUD_NAME}" ]; then
@@ -1146,8 +1365,31 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "# -------------------------- DEBUGGING END -------------------------------"
   fi
 
+
   VARFILE=./opsman_vars.yml
   echo "# GENERATED BY $0 - $(date)" > $VARFILE
+  if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
+    cid_inf=$($JQ -r '.modules[].outputs.infrastructure_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_inf=$(echo "$cid_inf" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+    cid_svc=$($JQ -r '.modules[].outputs.services_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+
+    echo "infrastructure_subnet_range: ${rng_inf}"       >> $VARFILE
+    echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
+    echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
+
+    #echo "project: $GCP_SVC_PRJID"                      >> $VARFILE
+    #echo "associated_service_account: ${GCP_SVC_NAME}"  >> $VARFILE
+    #echo "associated_service_account: gcppks PKS Service Account"  >> $VARFILE
+    echo "default_deployment_tag: gcppks"            >> $VARFILE
+    echo "region: ${GCP_REGION}"                        >> $VARFILE
+  fi
+
   if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
     echo "access_key_id: $AWS_ACCESS_KEY"               >> $VARFILE
     echo "secret_access_key: $AWS_SECRET_KEY"           >> $VARFILE
@@ -1174,6 +1416,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
+
   echo "-----------------------------------------------------------------------------------------------------------"
   $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
   echo "-----------------------------------------------------------------------------------------------------------"
@@ -1247,6 +1490,22 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 #     echo "Please run 'Apply Changes' in the OpsManager Web Interface or run pcfconfig-opsman"
 #     echo "without the -noapply option"; exit 0
 #  fi
+
+  if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
+    GCP_INSTANCE_OPSMAN=$(gcloud compute instances list --filter="name:${GCP_DNS_SUFFIX}-ops-manager" 2>/dev/null | \
+       grep -v "NAME" | awk '{ print $NF }')
+    GCP_INSTANCE_BOSH0=$(gcloud compute instances list --filter="labels:bosh-0" 2>/dev/null | \
+       grep -v "NAME" | awk '{ print $1 }')
+    GCP_BOSH0_INSTANCE_STATE=$(gcloud compute instances list --filter="labels:bosh-0" 2>/dev/null | \
+       grep -v "NAME" | awk '{ print $NF }')
+    GCP_BOSH0_INSTANCE_ZONE=$(gcloud compute instances list --filter="labels:bosh-0" 2>/dev/null | \
+       grep -v "NAME" | awk '{ print $2 }')
+
+    echo "Verify Bosh/0 Instance"
+    messagePrint " - BOSH Director (Bosh/0) InstanceID" "$GCP_INSTANCE_BOSH0"
+    messagePrint " - BOSH Director (Bosh/0) Zone" "$GCP_BOSH0_INSTANCE_ZONE"
+    messagePrint " - BOSH Director (Bosh/0) Instance State" "$GCP_BOSH0_INSTANCE_STATE"
+  fi
 
   if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
     AWS_INSTANCE_OPSMAN=$(aws ec2 --region $AWS_REGION  describe-instances \
@@ -1397,13 +1656,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
 
   if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
-    TLS_HOST_NAME=*.pks.${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}
-    TLS_HOST_NAME=api.pks.${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}
+    TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+    TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
     messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
     TLS_TEMP_CERT=/tmp/$$_cert
     OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
-    $OM $OM_LOGIN generate-certificate --domains api.pks.aws.pcfsdu.com > $TLS_TEMP_CERT
+    $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
+#gaga
 
     TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
     TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
@@ -1425,11 +1685,35 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     #FIX-alb LoadBalancer not working
     #echo "pks_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
     echo "pks_api_lb: "elb-api-lb"" >> $VARFILE
+    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
   fi
 
   if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
     echo "pks_api_lb: az-pks-lb" >> $VARFILE
     echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
+  fi
+
+  if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+    $JQ -r '"worker_node_service_account: " + .modules[].resources."google_service_account.pks_worker_node_service_account".primary.attributes.email' \
+    $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+    $JQ -r '"master_node_service_account: " + .modules[].resources."google_service_account.pks_master_node_service_account".primary.attributes.email' \
+    $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+
+    $JQ -r '"pks_api_hostname: " + .modules[].outputs.pks_api_endpoint.value' $TERRAFORM_TFSTATE | \
+        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+    $JQ -r '"network_name: " + .modules[].outputs.network_name.value' $TERRAFORM_TFSTATE | \
+        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+    $JQ -r '"pks_api_lb: " + .modules[].outputs.pks_lb_backend_name.value' $TERRAFORM_TFSTATE | \
+        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+    
+    #echo "pks_api_lb: tcp:pks-api" >> $VARFILE
+    echo "zone-1: $AVAILABILITY_ZONE1" >> $VARFILE
+    echo "zone-2: $AVAILABILITY_ZONE2" >> $VARFILE
+    echo "zone-3: $AVAILABILITY_ZONE3" >> $VARFILE
+    echo "master_service_account: $GCP_SVC_NAME" >> $VARFILE
+    echo "project: $GCP_SVC_PRJID" >> $VARFILE
   fi
 
   messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
@@ -1467,7 +1751,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
   echo "-----------------------------------------------------------------------------------------------------------"
 
-#gaga
   if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
     # --- CREATE ELB LOADBALANCER ---
     SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
@@ -1494,10 +1777,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         $JQ -r '.LoadBalancerDescriptions[0].DNSName')
     messagePrint " - DNS Name:" "$ELBDNS"
 
-echo "ROUTE53_TOKEN:$ROUTE53_TOKEN"
-echo "AWS_DNS_SUFFIX:$AWS_DNS_SUFFIX"
-echo "AWS_DNS_PREFIX:$AWS_DNS_PREFIX"
-
     #aws route53 list-hosted-zones-by-name --dns-name aws.pcfsdu.com
     #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL"
 
@@ -1508,7 +1787,6 @@ echo "AWS_DNS_PREFIX:$AWS_DNS_PREFIX"
         jq -r '.LoadBalancerDescriptions[0].DNSName')
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
         jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
-echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 
       #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL" --query "ResourceRecordSets[?Name == 'api.pks.aws.pcfsdu.com.']" | jq -r '.[].AliasTarget.HostedZoneId'
 
@@ -1538,7 +1816,6 @@ echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 }
 EOF
 
-echo "ZONE_ID:$ZONE_ID"
         echo "-----------------------------------------------------------------------------------------------------------"
         aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
         echo "-----------------------------------------------------------------------------------------------------------"
@@ -1549,7 +1826,7 @@ echo "ZONE_ID:$ZONE_ID"
 
     fi
   else
-    echo "INFO: Pleae set an alias in the DNS Record of your domain ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} in the record"
+    echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
     echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
   fi
 
@@ -1563,21 +1840,36 @@ echo "ZONE_ID:$ZONE_ID"
 
   echo "-----------------------------------------------------------------------------------------------------------"
   $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
-    --pivnet-file-glob ${scf} --pivnet-api-token  "fdb9b83f70714fdfbea611704c1adaeb-r" --product-version ${scv}
+    --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}
   echo "-----------------------------------------------------------------------------------------------------------"
   $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf} 
   echo "-----------------------------------------------------------------------------------------------------------"
 
 
   if [ $NO_APPLY -eq 0 ]; then
-    echo "Applying Changes to OpsManager"
-    $OM $OM_LOGIN apply-changes
+    echo ""
+    echo "Applying Changes"
+    if [ $DEBUG -gt 0 ]; then
+      echo "-----------------------------------------------------------------------------------------------------------"
+      $OM $OM_LOGIN apply-changes
+      echo "-----------------------------------------------------------------------------------------------------------"
+    else
+      $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+    fi
   fi
 
   echo ""
   echo "Configuration of the PKS Tile is completed."
   exit 0
 fi
+
+# CLEANUP
+	#gcloud compute networks subnets delete gcppks-infrastructure-subnet --region europe-west1
+        #gcloud compute networks list
+        #gcloud compute zones list
+        #gcloud dns managed-zones list
+        #gcloud dns record-sets list --zone=gcp-zone
+#projects/pa-sadubois/regions/europe-west1/subnetworks/gcppks-infrastructure-subnet' is already being used by 'projects/pa-sadubois/zones/europe-west1-c/instances/vm-f2759a64-33d0-4881-444d-96c4b77bf101', resourceInUseByAnotherResource
 
 
 exit

@@ -1,53 +1,60 @@
 ---
+properties-configuration:
+  iaas_configuration:
+    name: default
+    additional_cloud_properties:
+    project: ((project))
+    associated_service_account: ((associated_service_account))
+    default_deployment_tag: ((default_deployment_tag))
+
+#END-STAGE-1
 az-configuration:
-- name: europe-west1-c
-  iaas_configuration_guid: 8dc9c761c94d688233a0
-- name: europe-west1-d
-  iaas_configuration_guid: 8dc9c761c94d688233a0
-- name: europe-west1-b
-  iaas_configuration_guid: 8dc9c761c94d688233a0
+  - name: ((zone-1))
+  - name: ((zone-2))
+  - name: ((zone-3))
 network-assignment:
   network:
-    name: budapest-management-subnet
+    name: infrastructure
   other_availability_zones: []
   singleton_availability_zone:
-    name: europe-west1-c
+    name: ((zone-1))
+
 networks-configuration:
   icmp_checks_enabled: false
   networks:
-  - name: budapest-management-subnet
+  - name: infrastructure
     subnets:
-    - iaas_identifier: budapest-pcf-network/budapest-management-subnet/europe-west1
-      cidr: 10.0.0.0/26
-      dns: 8.8.8.8
-      gateway: 10.0.0.1
-      reserved_ip_ranges: 10.0.0.0-10.0.0.4
-      availability_zone_names:
-      - europe-west1-c
-      - europe-west1-d
-      - europe-west1-b
-  - name: budapest-pas-subnet
-    subnets:
-    - iaas_identifier: budapest-pcf-network/budapest-pas-subnet/europe-west1
-      cidr: 10.0.4.0/24
-      dns: 8.8.8.8
-      gateway: 10.0.4.1
-      reserved_ip_ranges: 10.0.4.0-10.0.4.4
-      availability_zone_names:
-      - europe-west1-c
-      - europe-west1-d
-      - europe-west1-b
-  - name: budapest-services-subnet
-    subnets:
-    - iaas_identifier: budapest-pcf-network/budapest-services-subnet/europe-west1
-      cidr: 10.0.8.0/24
+    - iaas_identifier: ((network_name))/((infrastructure_subnet_name))/((region))
+      cidr: ((infrastructure_subnet_cidr))
       dns: 169.254.169.254
-      gateway: 10.0.8.1
-      reserved_ip_ranges: 10.0.8.0-10.0.8.4
+      gateway: ((infrastructure_subnet_gateway))
+      reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
-      - europe-west1-c
-      - europe-west1-d
-      - europe-west1-b
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
+  - name: pks
+    subnets:
+    - iaas_identifier: ((network_name))/((pks_subnet_name))/((region))
+      cidr: ((pks_subnet_cidr))
+      dns: 169.254.169.254
+      gateway: ((pks_subnet_gateway))
+      reserved_ip_ranges: ((pks_subnet_range))
+      availability_zone_names:
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
+  - name: services
+    subnets:
+    - iaas_identifier: ((network_name))/((services_subnet_name))/((region))
+      cidr: ((services_subnet_cidr))
+      dns: 169.254.169.254
+      gateway: ((services_subnet_gateway))
+      reserved_ip_ranges: ((services_subnet_range))
+      availability_zone_names:
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
 properties-configuration:
   director_configuration:
     blobstore_type: local

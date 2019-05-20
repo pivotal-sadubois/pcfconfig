@@ -1,0 +1,377 @@
+#!/bin/bash
+# ############################################################################################
+# File: ........: pcfconfig
+# Language .....: bash
+# Author .......: Sacha Dubois, Pivotal
+# Description ..: PCF Installation and Configuration Utility
+# ############################################################################################
+
+export PATH=~/workspace/pcfconfig:$PATH
+
+PCFCONFIG_PATH=$(dirname $0)
+PCFCONFIG_BASE=$(basename $0)
+
+# --- SOURCE FUNCTIONS---
+. ${PCFCONFIG_PATH}/functions
+
+DEBUG=0
+PIVNET_TOKEN=""
+ROUTE53_TOKEN=""
+OPSMAN_USER=""
+OPSMAN_PASS=""
+OPSMAN_DKEY=""
+PKS_VERSION=""
+PAS_VERSION=""
+DNS_DOMAIN=""
+
+AZURE_SUBSCRIPTION_ID=""
+AZURE_TENANT_ID=""
+AZURE_CLIENT_ID==
+AZURE_CLIENT_SECRET=""
+AZURE_LOCATION=""
+AWS_ACCESS_KEY=""
+AWS_SECRET_KEY=""
+AWS_REGION=""
+GCP_SERVICE_ACCOUNT=""
+GCP_REGION=""
+GCP_PROJECT=""
+CLOUD_PROVIDER=""
+PRODUCT_TILE=""
+
+usage() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "             Configuration Settings"
+  echo "                       --admin-user <login>             - OpsManager Admin User"
+  echo "                       --admin-pass <password>          - OpsManager Admin Password"
+  echo "                       --decryption-key <phrase>        - OpsManager Decryption Prhase"
+  echo "                       --pivnet-token <token>           - Pivnet API Token"
+  echo "                       --workdir <directory>            - Working Directory (default: ~/workspace)"
+  echo "                       --env-name <name>                - Environment Name"
+  echo "                       --dns-domain <vars>              - DNS Domain Name"
+  echo "                       --aws-route53 <token>            - AWS Route53 Token"
+  echo ""
+  echo "             Product Settings>"
+  echo "                       --pks-version <version>          - PKS Version"
+  echo "                       --pks-user <version>             - PKS Admin User"
+  echo "                       --pks-pass <version>             - PKS Admin Password"
+  echo "                       --pas-version <version>          - PAS Version"
+  echo "                       --harbor-version <version>       - PAS Version"
+  echo ""
+  echo "             Google Cloud Platform (GCP)"
+  echo "                       --gcp-service-account <file>     - GCP Access Key"
+  echo "                       --gcp-region <val>               - GCP Region  (gcloud projects list)"
+  echo "                       --gcp-project-name <val>         - GCP Project (gcloud compute zones list)"
+  echo ""
+  echo "             Microsoft Azure Cloud (Azure)"
+  echo "                       --azure-subscription_id <val>    - Azure Subscription Id"
+  echo "                       --azure-tenant_id <val>          - Azure Tenant Id"
+  echo "                       --azure-client_id <val>          - Azure Client/Application Id"
+  echo "                       --azure-client_secret            - Azure Client Secret"
+  echo "                       --azure-location <val>           - Azure Location"
+  echo ""
+  echo "             Amazon Web Services (AWS)"
+  echo "                       --aws-access_key <val>           - AWS Access Key"
+  echo "                       --aws-secret_key <val>           - AWS Secret Key"
+  echo "                       --aws-region <val>               - AWS Region"
+  echo ""
+}
+
+if [ "${1}" == "" ]; then 
+  usage; exit 0
+fi
+
+while [ "$1" != "" ]; do
+  case $1 in
+    --debug) DEBUG=1;; 
+    --usage) USAGE=1;;
+    --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;       # GCP SERVICE_ACCOUNT
+    --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
+    --pks-version) PKS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
+    --pas-version) PAS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
+    --aws-route53) ROUTE53_TOKEN=$2; shift;;                     # TERRAFORM VARIABLE FILE
+    --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
+    --admin-user) OPSMAN_USER=$2; shift;;                        # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    --admin-pass) OPSMAN_PASS=$2; shift;;                        # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
+    --decryption-key) OPSMAN_DKEY=$2; shift;;                    # PCFCONFIG-OPSMAN
+    --azure-subscription_id) AZURE_SUBSCRIPTION_ID=$2; shift;;   # PCFCONFIG-OPSMAN
+    --azure-tenant_id) AZURE_TENANT_ID=$2; shift;;               # PCFCONFIG-OPSMAN
+    --azure-client_id) AZURE_CLIENT_ID=$2; shift;;               # PCFCONFIG-OPSMAN
+    --azure-client_secret) AZURE_CLIENT_SECRET=$2; shift;;       # PCFCONFIG-OPSMAN
+    --azure-location) AZURE_LOCATION=$2; shift;;                 # AWS LOCATION
+    --aws-access_key) AWS_ACCESS_KEY=$2; shift;;                 # AWS ACCESS KEY
+    --aws-secret_key) AWS_SECRET_KEY=$2; shift;;                 # AWS SECRET KEY
+    --gcp-region) GCP_REGION=$2; shift;;                         # PCFCONFIG-OPSMAN
+    --gcp-project-name) GCP_PROJECT=$2; shift;;                  # PCFCONFIG-OPSMAN
+    --azure-location) AWSSECRETKEY=$2; shift;;                   # PCFCONFIG-OPSMAN
+    --aws-region) AWS_REGION=$2; shift;;                         # PCFCONFIG-OPSMAN
+    --dns-domain) DNS_DOMAIN=$2; shift;;                         # PCFCONFIG-OPSMAN
+    --env-name) ENV_NAME=$2; shift;;                             # PCFCONFIG-OPSMAN
+  esac
+  shift
+done
+
+# --- CHECK CLOUD CREDENTIALS ---
+if [ "${AZURE_SUBSCRIPTION_ID}" == "" -a "${AWS_ACCESS_KEY}" == "" -a "${GCP_SERVICE_ACCOUNT}" == "" ]; then
+  echo "ERROR: Either Azure, AWS or GCP credentials needs to be provided"; exit 1
+fi
+
+# --- CHECK FOR AZURE ---
+if [ "${AZURE_SUBSCRIPTION_ID}" != "" ]; then
+  if [ "${CLOUD_PROVIDER}" != "" ]; then 
+    echo "ERROR: Please provide only the credentials of the Cloud Environment you want to deploy"; exit 1
+  else 
+    CLOUD_PROVIDER="azure"
+  fi
+fi
+
+# --- CHECK FOR AWS ---
+if [ "${AWS_ACCESS_KEY}" != "" ]; then
+  if [ "${CLOUD_PROVIDER}" != "" ]; then 
+    echo "ERROR: Please provide only the credentials of the Cloud Environment you want to deploy"; exit 1
+  else 
+    CLOUD_PROVIDER="aws"
+  fi
+fi
+
+# --- CHECK FOR GCP ---
+if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
+  if [ "${CLOUD_PROVIDER}" != "" ]; then 
+    echo "ERROR: Please provide only the credentials of the Cloud Environment you want to deploy"; exit 1
+  else 
+    CLOUD_PROVIDER="gcp"
+  fi
+fi
+
+# --- CHECK PRODUCT SELECTION ---
+if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
+  echo "ERROR: Either PKS or PAS Version needs to be provided"; exit 1
+fi
+
+if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
+  echo "ERROR: Either PKS or PAS Version needs to be provided"; exit 1
+fi
+
+# --- CHECK PRODUCT SELECTION ---
+if [ "${PKS_VERSION}" != "" ]; then 
+  if [ "${PAS_VERSION}" != "" ]; then
+    echo "ERROR: Only one product can be deployed at a time, please provide the PKS or PAS Version"; exit 1
+  else
+    PRODUCT_TILE=pks
+  fi
+else
+  PRODUCT_TILE=pas
+fi
+
+if [ $DEBUG -gt 0 ]; then 
+  echo "PIVNET_TOKEN:$PIVNET_TOKEN"
+  echo "ROUTE53_TOKEN:$ROUTE53_TOKEN"
+  echo "OPSMAN_USER:$OPSMAN_USER"
+  echo "OPSMAN_PASS:$OPSMAN_PASS"
+  echo "OPSMAN_DKEY:$OPSMAN_DKEY"
+  echo "PKS_VERSION:$PKS_VERSION"
+  echo "PAS_VERSION:$PAS_VERSION"
+  echo "AZURE_SUBSCRIPTION_ID:$AZURE_SUBSCRIPTION_ID"
+  echo "AZURE_TENANT_ID:$AZURE_TENANT_ID"
+  echo "AZURE_CLIENT_ID:$AZURE_CLIENT_ID"
+  echo "AZURE_CLIENT_SECRET:$AZURE_CLIENT_SECRET"
+  echo "AZURE_LOCATION:$AZURE_LOCATION"
+  echo "AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+  echo "AWS_SECRET_KEY:$AWS_SECRET_KEY"
+  echo "AWS_REGION:$AWS_REGION"
+  echo "DNS_DOMAIN:$DNS_DOMAIN"
+  echo "CLOUD_PROVIDER:$CLOUD_PROVIDER"
+  echo "PRODUCT_TILE:$PRODUCT_TILE"
+fi
+
+echo ""
+echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
+echo "by Sacha Dubois, Pivotal Inc,"
+echo "-----------------------------------------------------------------------------------------------------------"
+TF_DEPLOYMENT=$CLOUD_PROVIDER
+checkCloudCLI
+
+# --- VERIFY PRODUCT VERSION ---
+if [ "$PRODUCT_TILE" == "pks" ]; then 
+  PKS_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
+
+  cnt=$(echo $PKS_VERSION | awk -F'.' '{ print NF }')
+  if [ ${cnt} -ne 3 ]; then
+    echo "ERROR: PKS Version ($PKS_VERSION) should be in the format x.y.z"; exit 1
+  fi
+
+  if [ -f ${PKS_RELEASE_NOTES} ]; then 
+    cnt=$(egrep -c "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES)
+    if [ ${cnt} -gt 0 ]; then 
+      PKS_OPSMAN_VERS=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $4 }' | head -1)
+      PKS_OPSMAN_TYPE=$(echo "${PKS_OPSMAN_VERS}" | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}')
+      PKS_STEMCELL_TYPE=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $6 }' | head -1)
+      PKS_STEMCELL_VERS=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $7 }' | head -1)
+      PKS_DEFAULT_TEMPLATE=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $8 }')
+
+      if [ "${PKS_DEFAULT_TEMPLATE}" == "" -o "${PKS_DEFAULT_TEMPLATE}" == "-" ]; then 
+        echo "ERROR: There is currently no tested release for PKS $PKS_VERSION on $CLOUD_PROVIDER"; exit
+      fi
+    else
+      echo "ERROR: PKS Release $PKS_VERSION not defined in $PKS_RELEASE_NOTES"; exit 1
+    fi
+  else
+    echo "ERROR: can not find ${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt file"; exit 1
+  fi
+fi
+
+##############################################################################################
+######################################## MAIN PROGRAMM #######################################
+##############################################################################################
+
+# --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
+OPSMAN_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-release-notes.txt
+TF_VARFILE="/tmp/terraform_${CLOUD_PROVIDER}.tfvars"; rm -f $TF_VARFILE; touch $TF_VARFILE
+
+# --- REGION FIX ---
+if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
+  cnt=$(echo "$GCP_REGION" | grep -c "europe")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="eu"; fi
+  cnt=$(echo "$GCP_REGION" | grep -c "asia")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="asia"; fi
+  cnt=$(echo "$GCP_REGION" | egrep -c "northamerica|us")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="us"; fi
+fi
+
+if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
+  SEARCH_REG="$AWS_REGION"
+fi 
+
+if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
+  cnt=$(echo "$AZURE_LOCATION" | egrep -c "europe")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="west_europe"; fi
+  cnt=$(echo "$AZURE_LOCATION" | egrep -c "_us")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="east_us"; fi
+  cnt=$(echo "$AZURE_LOCATION" | egrep -c "_asia")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
+fi
+
+cnt=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},")
+if [ ${cnt} -gt 0 ]; then
+  # --- CHECK OPSMAN VERSION ---
+  cnt=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},${AWS_REGION},")
+  if [ ${cnt} -gt 0 ]; then
+    OPSMAN_IMAGE=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
+                 grep ",${CLOUD_PROVIDER},${AWS_REGION}," | head -1 | awk -F',' '{ print $5 }')
+  else
+    OPSMAN_IMAGE=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
+                 grep ",${CLOUD_PROVIDER}," | head -1 | awk -F',' '{ print $5 }')
+  fi
+else
+  echo "ERROR: Can not find configuration for OpsManager $PKS_OPSMAN_VERS in $OPSMAN_RELEASE_NOTES"; exit 1
+fi
+
+if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
+  list=$($GCLOUD compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+  GCP_AZ1=$(echo $list | awk '{ print $1 }')
+  GCP_AZ2=$(echo $list | awk '{ print $2 }')
+  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+
+  echo "env_name           = \"${ENV_NAME}\""                                  >> $TF_VARFILE
+  echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
+  echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
+  echo "opsman_image_url   = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
+  echo "dns_suffix         = \"${DNS_DOMAIN}\""                                >> $TF_VARFILE
+  echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+  echo "SSL_CERT"                                                              >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+  echo "SSL_KEY"                                                               >> $TF_VARFILE
+
+  if [ -f $GCP_SERVICE_ACCOUNT ]; then
+    PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
+    if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
+      echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
+      cat $GCP_SERVICE_ACCOUNT                               >> $TF_VARFILE
+      echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
+    else
+      echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
+      echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
+      exit 1
+    fi
+  else
+    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
+  fi
+
+fi
+
+if [ "${CLOUD_PROVIDER}" == "aws" ]; then
+  # --- GET AVAILABILITY ZONE FOR LOCATION ---
+  AWS_AZ1=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[0].ZoneName')
+  AWS_AZ2=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[1].ZoneName')
+  AWS_AZ3=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[2].ZoneName')
+
+  echo "env_name           = \"${ENV_NAME}\""                                  >> $TF_VARFILE
+  echo "access_key         = \"${AWS_ACCESS_KEY}\""                            >> $TF_VARFILE
+  echo "secret_key         = \"${AWS_SECRET_KEY}\""                            >> $TF_VARFILE
+  echo "region             = \"${AWS_REGION}\""                                >> $TF_VARFILE
+  echo "availability_zones = [\"${AWS_AZ1}\", \"${AWS_AZ2}\", \"${AWS_AZ3}\"]" >> $TF_VARFILE
+  echo "ops_manager_ami    = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
+  echo "dns_suffix         = \"${DNS_DOMAIN}\""                                >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+  echo "SSL_CERT"                                                              >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+  echo "SSL_KEY"                                                               >> $TF_VARFILE
+fi
+
+if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
+  echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
+  echo "tenant_id             = \"${AZURE_TENANT_ID}\""                        >> $TF_VARFILE
+  echo "client_id             = \"${AZURE_CLIENT_ID}\""                        >> $TF_VARFILE
+  echo "client_secret         = \"${AZURE_CLIENT_SECRET}\""                    >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "env_name              = \"${ENV_NAME}\""                               >> $TF_VARFILE
+  echo "env_short_name        = \"${PRODUCT_TILE}\""                           >> $TF_VARFILE
+  echo "location              = \"${AZURE_LOCATION}\""                         >> $TF_VARFILE
+  echo "ops_manager_image_uri = \"${OPSMAN_IMAGE}\""                           >> $TF_VARFILE
+  echo "dns_suffix            = \"${DNS_DOMAIN}\""                             >> $TF_VARFILE
+  echo "vm_admin_username     = \"opsman\""                                    >> $TF_VARFILE
+fi
+
+TERRAFORM_RELEASE_NOTES=${PCFCONFIG_PATH}/files/terraform-release-notes.txt
+PCF_VERSION=$(egrep ":${PKS_OPSMAN_TYPE}" $TERRAFORM_RELEASE_NOTES | awk -F: '{ print $2 }' | head -1) 
+
+${PCFCONFIG_PATH}/pcfconfig-terraform --pivnet-token $PIVNET_TOKEN \
+                                      --pks-tfvars $TF_VARFILE \
+                                      --deployment $CLOUD_PROVIDER \
+                                      --cf-version $PCF_VERSION \
+                                      --directory-prefix cf-terraform \
+                                      --install-mode delete
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
+fi
+
+cd ~/workspace/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
+terraform init > /tmp/$$_log 2>&1
+terraform plan -out=plan >> /tmp/$$_log 2>&1
+terraform apply -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+tail -20 /tmp/$$_log
+echo "-----------------------------------------------------------------------------------------------------------"
+if [ $ret -ne 0 ]; then
+  echo "ERROR: Problem with teraform apply"; exit 1
+fi
+
+pcfconfig-opsman -u $OPSMAN_USER -p $OPSMAN_PASS -dp $OPSMAN_DKEY --aws-route53 $ROUTE53_TOKEN
+if [ $? -ne 0 ]; then
+  echo "ERROR: Problem with pcfconfig-opsman occured"; exit 1
+fi
+
+pcfconfig-pks -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+--pks-version $PKS_VERSION --aws-route53 $ROUTE53_TOKEN
+if [ $? -ne 0 ]; then
+  echo "ERROR: Problem with pcfconfig-pks occured"; exit 1
+fi
+
+
+

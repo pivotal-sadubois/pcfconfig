@@ -1,0 +1,18 @@
+#https://docs.pivotal.io/runtimes/pks/1-3/release-notes.html
+#pks-ver:min-opsman:stemcell:version:azure:aws:gcp:
+# AZURE RELEASE
+1.4.0:azure:default:2.4.3:default:ubuntu-xenial-stemcell:250.25:opsman_azure.yml
+1.3.6:azure:default:2.4.3:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.5:azure:default:2.4.3:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.4:azure:default:2.4.3:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.3:azure:default:2.4.3:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.6:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.5:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.4:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+1.3.3:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure.yml
+# AWS RELEASE
+1.4.0:aws:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_aws.yml
+1.3.6:aws:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_aws.yml
+# GCP RELEASE
+1.4.0:gcp:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_gcp.yml
+1.3.6:gcp:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_gcp.yml

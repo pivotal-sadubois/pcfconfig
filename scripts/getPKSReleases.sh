@@ -9,10 +9,7 @@
 DIRNAME=$(dirname $0)
 RELEASE_FILE=${DIRNAME}/../files/pks-release-notes.txt
 PRODUCT_SLUG=pivotal-container-service
-LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
-     egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
 
-echo "# GENETATED BY getPKSReleases.sh (`date`)" > $RELEASE_FILE
 
 PIVNET=$(which pivnet)
 if [ "${PIVNET}" == "" ]; then
@@ -28,6 +25,16 @@ else
   fi
 fi
 
+pivnet products > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "ERROR: not logged in in PIVNET, please login with a new pivnet token"
+  echo "       => pivnet login --api-token \"XXXXXXXXXXXXXXXXXXXXXXXXXXX\""
+fi
+
+echo "# GENETATED BY getPKSReleases.sh (`date`)" > $RELEASE_FILE
+LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
+     egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
 for rel in $LIST; do
   #echo "Download Release: $rel"
   pivnet --format=json product-files --product-slug $PRODUCT_SLUG -r $rel | jq > /tmp/$0_$$
