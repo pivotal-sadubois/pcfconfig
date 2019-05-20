@@ -23,6 +23,7 @@ OPSMAN_DKEY=""
 PKS_VERSION=""
 PAS_VERSION=""
 DNS_DOMAIN=""
+TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
 AZURE_SUBSCRIPTION_ID=""
 AZURE_TENANT_ID=""
@@ -106,6 +107,7 @@ while [ "$1" != "" ]; do
     --aws-region) AWS_REGION=$2; shift;;                         # PCFCONFIG-OPSMAN
     --dns-domain) DNS_DOMAIN=$2; shift;;                         # PCFCONFIG-OPSMAN
     --env-name) ENV_NAME=$2; shift;;                             # PCFCONFIG-OPSMAN
+    --workdir) TF_WORKDIR=$2; shift;;                             # PCFCONFIG-OPSMAN
   esac
   shift
 done
@@ -338,39 +340,79 @@ fi
 
 TERRAFORM_RELEASE_NOTES=${PCFCONFIG_PATH}/files/terraform-release-notes.txt
 PCF_VERSION=$(egrep ":${PKS_OPSMAN_TYPE}" $TERRAFORM_RELEASE_NOTES | awk -F: '{ print $2 }' | head -1) 
+PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
+PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"
+PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
 
-${PCFCONFIG_PATH}/pcfconfig-terraform --pivnet-token $PIVNET_TOKEN \
-                                      --pks-tfvars $TF_VARFILE \
-                                      --deployment $CLOUD_PROVIDER \
-                                      --cf-version $PCF_VERSION \
-                                      --directory-prefix cf-terraform \
-                                      --install-mode delete
+# --- INITIALIZE STATE FILES ---
+touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE
 
-if [ $? -ne 0 ]; then
-  echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
+# --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then 
+  setPCFconfigState $PCFCONFIG_TF_STATE "started"
+  ${PCFCONFIG_PATH}/pcfconfig-terraform --pivnet-token $PIVNET_TOKEN \
+                                        --pks-tfvars $TF_VARFILE \
+                                        --deployment $CLOUD_PROVIDER \
+                                        --cf-version $PCF_VERSION \
+                                        --directory-prefix cf-terraform \
+                                        --install-mode delete
+  if [ $? -ne 0 ]; then 
+    setPCFconfigState $PCFCONFIG_TF_STATE "failed"
+    echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
+    exit 1
+  fi
+
+  cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+  echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
+  terraform init > /tmp/$$_log 2>&1
+  terraform plan -out=plan >> /tmp/$$_log 2>&1
+  terraform apply -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+  tail -20 /tmp/$$_log
+  echo "-----------------------------------------------------------------------------------------------------------"
+  if [ $ret -ne 0 ]; then
+    echo "ERROR: Problem with teraform apply"
+    setPCFconfigState $PCFCONFIG_TF_STATE "failed"
+    exit 1
+  else
+    setPCFconfigState $PCFCONFIG_TF_STATE "completed"
+  fi
+else
+  messagePrint "pcfconfig-terraform already done" "skipping"
 fi
 
-cd ~/workspace/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+# --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+if [ "$(getPCFconfigState $PCFCONFIG_OPSMAN_STATE)" != "completed" ]; then 
+  cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
-echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
-terraform init > /tmp/$$_log 2>&1
-terraform plan -out=plan >> /tmp/$$_log 2>&1
-terraform apply -auto-approve >> /tmp/$$_log 2>&1; ret=$?
-tail -20 /tmp/$$_log
-echo "-----------------------------------------------------------------------------------------------------------"
-if [ $ret -ne 0 ]; then
-  echo "ERROR: Problem with teraform apply"; exit 1
+  setPCFconfigState $PCFCONFIG_OPSMAN_STATE "started"
+  pcfconfig-opsman -u $OPSMAN_USER -p $OPSMAN_PASS -dp $OPSMAN_DKEY --aws-route53 $ROUTE53_TOKEN
+  if [ $? -ne 0 ]; then
+    setPCFconfigState $PCFCONFIG_OPSMAN_STATE "failed"
+    echo "ERROR: Problem with pcfconfig-opsman occured"; exit 1
+  else
+    setPCFconfigState $PCFCONFIG_OPSMAN_STATE "completed"
+  fi
+else
+  messagePrint "pcfconfig-opsman already done" "skipping"
 fi
 
-pcfconfig-opsman -u $OPSMAN_USER -p $OPSMAN_PASS -dp $OPSMAN_DKEY --aws-route53 $ROUTE53_TOKEN
-if [ $? -ne 0 ]; then
-  echo "ERROR: Problem with pcfconfig-opsman occured"; exit 1
-fi
+# --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+if [ "$(getPCFconfigState $PCFCONFIG_PKS_STATE)" != "completed" ]; then 
+  cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
-pcfconfig-pks -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
---pks-version $PKS_VERSION --aws-route53 $ROUTE53_TOKEN
-if [ $? -ne 0 ]; then
-  echo "ERROR: Problem with pcfconfig-pks occured"; exit 1
+  setPCFconfigState $PCFCONFIG_PKS_STATE "started"
+  pcfconfig-pks -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+    --pks-version $PKS_VERSION --aws-route53 $ROUTE53_TOKEN
+
+  if [ $? -ne 0 ]; then
+    setPCFconfigState $PCFCONFIG_PKS_STATE "failed"
+    echo "ERROR: Problem with pcfconfig-pks occured"; exit 1
+  else
+    setPCFconfigState $PCFCONFIG_PKS_STATE "completed"
+  fi
+else
+  messagePrint "pcfconfig-pks already done" "skipping"
 fi
 
 

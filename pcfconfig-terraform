@@ -1613,10 +1613,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "      download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"              >> $TMP_SCRIPT
       echo "      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"               >> $TMP_SCRIPT
       echo "      --product-version \"${PKS_VERSION}\""                                                     >> $TMP_SCRIPT
+      echo "  if [ \$? -ne 0 ]; then exit 1; fi"                                                            >> $TMP_SCRIPT
       echo "fi"                                                                                             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
-      #echo "echo \"Uploading PKS Product Image ($PKS_VERSION)\""                                            >> $TMP_SCRIPT
-      #echo "echo \" - PKS Product Image .................................: /tmp/$PIVNET_GLOB\""             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
       echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"    >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                  >> $TMP_SCRIPT

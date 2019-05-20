@@ -310,6 +310,17 @@ Looking for PKS Product Image (1.4.0)
  - PIVNET Product GLOB ...................................: pivotal-container-service-1.4.0-build.31.pivotal
  - Verify download and caching options ...................: ops-manager
 -----------------------------------------------------------------------------------------------------------
-attempting to download the file product-files/pivotal-container-service/pivotal-container-service-1.4.0-build.31.pivotal from source pivnet
+attempting to download the file product-files/stemcells-ubuntu-xenial/light-bosh-stemcell-250.38-google-kvm-ubuntu-xenial-go_agent.tgz from source pivnet
+calculating sha sum for /tmp/light-bosh-stemcell-250.38-google-kvm-ubuntu-xenial-go_agent.tgz
+/tmp/light-bosh-stemcell-250.38-google-kvm-ubuntu-xenial-go_agent.tgz already exists, skip downloading
+Writing a list of downloaded artifact to download-file.json
+-----------------------------------------------------------------------------------------------------------
+processing stemcell
+beginning stemcell upload to Ops Manager
+ 20.30 KiB / 20.30 KiB [============================================] 100.00% 0s
+
+finished upload
+-----------------------------------------------------------------------------------------------------------
+Applying Changes
 ```
 
