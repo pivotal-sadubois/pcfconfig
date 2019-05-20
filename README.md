@@ -63,8 +63,8 @@ USAGE: pcfconfig [options]
 To perform a fully unattended installation. You need to create a script containing the required settings for 
 your environment. Currently only PKS is supported for AWS and GCP Cloud. 
 
-...
 
+```
 $ vi install-gcp-pks-1.4.sh
 #!/bin/bash
 export PATH=~/workspace/pcfconfig:$PATH
@@ -86,10 +86,10 @@ pcfconfig    --pivnet-token $PIVNET_TOKEN --pks-version "${PKS_VERISON}" \
              --env-name "${ENV_NAME}" --aws-route53 "${AWS_ROUTE53_TOKEN}" \
              --azure-client_secret "${CLIENT_SECRET}" --gcp-region "${LOCATION}" \
              --gcp-service-account $SERVICE_ACCOUNT --env-name "${ENV_NAME}"
-...
+```
 
 When you start the script you would see an output similiar to the following: 
-...
+```
 PCF Configuration Utility (pcfconfig)
 by Sacha Dubois, Pivotal Inc,
 -----------------------------------------------------------------------------------------------------------
@@ -264,5 +264,52 @@ applying vmextensions configuration for the following:
 finished configuring vm extensions
 -----------------------------------------------------------------------------------------------------------
 Applying Changes to OpsManager
-...
+
+Configuration of the OpsManager completed. You may proceede with pcfconfig-pks / pcfconfig-pas
+
+PCF Configuration Utility (pcfconfig-pks)
+by Sacha Dubois, Pivotal Inc,
+-----------------------------------------------------------------------------------------------------------
+checking for the om utility ..............................: Installed - 0.56.0
+checking for the jq utility ..............................: Installed - jq-1.6
+checking for the terraform  ..............................: Installed - v0.11.13
+checking for the openssl utility .........................: Installed - LibreSSL 2.6.5
+checking terraform product selection .....................: Pivotal Container Service (PKS)
+checking terraform cloud provider ........................: Google Gloud Platform (GCP)
+checking for GCP CLI utility .............................: installed - 246.0.0
+Verify GCP configuration:
+ - GCP ServiceAccount ....................................: pcfconfig@pa-sadubois.iam.gserviceaccount.com
+ - GCP ServiceAccount ProjectID ..........................: pa-sadubois
+ - GCP Region ............................................: europe-west4
+ - GCP Availability Zone .................................: europe-west4-a, europe-west4-b, europe-west4-c
+ - DNS Domain Suffix .....................................: pcfsdu.com
+ - DNS Domain Prefix .....................................: gcppks
+ - DNS SubDomain .........................................: gcppks.pcfsdu.com
+ - OPS Manager AMI .......................................: ops-manager-us/pcf-gcp-2.5.4-build.189.tar.gz - 2.5.4
+Verify GCP Ops Manager instance
+ - Ops Manager VM Name ...................................: gcppks-ops-manager
+ - Ops Manager Instance ..................................: RUNNING
+ - DNS Servers ...........................................: ns-cloud-d1.googledomains.com. ns-cloud-d2.googledomains.com. ns-cloud-d3.googledomains.com. ns-cloud-d4.googledomains.com.
+ - Ops Manager DNS Name ..................................: pcf.gcppks.pcfsdu.com
+Validating OPS Manager DNS records (pcf.gcppks.pcfsdu.com)
+   => Verify DNS lookup Google (8.8.8.8) .................: successful
+   => Verify DNS lookup (ns-cloud-d1.googledomains.com.) .: successful
+   => Verify DNS lookup (ns-cloud-d2.googledomains.com.) .: successful
+   => Verify DNS lookup (ns-cloud-d3.googledomains.com.) .: successful
+   => Verify DNS lookup (ns-cloud-d4.googledomains.com.) .: successful
+   => Verify DNS lookup localhost (10.70.0.10) ...........: successful
+ - Ops Manager Public IP .................................: 34.90.220.211
+ - Ops Manager Private IP ................................: 10.0.0.2
+Verify Bosh/0 Instance
+ - BOSH Director (Bosh/0) InstanceID .....................: vm-db6f5cf4-6262-414f-4da8-1c8a0d2021e7
+ - BOSH Director (Bosh/0) Zone ...........................: europe-west4-a
+ - BOSH Director (Bosh/0) Instance State .................: RUNNING
+Looking for PKS Product Image (1.4.0)
+ - PKS Product Version requested .........................: 1.4.0
+ - PIVNET Product SLAG ...................................: pivotal-container-service
+ - PIVNET Product GLOB ...................................: pivotal-container-service-1.4.0-build.31.pivotal
+ - Verify download and caching options ...................: ops-manager
+-----------------------------------------------------------------------------------------------------------
+attempting to download the file product-files/pivotal-container-service/pivotal-container-service-1.4.0-build.31.pivotal from source pivnet
+```
 
