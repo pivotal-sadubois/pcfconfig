@@ -1,0 +1,11 @@
+# GENETATED BY getPASSmallRuntime.sh (Sun May 26 00:00:26 CEST 2019)
+378195:2.5.4:Small Footprint PAS:srt-2.5.4-build.5.pivotal
+375579:2.5.3:Small Footprint PAS:srt-2.5.3-build.17.pivotal
+358342:2.5.2:Small Footprint PAS:srt-2.5.2-build.7.pivotal
+348844:2.5.1:Small Footprint PAS:srt-2.5.1-build.5.pivotal
+336546:2.5.0:Small Footprint PAS:srt-2.5.0-build.297.pivotal
+379108:2.4.8:Small Footprint PAS:srt-2.4.8-build.9.pivotal
+375604:2.4.7:Small Footprint PAS:srt-2.4.7-build.16.pivotal
+357903:2.4.6:Small Footprint PAS:srt-2.4.6-build.5.pivotal
+349704:2.4.5:Small Footprint PAS:srt-2.4.5-build.25.pivotal
+317727:2.4.4:Small Footprint PAS:srt-2.4.4-build.2.pivotal

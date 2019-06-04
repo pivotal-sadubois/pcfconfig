@@ -20,8 +20,10 @@ ROUTE53_TOKEN=""
 OPSMAN_USER=""
 OPSMAN_PASS=""
 OPSMAN_DKEY=""
+PCF_VERSION=""
 PKS_VERSION=""
 PAS_VERSION=""
+PAS_SRT=""
 DNS_DOMAIN=""
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
@@ -56,6 +58,7 @@ usage() {
   echo "                       --pks-user <version>             - PKS Admin User"
   echo "                       --pks-pass <version>             - PKS Admin Password"
   echo "                       --pas-version <version>          - PAS Version"
+  echo "                       --pas-srt                        - PAS Small Footprint"
   echo "                       --harbor-version <version>       - PAS Version"
   echo ""
   echo "             Google Cloud Platform (GCP)"
@@ -85,6 +88,7 @@ while [ "$1" != "" ]; do
   case $1 in
     --debug) DEBUG=1;; 
     --usage) USAGE=1;;
+    --pas-srt ) PAS_SRT="--pas-srt";;
     --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;       # GCP SERVICE_ACCOUNT
     --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
     --pks-version) PKS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
@@ -159,10 +163,17 @@ if [ "${PKS_VERSION}" != "" ]; then
     echo "ERROR: Only one product can be deployed at a time, please provide the PKS or PAS Version"; exit 1
   else
     PRODUCT_TILE=pks
+    PRODUCT_TILE_NAME=PKS
+    PCF_VERSION=$PKS_VERSION
+    TF_TILE_OPTION="--pks-tfvars"
   fi
 else
   PRODUCT_TILE=pas
+  PRODUCT_TILE_NAME=PAS
+  PCF_VERSION=$PAS_VERSION
+  TF_TILE_OPTION="--pas-tfvars"
 fi
+
 
 if [ $DEBUG -gt 0 ]; then 
   echo "PIVNET_TOKEN:$PIVNET_TOKEN"
@@ -194,31 +205,33 @@ checkCloudCLI
 
 # --- VERIFY PRODUCT VERSION ---
 if [ "$PRODUCT_TILE" == "pks" ]; then 
-  PKS_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
+  PCF_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
+else
+  PCF_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pas-release-notes.txt
+fi
 
-  cnt=$(echo $PKS_VERSION | awk -F'.' '{ print NF }')
-  if [ ${cnt} -ne 3 ]; then
-    echo "ERROR: PKS Version ($PKS_VERSION) should be in the format x.y.z"; exit 1
-  fi
+cnt=$(echo $PCF_VERSION | awk -F'.' '{ print NF }')
+if [ ${cnt} -ne 3 ]; then
+  echo "ERROR: $PRODUCT_TILE_NAME Version ($PCF_VERSION) should be in the format x.y.z"; exit 1
+fi
 
-  if [ -f ${PKS_RELEASE_NOTES} ]; then 
-    cnt=$(egrep -c "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES)
-    if [ ${cnt} -gt 0 ]; then 
-      PKS_OPSMAN_VERS=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $4 }' | head -1)
-      PKS_OPSMAN_TYPE=$(echo "${PKS_OPSMAN_VERS}" | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}')
-      PKS_STEMCELL_TYPE=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $6 }' | head -1)
-      PKS_STEMCELL_VERS=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $7 }' | head -1)
-      PKS_DEFAULT_TEMPLATE=$(egrep "^${PKS_VERSION}:${CLOUD_PROVIDER}:default" $PKS_RELEASE_NOTES | awk -F: '{ print $8 }')
+if [ -f ${PCF_RELEASE_NOTES} ]; then 
+  cnt=$(egrep -c "^${PCF_VERSION}:${CLOUD_PROVIDER}:default" $PCF_RELEASE_NOTES)
+  if [ ${cnt} -gt 0 ]; then 
+    PCF_OPSMAN_VERS=$(egrep "^${PCF_VERSION}:${CLOUD_PROVIDER}:default" $PCF_RELEASE_NOTES | awk -F: '{ print $4 }' | head -1)
+    PCF_OPSMAN_TYPE=$(echo "${PCF_OPSMAN_VERS}" | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}')
+    PCF_STEMCELL_TYPE=$(egrep "^${PCF_VERSION}:${CLOUD_PROVIDER}:default" $PCF_RELEASE_NOTES | awk -F: '{ print $6 }' | head -1)
+    PCF_STEMCELL_VERS=$(egrep "^${PCF_VERSION}:${CLOUD_PROVIDER}:default" $PCF_RELEASE_NOTES | awk -F: '{ print $7 }' | head -1)
+    PCF_DEFAULT_TEMPLATE=$(egrep "^${PCF_VERSION}:${CLOUD_PROVIDER}:default" $PCF_RELEASE_NOTES | awk -F: '{ print $8 }')
 
-      if [ "${PKS_DEFAULT_TEMPLATE}" == "" -o "${PKS_DEFAULT_TEMPLATE}" == "-" ]; then 
-        echo "ERROR: There is currently no tested release for PKS $PKS_VERSION on $CLOUD_PROVIDER"; exit
-      fi
-    else
-      echo "ERROR: PKS Release $PKS_VERSION not defined in $PKS_RELEASE_NOTES"; exit 1
+    if [ "${PCF_DEFAULT_TEMPLATE}" == "" -o "${PCF_DEFAULT_TEMPLATE}" == "-" ]; then 
+      echo "ERROR: There is currently no tested release for $PRODUCT_TILE_NAME $PCF_VERSION on $CLOUD_PROVIDER"; exit
     fi
   else
-    echo "ERROR: can not find ${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt file"; exit 1
+    echo "ERROR: $PRODUCT_TILE_NAME Release $PCF_VERSION not defined in $PCF_RELEASE_NOTES"; exit 1
   fi
+else
+  echo "ERROR: can not find ${PCF_RELEASE_NOTES} file"; exit 1
 fi
 
 ##############################################################################################
@@ -252,19 +265,19 @@ if [ "${CLOUD_PROVIDER}" == "azure" ]; then
   if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
 fi
 
-cnt=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},")
+cnt=$(egrep "^(${PCF_OPSMAN_VERS}|${PCF_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},")
 if [ ${cnt} -gt 0 ]; then
   # --- CHECK OPSMAN VERSION ---
-  cnt=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},${AWS_REGION},")
+  cnt=$(egrep "^(${PCF_OPSMAN_VERS}|${PCF_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | grep -c ",${CLOUD_PROVIDER},${AWS_REGION},")
   if [ ${cnt} -gt 0 ]; then
-    OPSMAN_IMAGE=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
+    OPSMAN_IMAGE=$(egrep "^(${PCF_OPSMAN_VERS}|${PCF_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
                  grep ",${CLOUD_PROVIDER},${AWS_REGION}," | head -1 | awk -F',' '{ print $5 }')
   else
-    OPSMAN_IMAGE=$(egrep "^(${PKS_OPSMAN_VERS}|${PKS_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
+    OPSMAN_IMAGE=$(egrep "^(${PCF_OPSMAN_VERS}|${PCF_OPSMAN_VERS}.[0-9]*)," $OPSMAN_RELEASE_NOTES | \
                  grep ",${CLOUD_PROVIDER}," | head -1 | awk -F',' '{ print $5 }')
   fi
 else
-  echo "ERROR: Can not find configuration for OpsManager $PKS_OPSMAN_VERS in $OPSMAN_RELEASE_NOTES"; exit 1
+  echo "ERROR: Can not find configuration for OpsManager $PCF_OPSMAN_VERS in $OPSMAN_RELEASE_NOTES"; exit 1
 fi
 
 if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
@@ -339,21 +352,28 @@ if [ "${CLOUD_PROVIDER}" == "azure" ]; then
 fi
 
 TERRAFORM_RELEASE_NOTES=${PCFCONFIG_PATH}/files/terraform-release-notes.txt
-PCF_VERSION=$(egrep ":${PKS_OPSMAN_TYPE}" $TERRAFORM_RELEASE_NOTES | awk -F: '{ print $2 }' | head -1) 
+PCF_LATEST=$(egrep ":${PCF_OPSMAN_TYPE}" $TERRAFORM_RELEASE_NOTES | awk -F: '{ print $2 }' | head -1) 
+#PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
+#PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"
+#PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
+#PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
+
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
 PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"
 PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
+PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
 
 # --- INITIALIZE STATE FILES ---
-touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE
+#touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
 
 # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
 if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then 
   setPCFconfigState $PCFCONFIG_TF_STATE "started"
+
   ${PCFCONFIG_PATH}/pcfconfig-terraform --pivnet-token $PIVNET_TOKEN \
-                                        --pks-tfvars $TF_VARFILE \
+                                        $TF_TILE_OPTION $TF_VARFILE \
                                         --deployment $CLOUD_PROVIDER \
-                                        --cf-version $PCF_VERSION \
+                                        --cf-version $PCF_LATEST \
                                         --directory-prefix cf-terraform \
                                         --install-mode delete
   if [ $? -ne 0 ]; then 
@@ -363,6 +383,8 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   fi
 
   cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+  #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/modules/ops_manager
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/$$_log 2>&1
@@ -397,23 +419,50 @@ else
   messagePrint "pcfconfig-opsman already done" "skipping"
 fi
 
-# --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
-if [ "$(getPCFconfigState $PCFCONFIG_PKS_STATE)" != "completed" ]; then 
-  cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
-
-  setPCFconfigState $PCFCONFIG_PKS_STATE "started"
-  pcfconfig-pks -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
-    --pks-version $PKS_VERSION --aws-route53 $ROUTE53_TOKEN
-
-  if [ $? -ne 0 ]; then
-    setPCFconfigState $PCFCONFIG_PKS_STATE "failed"
-    echo "ERROR: Problem with pcfconfig-pks occured"; exit 1
+if [ "${PRODUCT_TILE}" == "pks" ]; then
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+  if [ "$(getPCFconfigState $PCFCONFIG_PKS_STATE)" != "completed" ]; then 
+    cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+  
+    setPCFconfigState $PCFCONFIG_PKS_STATE "started"
+    pcfconfig-pks -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+      --pks-version $PKS_VERSION --aws-route53 $ROUTE53_TOKEN
+  
+    if [ $? -ne 0 ]; then
+      setPCFconfigState $PCFCONFIG_PKS_STATE "failed"
+      echo "ERROR: Problem with pcfconfig-pks occured"; exit 1
+    else
+      setPCFconfigState $PCFCONFIG_PKS_STATE "completed"
+    fi
   else
-    setPCFconfigState $PCFCONFIG_PKS_STATE "completed"
+    messagePrint "pcfconfig-pks already done" "skipping"
   fi
 else
-  messagePrint "pcfconfig-pks already done" "skipping"
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+  if [ "$(getPCFconfigState $PCFCONFIG_PAS_STATE)" != "completed" ]; then
+    cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+    setPCFconfigState $PCFCONFIG_PAS_STATE "started"
+    pcfconfig-pas -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+      --pas-version $PAS_VERSION --aws-route53 $ROUTE53_TOKEN $PAS_SRT
+
+    if [ $? -ne 0 ]; then
+      setPCFconfigState $PCFCONFIG_PAS_STATE "failed"
+      echo "ERROR: Problem with pcfconfig-pas occured"; exit 1
+    else
+      setPCFconfigState $PCFCONFIG_PAS_STATE "completed"
+    fi
+  else
+    messagePrint "pcfconfig-pas already done" "skipping"
+  fi
 fi
+
+
+
+
+
+
+
 
 
 

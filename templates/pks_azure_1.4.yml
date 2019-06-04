@@ -142,7 +142,7 @@ resource-config:
       size_mb: automatic
     instance_type:
       id: automatic
-    internet_connected: true
+    internet_connected: false
     elb_names:
     - az-pks-lb
 errand-config:

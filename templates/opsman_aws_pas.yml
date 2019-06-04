@@ -1,0 +1,144 @@
+---
+properties-configuration:
+  iaas_configuration:
+    access_key_id: ((access_key_id))
+    secret_access_key: ((secret_access_key))
+    security_group: ((vms_security_group_id))
+    key_pair_name: ((ops_manager_ssh_public_key_name))
+    ssh_private_key: ((ops_manager_ssh_private_key))
+    region: ((aws-region))
+    encrypted: ((encrypted))
+
+#END-STAGE-1
+az-configuration:
+  - name: ((infrastructure_subnet_1_azname))
+  - name: ((infrastructure_subnet_2_azname))
+  - name: ((infrastructure_subnet_3_azname))
+
+properties-configuration:
+  singleton_availability_zone: ((infrastructure_subnet_1_azname))
+  director_configuration:
+    ntp_servers_string: ((ntp_servers_string))
+    resurrector_enabled: true
+    allow_legacy_agents: true
+    max_threads: 5
+    director_hostname: 
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    skip_director_drain: true
+    reimbursable: true
+    director_worker_count: 5
+    post_deploy_enabled: true
+    retry_bosh_deploys: false
+    keep_unreachable_vms: false
+    # LOCAL BLOBSTORE
+    blobstore_type: local
+    local_blobstore_options:
+      tls_enabled: true
+    # S3-BLOBSTORE
+    #blobstore_type: s3
+    #s3_blobstore_options: 
+    #  endpoint: ((s3_blobstore_endpoint))
+    #  bucket_name: ((s3_blobstore_bucket_name))
+    #  access_key: ((s3_blobstore_secret_key))
+    #  secret_key: ((s3_blobstore_secret_key))
+    #  signature_version: ((s3_blobstore_signature_version))
+    #  region: ((s3_blobstore_region))
+    #hm_pager_duty_options:
+    #  enabled: 
+    #  service_key: 
+    #  http_proxy: 
+    #hm_emailer_options:
+    #  enabled: 
+    #  port: 
+    #  domain: 
+    #  host: 
+    #  from: 
+    #  tls: 
+    #  smtp_user: 
+    #  smtp_password: 
+    #  recipients: 
+
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: infrastructure
+    subnets:
+    - iaas_identifier: ((infrastructure_subnet_1_ids))
+      cidr: ((infrastructure_subnet_1_cidrs))
+      reserved_ip_ranges: ((infrastructure_subnet_1_range))
+      dns: ((infrastructure_subnet_1_dns))
+      gateway: ((infrastructure_subnet_1_gateway))
+      availability_zone_names: 
+      - ((infrastructure_subnet_1_azname))
+    - iaas_identifier: ((infrastructure_subnet_2_ids))
+      cidr: ((infrastructure_subnet_2_cidrs))
+      reserved_ip_ranges: ((infrastructure_subnet_2_range))
+      dns: ((infrastructure_subnet_2_dns))
+      gateway: ((infrastructure_subnet_2_gateway))
+      availability_zone_names: 
+      - ((infrastructure_subnet_2_azname))
+    - iaas_identifier: ((infrastructure_subnet_3_ids))
+      cidr: ((infrastructure_subnet_3_cidrs))
+      reserved_ip_ranges: ((infrastructure_subnet_3_range))
+      dns: ((infrastructure_subnet_3_dns))
+      gateway: ((infrastructure_subnet_3_gateway))
+      availability_zone_names: 
+      - ((infrastructure_subnet_3_azname))
+
+  - name: pas-subnet
+    subnets:
+    - iaas_identifier: ((pas_subnet_1_ids))
+      cidr: ((pas_subnet_1_cidrs))
+      reserved_ip_ranges: ((pas_subnet_1_range))
+      dns: ((pas_subnet_1_dns))
+      gateway: ((pas_subnet_1_gateway))
+      availability_zone_names: 
+      - ((pas_subnet_1_azname))
+    - iaas_identifier: ((pas_subnet_2_ids))
+      cidr: ((pas_subnet_2_cidrs))
+      reserved_ip_ranges: ((pas_subnet_2_range))
+      dns: ((pas_subnet_2_dns))
+      gateway: ((pas_subnet_2_gateway))
+      availability_zone_names: 
+      - ((pas_subnet_3_azname))    
+    - iaas_identifier: ((pas_subnet_3_ids))
+      cidr: ((pas_subnet_3_cidrs))
+      reserved_ip_ranges: ((pas_subnet_3_range))
+      dns: ((pas_subnet_3_dns))
+      gateway: ((pas_subnet_3_gateway))
+      availability_zone_names: 
+      - ((pas_subnet_3_azname))
+
+  - name: services-subnet
+    service_network: true
+    subnets:
+    - iaas_identifier: ((services_subnet_1_ids))
+      cidr: ((services_subnet_1_cidrs))
+      reserved_ip_ranges: ((services_subnet_1_range))
+      dns: ((services_subnet_1_dns))
+      gateway: ((services_subnet_1_gateway))
+      availability_zone_names: 
+      - ((services_subnet_1_azname))
+    - iaas_identifier: ((services_subnet_2_ids))
+      cidr: ((services_subnet_2_cidrs))
+      reserved_ip_ranges: ((services_subnet_2_range))
+      dns: ((services_subnet_2_dns))
+      gateway: ((services_subnet_2_gateway))
+      availability_zone_names: 
+      - ((services_subnet_3_azname))    
+    - iaas_identifier: ((services_subnet_3_ids))
+      cidr: ((services_subnet_3_cidrs))
+      reserved_ip_ranges: ((services_subnet_3_range))
+      dns: ((services_subnet_3_dns))
+      gateway: ((services_subnet_3_gateway))
+      availability_zone_names: 
+      - ((services_subnet_3_azname))
+
+network-assignment:
+  network: 
+    name: infrastructure
+  singleton_availability_zone: 
+    name: eu-central-1c
+

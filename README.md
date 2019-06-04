@@ -322,5 +322,6 @@ beginning stemcell upload to Ops Manager
 finished upload
 -----------------------------------------------------------------------------------------------------------
 Applying Changes
+Configuration of the PKS Tile is completed.
 ```
 

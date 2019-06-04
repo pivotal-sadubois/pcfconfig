@@ -32,6 +32,7 @@ OPSMAN_TEMPLATE=""
 # --- PAS/PKS VARIABLES ---
 OPS_UPLOAD=1
 PAS_VERSION=""
+PAS_SRT=0
 PKS_VERSION=""
 TLS_CERTIFICATE=""
 TLS_PRIVATE_KEY=""
@@ -65,6 +66,7 @@ while [ "$1" != "" ]; do
     --pivnet-token) PIVNET_TOKEN=$2; shift;;        # PCFCONFIG-PKS
     --pks-version) PKS_VERSION=$2; shift;;          # PCFCONFIG-PKS
     --pas-version) PAS_VERSION=$2; shift;;          # PCFCONFIG-PAS
+    --pas-srt) PAS_SRT=1;;                          # PCFCONFIG-PAS
     --tls_cert) TLS_CERTIFICATE=$2; shift;;         # PCFCONFIG-PAS
     --tls_private_key) TLS_PRIVATE_KEY=$2; shift;;  # PCFCONFIG-PAS
     --pks-tfvars) TF_PKS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
@@ -141,6 +143,7 @@ usage_pas() {
   echo "                       -p <admin>                 - OpsManager Amdin Password"
   echo "                       --pivnet-token <token>     - Pivnet API Token"
   echo "                       --pas-version <version>    - PAS Version"
+  echo "                       --pas-srt                  - PAS Small Footprint"
   echo "                       --aws-route53 <token>      - AWS Route53 Token"
   echo "                       --debug                    - Debugging"
   echo "                       --noapply                  - Do not Apply changes on OpsManager"
@@ -527,8 +530,6 @@ checkEnvironment() {
         let i=i+1
       done
 
-#gaga-gcp
-
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
@@ -741,8 +742,6 @@ checkEnvironment() {
         let i=i+1
       done
 
-#gaga-aws
-
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
@@ -947,7 +946,8 @@ checkEnvironment() {
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
-      if [ $dns_google_stat == "failed" ]; then
+echo "dns_google_stat:$dns_google_stat"
+      if [ "$dns_google_stat" == "failed" ]; then
         messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_stat"
         subdomain=$(echo $OPS_MANAGER_DNS | sed -e 's/\./<1>/' -e 's/^.*<1>//g')
         sublen=$(echo $subdomain | wc -c | sed 's/ *//g')
@@ -1164,7 +1164,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   if [ -d "${TF_HOME}" ]; then 
     if [ "${TF_DIR_MODE}" != "" ]; then 
       if [ "${TF_DIR_MODE}" == "delete" ]; then 
-        messagePrint " - Deleting existing instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}-${PCF_VERSION}"
+        messagePrint " - Deleting existing instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}"
         rm -rf "${TF_HOME}"
       fi
 
@@ -1173,7 +1173,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
         if [ -d ${TF_HOME}-${PRESERVE} ]; then 
           PRESERVE=$(date "+%Y%m%d%M%S")
         fi
-        messagePrint " - Preserving old Instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}-${PCF_VERSION}-${PRESERVE}"
+        messagePrint " - Preserving old Instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}-${PRESERVE}"
         mv "${TF_HOME}" "${TF_HOME}-${PRESERVE}"
       fi
 
@@ -1243,7 +1243,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
       TERRAFORM_VARS=terraform.tfvars
       TERRAFORM_VARS_ORIG=$TF_PKS_VARFILE
       cp $TF_PAS_VARFILE $TF_HOME/terraforming-pas/$TERRAFORM_VARS
-      messagePrint " - Placing Terraform Variable file" "$TF_HOME/terraforming-pas/TERRAFORM_VARS"
+      messagePrint " - Placing Terraform Variable file" "$TF_HOME/terraforming-pas/$TERRAFORM_VARS"
     else
       echo "ERROR: Terraform variable file $TF_PAS_VARFILE not found"; exit 1
     fi
@@ -1268,8 +1268,17 @@ fi
 
 # --- CHECK FOR TEMPLATE ---
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
-  checkEnvironment
 
+  if [ -f ./main.tf ]; then 
+    cnt=$(egrep -c "module \"pas\"" ./main.tf) 
+    if [ $cnt -eq 1 ]; then 
+      OPSMAN_MODE=pas
+    else
+      OPSMAN_MODE=pks
+    fi
+  fi
+
+  checkEnvironment
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
     dn=$(dirname $OPSMAN_TEMPLATE)
     bn=$(basename $OPSMAN_TEMPLATE)
@@ -1296,8 +1305,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     fi
   else
     # --- DEFAULT TEMPLATE ---
-    OPSMAN_TEMPLATE="opsman_${PCF_CLOUD_NAME}.yml"
-    OPSMAN_CONFIG=$PCFCONFIG_PATH/templates/opsman_${PCF_CLOUD_NAME}.yml
+    OPSMAN_TEMPLATE="opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml"
+    OPSMAN_CONFIG=$PCFCONFIG_PATH/templates/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml
     bn=$(basename $OPSMAN_TEMPLATE)
   fi
 
@@ -1356,7 +1365,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   messagePrint " - Template Description:  " "$des"
 
   # --- COPY JQ FILES FROM THE TEMPLATES ---
-  JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_${PCF_CLOUD_NAME}.jq
+  JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.jq
 
   # --- GET AWS INSTANCE ---
   if [ $DEBUG -gt 0 ]; then
@@ -1419,6 +1428,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 
   echo "-----------------------------------------------------------------------------------------------------------"
   $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
+  if [ $ret -ne 0 ]; then 
+    echo "ERROR: OpsManager configure-authentication failled, please try again"; exit 1
+  fi
   echo "-----------------------------------------------------------------------------------------------------------"
 
   # --- CONFIGURE AUTHENTICFICATION ---
@@ -1441,16 +1453,25 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     if [ $DEBUG -gt 0 ]; then
       echo "-----------------------------------------------------------------------------------------------------------"
       $OM $OM_LOGIN apply-changes
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: OpsManager apply changes failed, please try again"; exit 1
+      fi
       echo "-----------------------------------------------------------------------------------------------------------"
     else
       $OM $OM_LOGIN apply-changes > /dev/null 2>&1
     fi
   else
-
     echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-1 ------------------------------------------"
     $OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
+    if [ $? -ne 0 ]; then 
+      echo "ERROR: OpsManager configure-direcotr failed, please try again"; exit 1
+    fi
+
     echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-2 ------------------------------------------"
     $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
+    if [ $? -ne 0 ]; then 
+      echo "ERROR: OpsManager configure-direcotr failed, please try again"; exit 1
+    fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
     # --- CLEANUP ---
@@ -1567,28 +1588,72 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     fi
   fi
 
-  echo "Looking for PKS Product Image ($PKS_VERSION)"
-  PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ print $NF }')
-  if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
-  PIVNET_SLUG=pivotal-container-service
+  if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+    echo "Looking for PKS Product Image ($PKS_VERSION)"
+    PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ print $NF }')
+    if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
+    PIVNET_SLUG=pivotal-container-service
 
-  # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
-  messagePrint " - PKS Product Version requested" "$PKS_VERSION"
-  messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
-  messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
+    # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
+    messagePrint " - PKS Product Version requested" "$PKS_VERSION"
+    messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
+    messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
-  cnt=$(egrep -c ":${PKS_VERSION}:" $PCFCONFIG_PATH/files/pks-release-notes.txt)
-  if [ "${cnt}" -eq 0 ]; then 
-    echo ""
-    echo "ERROR: The PKS Version (${PKS_VERSION}) is not known. Please choose one from the list:"
-    cat $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ printf("         PKS-%-7s\n",$2)}' | sed 1d
-    exit 1
+    cnt=$(egrep -c ":${PKS_VERSION}:" $PCFCONFIG_PATH/files/pks-release-notes.txt)
+    if [ "${cnt}" -eq 0 ]; then 
+      echo ""
+      echo "ERROR: The PKS Version (${PKS_VERSION}) is not known. Please choose one from the list:"
+      cat $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ printf("         PKS-%-7s\n",$2)}' | sed 1d
+      exit 1
+    fi
+
+    PXS_VERSION=$PKS_VERSION
+  else
+    #gaga
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      max_instances=$(aws ec2 describe-account-attributes --region $AWS_REGION --attribute-names max-instances | \
+          jq -r '.AccountAttributes[0].AttributeValues[0].AttributeValue')
+      echo "max_instances:$max_instances"
+
+    fi
+
+    echo "Looking for PAS Product Image ($PAS_VERSION)"
+    if [ "$PAS_SRT" -eq 1 ]; then
+      PAS_RELEASE_NOTES="$PCFCONFIG_PATH/files/pas-srt-release-notes.txt"
+      PIVNET_SLUG=elastic-runtime
+      PIVNET_SLUG_SHORT=srt
+      PIVNET_SLUG_NAME="Small Footprint PAS"
+    else
+      PAS_RELEASE_NOTES="$PCFCONFIG_PATH/files/pas-release-notes.txt"
+      PIVNET_SLUG=elastic-runtime
+      PIVNET_SLUG_SHORT=cf
+      PIVNET_SLUG_NAME="Pivotal Application Service"
+    fi
+
+    PIVNET_GLOB=$(egrep ":${PAS_VERSION}" $PAS_RELEASE_NOTES | awk -F: '{ print $NF }')
+    if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
+
+    # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
+    messagePrint " - PAS Product Version requested" "$PAS_VERSION"
+    messagePrint " - PIVNET Product Name" "$PIVNET_SLUG_NAME"
+    messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
+    messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
+
+    cnt=$(egrep -c ":${PAS_VERSION}:" $PAS_RELEASE_NOTES)
+    if [ "${cnt}" -eq 0 ]; then 
+      echo ""
+      echo "ERROR: The PAS Version (${PAS_VERSION}) is not known. Please choose one from the list:"
+      cat $PAS_RELEASE_NOTES | awk -F: '{ printf("         PAS-%-7s\n",$2)}' | sed 1d
+      exit 1
+    fi
+
+    PXS_VERSION=$PAS_VERSION
   fi
 
   # --- VERIFY IF PKS PRODUCT TILE HAS BEEN UPDLOADED ALREADY --- 
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
-  OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "pivotal-container-service" | awk '{ print $4 }')
-  
+  OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "$PIVNET_SLUG" | awk '{ print $4 }')
+
   if [ "$OPSMAN_AVAILABLE_PRODUCT" == "" ]; then 
     if [ $OPS_UPLOAD -eq 0 ]; then 
       if [ -f "/tmp/$PIVNET_GLOB" ]; then
@@ -1597,29 +1662,28 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         messagePrint " - Verify download and caching options" "download-from-pivnet"
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
-          --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PKS_VERSION}"
+          --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PXS_VERSION}"
         echo "-----------------------------------------------------------------------------------------------------------"
       fi
 
-      echo "Uploading PKS Product Image ($PKS_VERSION)"
-      messagePrint " - PKS Product Image" "/tmp/$PIVNET_GLOB"
+      echo "Uploading Product Image ($PXS_VERSION)"
+      messagePrint " - Product Image" "/tmp/$PIVNET_GLOB"
       ver=$($OM $OM_LOGIN available-products | grep "$PIVNET_SLUG" | awk '{ print $4 }')
-      if [ "${ver}" != "" ]; then PKS_UPLOAD="${ver}"; else PKS_UPLOAD="not uploaded"; fi
-      messagePrint " - PKS Product Uplodad Status" "$PKS_UPLOAD"
+      if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
+      messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
       messagePrint " - Verify download and caching options" "ops-manager"
-      echo "if [ ! -f $PIVNET_GLOB ]; then"                                                                 >> $TMP_SCRIPT
+      echo "if [ ! -f /tmp/$PIVNET_GLOB ]; then"                                                                 >> $TMP_SCRIPT
       echo "  om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"  >> $TMP_SCRIPT
       echo "      download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"              >> $TMP_SCRIPT
       echo "      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"               >> $TMP_SCRIPT
-      echo "      --product-version \"${PKS_VERSION}\""                                                     >> $TMP_SCRIPT
+      echo "      --product-version \"${PXS_VERSION}\""                                                     >> $TMP_SCRIPT
       echo "  if [ \$? -ne 0 ]; then exit 1; fi"                                                            >> $TMP_SCRIPT
       echo "fi"                                                                                             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
       echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"    >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                  >> $TMP_SCRIPT
-      echo "rm -f /tmp/$PIVNET_GLOB"                                                                        >> $TMP_SCRIPT
 
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
@@ -1641,163 +1705,371 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     fi
   fi
 
-  VARFILE=./pks_vars.yml; rm -rf $VARFILE; touch $VARFILE
+  if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas" ]; then
+    VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
+    if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
 
-  # --- COPY JQ FILES FROM THE TEMPLATES ---
-  PKS_MINOR_VERSION=$(echo $PKS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
-  if [ -f $PCFCONFIG_PATH/templates/pks${PKS_VERSION}.jq ]; then
-    PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_VERSION}.yml
-  else
-    PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
-  fi
-
-  echo "Configuring PKS Tile (${PKS_VERSION})"
-  messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
-
-  if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
-    TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
-    TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
-    messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
-
-    TLS_TEMP_CERT=/tmp/$$_cert
-    OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
-    $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
-#gaga
-
-    TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
-    TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
-  fi
-
-  echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
-  echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
-
-  $JQ -r '"pks_api_hostname: " + .modules[].outputs.domain.value' \
-  $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
-  $JQ -r '"pks_master_iam_instance_profile_name: " + .modules[].outputs.pks_master_iam_instance_profile_name.value' \
-  $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
-  $JQ -r '"pks_worker_iam_instance_profile_name: " + .modules[].outputs.pks_worker_iam_instance_profile_name.value' \
-  $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
- 
-  if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
-    tg1=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
-    tg2=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
-    #FIX-alb LoadBalancer not working
-    #echo "pks_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
-    echo "pks_api_lb: "elb-api-lb"" >> $VARFILE
-    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
-    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
-    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-  fi
-
-  if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
-    echo "pks_api_lb: az-pks-lb" >> $VARFILE
-    echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
-  fi
-
-  if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
-    $JQ -r '"worker_node_service_account: " + .modules[].resources."google_service_account.pks_worker_node_service_account".primary.attributes.email' \
-    $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
-    $JQ -r '"master_node_service_account: " + .modules[].resources."google_service_account.pks_master_node_service_account".primary.attributes.email' \
-    $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
-
-    $JQ -r '"pks_api_hostname: " + .modules[].outputs.pks_api_endpoint.value' $TERRAFORM_TFSTATE | \
-        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
-    $JQ -r '"network_name: " + .modules[].outputs.network_name.value' $TERRAFORM_TFSTATE | \
-        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
-    $JQ -r '"pks_api_lb: " + .modules[].outputs.pks_lb_backend_name.value' $TERRAFORM_TFSTATE | \
-        sed '/: $/d' | grep -v null | sort -u >> $VARFILE
-    
-    #echo "pks_api_lb: tcp:pks-api" >> $VARFILE
-    echo "zone-1: $AVAILABILITY_ZONE1" >> $VARFILE
-    echo "zone-2: $AVAILABILITY_ZONE2" >> $VARFILE
-    echo "zone-3: $AVAILABILITY_ZONE3" >> $VARFILE
-    echo "master_service_account: $GCP_SVC_NAME" >> $VARFILE
-    echo "project: $GCP_SVC_PRJID" >> $VARFILE
-  fi
-
-  messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
-  messagePrint " - PKS Variable File" "$VARFILE"
-
-  OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
-  if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
-    wait_loop 10 "Waiting product to be ready to stage"
-
-    # --- CHEKING DNS ---
-    i=1; ret=1
-     while [ $i -lt 10 -a ${ret} -ne 0 ]; do
-      sleep 10
-      OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "pivotal-container-service" | awk '{ print $4 }')
-      if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then ret=0; fi
-      let i=i+1
-    done
-
-    if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then
-      echo "Staging PKS Product Tile"
-      messagePrint " - Staging PKS Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
-      echo "-----------------------------------------------------------------------------------------------------------"
-      $OM $OM_LOGIN stage-product --product-name pivotal-container-service --product-version ${OPSMAN_AVAILABLE_PRODUCT}
+    # --- COPY JQ FILES FROM THE TEMPLATES ---
+    PAS_MINOR_VERSION=$(echo $PAS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+    if [ -f $PCFCONFIG_PATH/templates/${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_VERSION}.yml ]; then
+      PAS_TEMPLATE=${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_VERSION}.yml
     else
-      echo "ERROR: No product to stage found"; exit 0
+      PAS_TEMPLATE=${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_MINOR_VERSION}.yml
     fi
-  fi
+#gaga
+
+    echo "Configuring PAS Tile (${PAS_VERSION})"
+    messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
+
+    if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
+      TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
+      TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
+      TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX},*.apps.${DNS_PREFIX}.${DNS_SUFFIX},*.${DNS_SUFFIX},${DNS_SUFFIX},${DNS_PREFIX}.${DNS_SUFFIX}"
+
+      messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
+
+      TLS_TEMP_CERT=/tmp/$$_cert
+      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+      $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
+
+      TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
+      TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+    fi
+
+    echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+    echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg2=$($JQ -r '.modules[].outputs.web_target_groups.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg3=$($JQ -r '.modules[].outputs.ssh_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      #PAS FIX-alb LoadBalancer not working
+      echo "pas_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
+      #echo "pas_api_lb: "tcp:elb-api-lb"" >> $VARFILE
+      echo "web_target_group_80: alb:${tg1}" >> $VARFILE
+      echo "web_target_group_443: alb:${tg2}" >> $VARFILE
+      echo "ssh_target_group: alb:${tg3}" >> $VARFILE
+      echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+      echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+      echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+    fi
+
+    messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
+    messagePrint " - PAS Variable File" "$VARFILE"
+
+    OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "cf" | awk '{ print $4 }')
+    if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
+      wait_loop 10 "Waiting product to be ready to stage"
+
+      # --- CHEKING DNS ---
+      i=1; ret=1
+       while [ $i -lt 10 -a ${ret} -ne 0 ]; do
+        sleep 10
+        OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "cf" | awk '{ print $4 }')
+        if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then ret=0; fi
+        let i=i+1
+      done
+
+      if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then
+        echo "Staging PAS Product Tile"
+        messagePrint " - Staging PAS Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
+        echo "-----------------------------------------------------------------------------------------------------------"
+        #$OM $OM_LOGIN stage-product --product-name elastic-runtime --product-version ${OPSMAN_AVAILABLE_PRODUCT}
+        $OM $OM_LOGIN stage-product --product-name cf --product-version ${OPSMAN_AVAILABLE_PRODUCT}
+      else
+        echo "ERROR: No product to stage found"; exit 0
+      fi
+    fi
+
+    OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "cf" | awk '{ print $4 }')
+    if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
+      echo "ERROR: Product cf could not be staged"; exit 0
+    fi
+
+#echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+#gaga PAS
+    if [ "${PCF_CLOUD_NAME}" == "aws1" ]; then
+      # --- CREATE ELB LOADBALANCER ---
+      SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
+         grep -v null | sed '/: $/d' | sort -u)
+
+      echo "Creating ELB Loadbalancer (elb-api-lb)"
+      messagePrint " - Subnet-1:" "$SUB1"
+      messagePrint " - Subnet-2:" "$SUB2"
+      messagePrint " - Subnet-3:" "$SUB3"
+      messagePrint " - Security Group:" "$SECG"
+
+      aws elb --region eu-central-1 describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
+      if [ ${ret} -gt 0 ]; then
+        aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" \
+        --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
+                    "Protocol=TCP,LoadBalancerPort=9021,InstanceProtocol=TCP,InstancePort=9021" \
+        --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG
+      fi
+
+      ELBDNS=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          $JQ -r '.LoadBalancerDescriptions[0].DNSName')
+      messagePrint " - DNS Name:" "$ELBDNS"
+
+      #aws route53 list-hosted-zones-by-name --dns-name aws.pcfsdu.com
+      #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL"
+
+      # --- ROUTE53 TOKEN SPECIDIED ---
+      if [ "${ROUTE53_TOKEN}" != "" ]; then 
+        DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          jq -r '.LoadBalancerDescriptions[0].DNSName')
+        DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+        #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL" --query "ResourceRecordSets[?Name == 'api.pks.aws.pcfsdu.com.']" | jq -r '.[].AliasTarget.HostedZoneId'
+
+
+        ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+        ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+        #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
+        #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
+        messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
+        messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
+
+        if [ "${ZONE_ID}" != "" ]; then 
+          list=$(echo $TLS_HOST_NAME | sed 's/,/ /g')
+
+          for n in $list; do
+    cat << EOF | sed -e "s/FQHN/$n/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+{
+            "Comment": "CREATE/DELETE/UPSERT a record ",
+            "Changes": [{
+            "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                                    "Name": "FQHN.",
+                                    "Type": "A",
+                                    "AliasTarget": {
+                                                    "HostedZoneId": "ZZID",
+                                                    "DNSName": "dualstack.AAAA.",
+                                                    "EvaluateTargetHealth": true
+                                                }
+}}]
+}
+EOF
+
+            echo "-----------------------------------------------------------------------------------------------------------"
+            aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
+            echo "-----------------------------------------------------------------------------------------------------------"
+
+            cp /tmp/$$_zone_record /tmp/aws_zone_record
+            rm -f /tmp/$$_zone_record
+          done
+        fi
+
+      fi
+    else
+      echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
+      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
+    fi
+
+    echo "Uploading Stemcell for PAS"
+    scv=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
+        tail -1 | awk -F: '{ print $2 }')
+    scf=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
+        tail -1 | awk -F: '{ print $5 }')
+    messagePrint " - Staging Stemcel Version:" "$scv"
+    messagePrint " - Staging Stemcel:" "$scf"
+
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
+      --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf}
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+
+    if [ $NO_APPLY -eq 0 ]; then
+      echo ""
+      echo "Applying Changes"
+      if [ $DEBUG -gt 0 ]; then
+        echo "-----------------------------------------------------------------------------------------------------------"
+        $OM $OM_LOGIN apply-changes
+        echo "-----------------------------------------------------------------------------------------------------------"
+      else
+        $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+      fi
+    fi
+
+    echo ""
+    echo "Configuration of the PAS Tile is completed."
+    exit 0
+  else
+    VARFILE=./pks_vars.yml; rm -rf $VARFILE; touch $VARFILE
+
+    # --- COPY JQ FILES FROM THE TEMPLATES ---
+    PKS_MINOR_VERSION=$(echo $PKS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+    if [ -f $PCFCONFIG_PATH/templates/pks${PKS_VERSION}.jq ]; then
+      PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_VERSION}.yml
+    else
+      PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
+    fi
+
+    echo "Configuring PKS Tile (${PKS_VERSION})"
+    messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
+
+    if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
+      TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+      TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+      messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
+
+      TLS_TEMP_CERT=/tmp/$$_cert
+      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+      $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
+
+      TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
+      TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+    fi
+
+    echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+    echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+
+    $JQ -r '"pks_api_hostname: " + .modules[].outputs.domain.value' \
+    $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
+    $JQ -r '"pks_master_iam_instance_profile_name: " + .modules[].outputs.pks_master_iam_instance_profile_name.value' \
+    $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
+    $JQ -r '"pks_worker_iam_instance_profile_name: " + .modules[].outputs.pks_worker_iam_instance_profile_name.value' \
+    $TERRAFORM_TFSTATE | sed '/: $/d' | sort -u >> $VARFILE
+ 
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      tg1=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg2=$($JQ -r '.modules[].outputs.pks_api_target_groups.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      #PKS FIX-alb LoadBalancer not working
+      #echo "pks_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
+      echo "pks_api_lb: "elb-api-lb"" >> $VARFILE
+      echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+      echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+      echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+      echo "pks_api_lb: az-pks-lb" >> $VARFILE
+      echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+      $JQ -r '"worker_node_service_account: " + .modules[].resources."google_service_account.pks_worker_node_service_account".primary.attributes.email' \
+      $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+      $JQ -r '"master_node_service_account: " + .modules[].resources."google_service_account.pks_master_node_service_account".primary.attributes.email' \
+      $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+
+      $JQ -r '"pks_api_hostname: " + .modules[].outputs.pks_api_endpoint.value' $TERRAFORM_TFSTATE | \
+          sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+      $JQ -r '"network_name: " + .modules[].outputs.network_name.value' $TERRAFORM_TFSTATE | \
+          sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+      $JQ -r '"pks_api_lb: " + .modules[].outputs.pks_lb_backend_name.value' $TERRAFORM_TFSTATE | \
+          sed '/: $/d' | grep -v null | sort -u >> $VARFILE
+    
+      #echo "pks_api_lb: tcp:pks-api" >> $VARFILE
+      echo "zone-1: $AVAILABILITY_ZONE1" >> $VARFILE
+      echo "zone-2: $AVAILABILITY_ZONE2" >> $VARFILE
+      echo "zone-3: $AVAILABILITY_ZONE3" >> $VARFILE
+      echo "master_service_account: $GCP_SVC_NAME" >> $VARFILE
+      echo "project: $GCP_SVC_PRJID" >> $VARFILE
+    fi
+
+    messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
+    messagePrint " - PKS Variable File" "$VARFILE"
+
+    OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
+    if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
+      wait_loop 10 "Waiting product to be ready to stage"
+
+      # --- CHEKING DNS ---
+      i=1; ret=1
+       while [ $i -lt 10 -a ${ret} -ne 0 ]; do
+        sleep 10
+        OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "pivotal-container-service" | awk '{ print $4 }')
+        if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then ret=0; fi
+        let i=i+1
+      done
+
+      if [ "${OPSMAN_AVAILABLE_PRODUCT}" != "" ]; then
+        echo "Staging PKS Product Tile"
+        messagePrint " - Staging PKS Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
+        echo "-----------------------------------------------------------------------------------------------------------"
+        $OM $OM_LOGIN stage-product --product-name pivotal-container-service --product-version ${OPSMAN_AVAILABLE_PRODUCT}
+        if [ $? -ne 0 ]; then 
+          echo "ERROR: Staging of pivotal-container-service has been failed, please retry"; exit 1
+        fi
+      else
+        echo "ERROR: No product to stage found"; exit 0
+      fi
+    fi
   
-  OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
-  if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
-    echo "ERROR: Product pivotal-container-service could not be staged"; exit 0
-  fi
-
-  echo "-----------------------------------------------------------------------------------------------------------"
-  $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
-  echo "-----------------------------------------------------------------------------------------------------------"
-
-  if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
-    # --- CREATE ELB LOADBALANCER ---
-    SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-    SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-    SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-    SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
-       grep -v null | sed '/: $/d' | sort -u)
-
-    echo "Creating ELB Loadbalancer (elb-api-lb)"
-    messagePrint " - Subnet-1:" "$SUB1"
-    messagePrint " - Subnet-2:" "$SUB2"
-    messagePrint " - Subnet-3:" "$SUB3"
-    messagePrint " - Security Group:" "$SECG"
-
-    aws elb --region eu-central-1 describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
-    if [ ${ret} -gt 0 ]; then
-      aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" \
-      --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
-                  "Protocol=TCP,LoadBalancerPort=9021,InstanceProtocol=TCP,InstancePort=9021" \
-      --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG
+    OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
+    if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
+      echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
     fi
-
-    ELBDNS=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
-        $JQ -r '.LoadBalancerDescriptions[0].DNSName')
-    messagePrint " - DNS Name:" "$ELBDNS"
-
-    #aws route53 list-hosted-zones-by-name --dns-name aws.pcfsdu.com
-    #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL"
 
 #gaga
-    # --- ROUTE53 TOKEN SPECIDIED ---
-    if [ "${ROUTE53_TOKEN}" != "" ]; then 
-      DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
-        jq -r '.LoadBalancerDescriptions[0].DNSName')
-      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
-        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
+    if [ $? -ne 0 ]; then 
+      echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
+    fi
+    echo "-----------------------------------------------------------------------------------------------------------"
 
-      #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL" --query "ResourceRecordSets[?Name == 'api.pks.aws.pcfsdu.com.']" | jq -r '.[].AliasTarget.HostedZoneId'
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      # --- CREATE ELB LOADBALANCER ---
+      SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
+         grep -v null | sed '/: $/d' | sort -u)
+
+      echo "Creating ELB Loadbalancer (elb-api-lb)"
+      messagePrint " - Subnet-1:" "$SUB1"
+      messagePrint " - Subnet-2:" "$SUB2"
+      messagePrint " - Subnet-3:" "$SUB3"
+      messagePrint " - Security Group:" "$SECG"
+
+      aws elb --region eu-central-1 describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
+      if [ ${ret} -gt 0 ]; then
+        aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" \
+        --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
+                    "Protocol=TCP,LoadBalancerPort=9021,InstanceProtocol=TCP,InstancePort=9021" \
+        --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG
+      fi
+
+      ELBDNS=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          $JQ -r '.LoadBalancerDescriptions[0].DNSName')
+      messagePrint " - DNS Name:" "$ELBDNS"
+
+      #aws route53 list-hosted-zones-by-name --dns-name aws.pcfsdu.com
+      #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL"
+
+      # --- ROUTE53 TOKEN SPECIDIED ---
+      if [ "${ROUTE53_TOKEN}" != "" ]; then 
+        DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          jq -r '.LoadBalancerDescriptions[0].DNSName')
+        DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+        #aws route53 list-resource-record-sets --hosted-zone-id "/hostedzone/Z13IRYE50CCEFL" --query "ResourceRecordSets[?Name == 'api.pks.aws.pcfsdu.com.']" | jq -r '.[].AliasTarget.HostedZoneId'
 
 
-      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
-      ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-      #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
-      #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
-      messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
-      messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
+        ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+        ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+        #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
+        #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
+        messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
+        messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
 
-      if [ "${ZONE_ID}" != "" ]; then 
+        if [ "${ZONE_ID}" != "" ]; then 
     cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
             "Comment": "CREATE/DELETE/UPSERT a record ",
@@ -1815,59 +2087,72 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 }
 EOF
 
-        echo "-----------------------------------------------------------------------------------------------------------"
-        aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
-        echo "-----------------------------------------------------------------------------------------------------------"
+          echo "-----------------------------------------------------------------------------------------------------------"
+          aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
+          echo "-----------------------------------------------------------------------------------------------------------"
 
-        cp /tmp/$$_zone_record /tmp/aws_zone_record
-        rm -f /tmp/$$_zone_record
+          cp /tmp/$$_zone_record /tmp/aws_zone_record
+          rm -f /tmp/$$_zone_record
+        fi
+
       fi
-
-    fi
-  else
-    echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
-    echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
-  fi
-
-  echo "Uploading Stemcell for PKS"
-  scv=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-      tail -1 | awk -F: '{ print $2 }')
-  scf=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-      tail -1 | awk -F: '{ print $5 }')
-  messagePrint " - Staging Stemcel Version:" "$scv"
-  messagePrint " - Staging Stemcel:" "$scf"
-
-  echo "-----------------------------------------------------------------------------------------------------------"
-  $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
-    --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}
-  echo "-----------------------------------------------------------------------------------------------------------"
-  $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf} 
-  echo "-----------------------------------------------------------------------------------------------------------"
-
-
-  if [ $NO_APPLY -eq 0 ]; then
-    echo ""
-    echo "Applying Changes"
-    if [ $DEBUG -gt 0 ]; then
-      echo "-----------------------------------------------------------------------------------------------------------"
-      $OM $OM_LOGIN apply-changes
-      echo "-----------------------------------------------------------------------------------------------------------"
     else
-      $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+      echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
+      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
     fi
-  fi
 
-  echo ""
-  echo "Configuration of the PKS Tile is completed."
-  exit 0
+    echo "Uploading Stemcell for PKS"
+    scv=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
+        tail -1 | awk -F: '{ print $2 }')
+    scf=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
+        tail -1 | awk -F: '{ print $5 }')
+    messagePrint " - Staging Stemcel Version:" "$scv"
+    messagePrint " - Staging Stemcel:" "$scf"
+
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
+      --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf} 
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+
+    if [ $NO_APPLY -eq 0 ]; then
+      echo ""
+      echo "Applying Changes"
+      if [ $DEBUG -gt 0 ]; then
+        echo "-----------------------------------------------------------------------------------------------------------"
+        $OM $OM_LOGIN apply-changes
+        echo "-----------------------------------------------------------------------------------------------------------"
+      else
+        $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+      fi
+    fi
+
+    echo ""
+    echo "Configuration of the PKS Tile is completed."
+    exit 0
+  fi
 fi
 
+exit
+
 # CLEANUP
+
+	aws iam list-instance-profilea
+        aws iam delete-instance-profile --instance-profile-name ppp_ops_manager
+	aws kms list-aliases --region eu-central-1
+	aws kms delete-alias --alias-name alias/ppp --region eu-central-1
+
 	#gcloud compute networks subnets delete gcppks-infrastructure-subnet --region europe-west1
         #gcloud compute networks list
         #gcloud compute zones list
         #gcloud dns managed-zones list
         #gcloud dns record-sets list --zone=gcp-zone
+
+        #gcloud compute networks delete gcppas-pcf-network -q
+        #gcloud compute firewall-rules delete gcppas-ssh-firewall
+        #gcloud compute firewall-rules delete gcppas-websocket-firewall
 #projects/pa-sadubois/regions/europe-west1/subnetworks/gcppks-infrastructure-subnet' is already being used by 'projects/pa-sadubois/zones/europe-west1-c/instances/vm-f2759a64-33d0-4881-444d-96c4b77bf101', resourceInUseByAnotherResource
 
 

@@ -12,7 +12,8 @@
 #                                 ........................................................
 # ----------------------------------------------------------------------------------------
 opsman_gcp.yml:gcp:2.5.4:stable:sadubois:2019-05-19:no issues 
-opsman_aws.yml:aws:2.5.2:stable:sadubois:2019-05-09:AWS 
-opsman_azure.yml:azure:2.5.2:develop:sadubois:2019-05-09:Azure Availability Sets
-opsman_azure.yml:azure:2.4.3:develop:sadubois:2019-05-09:PKS deploy fails with SKU conflict
-opsman_azure_az.yml:azure:2.5.2:develop:sadubois:2019-05-09:Azure Availability Zones
+opsman_aws_pks.yml:aws:2.5.2:stable:sadubois:2019-05-09:AWS 
+opsman_aws_pas.yml:aws:2.5.2:stable:sadubois:2019-05-09:AWS 
+opsman_azure_pks.yml:azure:2.5.2:develop:sadubois:2019-05-09:Azure Availability Sets
+opsman_azure_pks.yml:azure:2.4.3:develop:sadubois:2019-05-09:PKS deploy fails with SKU conflict
+opsman_azure_pks_az.yml:azure:2.5.2:develop:sadubois:2019-05-09:Azure Availability Zones
