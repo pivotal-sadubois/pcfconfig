@@ -36,7 +36,7 @@ product-properties:
    value: 50
  .properties.plan1_selector.active.worker_az_placement:
    value:
-   - eu-central-1c
+   - eu-central-1a
  .properties.plan1_selector.active.worker_instances:
    value: 3
  .properties.plan1_selector.active.allow_privileged_containers:

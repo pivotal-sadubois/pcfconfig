@@ -1,5 +1,3 @@
-#!/bin/bash
-# ############################################################################################
 # File: ........: pcfconfig
 # Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
@@ -22,7 +20,17 @@ OPSMAN_PASS=""
 OPSMAN_DKEY=""
 PCF_VERSION=""
 PKS_VERSION=""
+PKS_CLUSTER_1_NAME=""
+PKS_CLUSTER_1_PLAN=""
+PKS_CLUSTER_2_NAME=""
+PKS_CLUSTER_2_PLAN=""
+PKS_CLUSTER_3_NAME=""
+PKS_CLUSTER_3_PLAN=""
+
 PAS_VERSION=""
+PKS_ADMIN_USER=""
+PKS_ADMIN_PASS=""
+PKS_ADMIN_MAIL=""
 PAS_SRT=""
 DNS_DOMAIN=""
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
@@ -36,6 +44,7 @@ AWS_ACCESS_KEY=""
 AWS_SECRET_KEY=""
 AWS_REGION=""
 GCP_SERVICE_ACCOUNT=""
+GCP_PROJECT=""
 GCP_REGION=""
 GCP_PROJECT=""
 CLOUD_PROVIDER=""
@@ -55,8 +64,9 @@ usage() {
   echo ""
   echo "             Product Settings>"
   echo "                       --pks-version <version>          - PKS Version"
-  echo "                       --pks-user <version>             - PKS Admin User"
-  echo "                       --pks-pass <version>             - PKS Admin Password"
+  echo "                       --pks-admin-user <user>          - PKS Administration User"
+  echo "                       --pas-admin-pass <password>      - PKS Administration Password"
+  echo "                       --pas-admin-mail <email>         - PKS Administration Email"
   echo "                       --pas-version <version>          - PAS Version"
   echo "                       --pas-srt                        - PAS Small Footprint"
   echo "                       --harbor-version <version>       - PAS Version"
@@ -90,8 +100,18 @@ while [ "$1" != "" ]; do
     --usage) USAGE=1;;
     --pas-srt ) PAS_SRT="--pas-srt";;
     --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;       # GCP SERVICE_ACCOUNT
+    --gcp-project) GCP_PROJECT=$2; shift;;       # GCP PROJECT
     --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
     --pks-version) PKS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
+    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
+    --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
+    --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
+    --pks-cluster-1-name) PKS_CLUSTER_1_NAME=$2; shift;;
+    --pks-cluster-1-plan) PKS_CLUSTER_1_PLAN=$2; shift;;
+    --pks-cluster-2-name) PKS_CLUSTER_2_NAME=$2; shift;;
+    --pks-cluster-2-plan) PKS_CLUSTER_2_PLAN=$2; shift;;
+    --pks-cluster-3-name) PKS_CLUSTER_3_NAME=$2; shift;;
+    --pks-cluster-3-plan) PKS_CLUSTER_3_PLAN=$2; shift;;
     --pas-version) PAS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;                     # TERRAFORM VARIABLE FILE
     --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
@@ -111,7 +131,7 @@ while [ "$1" != "" ]; do
     --aws-region) AWS_REGION=$2; shift;;                         # PCFCONFIG-OPSMAN
     --dns-domain) DNS_DOMAIN=$2; shift;;                         # PCFCONFIG-OPSMAN
     --env-name) ENV_NAME=$2; shift;;                             # PCFCONFIG-OPSMAN
-    --workdir) TF_WORKDIR=$2; shift;;                             # PCFCONFIG-OPSMAN
+    --workdir) TF_WORKDIR=$2; shift;;                            # PCFCONFIG-OPSMAN
   esac
   shift
 done
@@ -235,6 +255,42 @@ else
 fi
 
 ##############################################################################################
+######################################### PREPERATION ########################################
+##############################################################################################
+
+if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
+  # --- VERIFY GCP SERVICE ACCOUNTS ---
+  if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
+    cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
+    if [ $cnt -eq 0 ]; then
+      messagePrint "Creating Servivce-Account" "pcfconfig"
+  
+      gcloud iam service-accounts create pcfconfig --display-name="pcfconfig" 2>/dev/null
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Service account: pcfconfig failed"; exit 1
+      else
+        sleep 5
+      fi
+  
+      svc=$(gcloud iam service-accounts list --filter "name:pcfconfig" | grep -v "EMAIL" | awk '{ print $(NF-1) }')
+  
+      gcloud iam service-accounts add-iam-policy-binding $svc \
+        --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
+      gcloud projects add-iam-policy-binding $GCP_PROJECT \
+        --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
+    fi
+  
+    # DELETE OLD KEYS
+    svc=$(gcloud iam service-accounts list --filter "name:pcfconfig" | grep -v "EMAIL" | awk '{ print $(NF-1) }')
+    for n in $(gcloud iam service-accounts keys list --iam-account=$svc | awk '{ print $1 }' | grep -v KEY_ID); do
+      gcloud iam service-accounts keys delete --iam-account=$svc $n -q > /dev/null 2>&1
+    done
+  
+    gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
+  fi
+fi
+
+##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
 ##############################################################################################
 
@@ -353,15 +409,11 @@ fi
 
 TERRAFORM_RELEASE_NOTES=${PCFCONFIG_PATH}/files/terraform-release-notes.txt
 PCF_LATEST=$(egrep ":${PCF_OPSMAN_TYPE}" $TERRAFORM_RELEASE_NOTES | awk -F: '{ print $2 }' | head -1) 
-#PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
-#PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"
-#PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
-#PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
-
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
 PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"
 PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
 PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
+PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-setup"
 
 # --- INITIALIZE STATE FILES ---
 #touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
@@ -436,6 +488,30 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     fi
   else
     messagePrint "pcfconfig-pks already done" "skipping"
+  fi
+
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+  if [ "$(getPCFconfigState $PCFCONFIG_PKS_AUTH_STATE)" != "completed" ]; then 
+    cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+  
+    setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
+    pcfconfig-pks-setup --pks-admin-user $PKS_ADMIN_USER --pks-admin-pass $PKS_ADMIN_PASS \
+         --pks-admin-mail $PKS_ADMIN_MAIL \
+         --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
+         --pks-cluster-1-plan $PKS_CLUSTER_1_PLAN \
+         --pks-cluster-2-name $PKS_CLUSTER_2_NAME \
+         --pks-cluster-2-plan $PKS_CLUSTER_2_PLAN \
+         --pks-cluster-3-name $PKS_CLUSTER_3_NAME \
+         --pks-cluster-3-plan $PKS_CLUSTER_3_PLAN 
+
+    if [ $? -ne 0 ]; then
+      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "failed"
+      echo "ERROR: Problem with pcfconfig-pks-setup occured"; exit 1
+    else
+      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "completed"
+    fi
+  else
+    messagePrint "pcfconfig-pks-setup already done" "skipping"
   fi
 else
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---

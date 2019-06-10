@@ -24,29 +24,29 @@ networks-configuration:
   networks:
   - name: infrastructure
     subnets:
-    - iaas_identifier: az-virtual-network/az-infrastructure-subnet
-      cidr: 10.0.8.0/26
-      dns: 168.63.129.16
-      gateway: 10.0.8.1
-      reserved_ip_ranges: 10.0.8.1-10.0.8.9
+    - iaas_identifier: ((network_name))/((infrastructure_subnet_name))
+      cidr: ((infrastructure_subnet_cid))
+      dns: ((infrastructure_subnet_dns))
+      gateway: ((infrastructure_subnet_gateway))
+      reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
       - "null"
   - name: pks
     subnets:
-    - iaas_identifier: az-virtual-network/az-pks-subnet
-      cidr: 10.0.12.0/26
-      dns: 168.63.129.16
-      gateway: 10.0.12.1
-      reserved_ip_ranges: 10.0.12.1-10.0.12.9
+    - iaas_identifier: ((network_name))/((pks_subnet_name))
+      cidr: ((pks_subnet_cidr))
+      dns: ((pks_subnet_dns))
+      gateway: ((pks_subnet_gateway))
+      reserved_ip_ranges: ((pks_subnet_range))
       availability_zone_names:
       - "null"
   - name: services
     subnets:
-    - iaas_identifier: az-virtual-network/az-pks-services-subnet
-      cidr: 10.0.16.0/22
-      dns: 168.63.129.16
-      gateway: 10.0.16.1
-      reserved_ip_ranges: 10.0.16.1-10.0.16.9
+    - iaas_identifier: ((network_name))/((services_subnet_name))
+      cidr: ((services_subnet_cidr))
+      dns: ((services_subnet_dns))
+      gateway: ((services_subnet_gateway))
+      reserved_ip_ranges: ((services_subnet_range))
       availability_zone_names:
       - "null"
 properties-configuration:

@@ -9,27 +9,25 @@
 
 # DIRECTOR_CONFIGURATION
 "ntp_servers_string: 0.amazon.pool.ntp.org",
+"network_name: " + .modules[].outputs.network_name.value,
 
 # INFRASTRUCTURE-SUBNET
 "infrastructure_subnet_cid: " + .modules[].outputs.infrastructure_subnet_cidr.value,
 "infrastructure_subnet_name: " + .modules[].outputs.infrastructure_subnet_name.value,
 "infrastructure_subnet_gateway: " + .modules[].outputs.infrastructure_subnet_gateway.value,
 "infrastructure_subnet_ids: " + .modules[].outputs.infrastructure_subnet_ids.value[0],
-"infrastructure_subnet_dns: " + "10.0.0.2",
-"infrastructure_subnet_range: " + "10.0.16.0-10.0.16.4",
+"infrastructure_subnet_dns: " + "168.63.129.16",
 
 # PKS-SUBNET
 "pks_subnet_cidr: " + .modules[].outputs.pks_subnet_cidr.value,
 "pks_subnet_name: " + .modules[].outputs.pks_subnet_name.value,
 "pks_subnet_gateway: " + .modules[].outputs.pks_subnet_gateway.value,
 "pks_subnet_ids: " + .modules[].outputs.pks_subnet_ids.value[0],
-"pks_subnet_dns: " + "10.0.0.2",
-"pks_subnet_range: " + "10.0.4.0-10.0.4.9",
+"pks_subnet_dns: " + "168.63.129.16",
 
 # SERVICES-SUBNET
 "services_subnet_cidr: " + .modules[].outputs.services_subnet_cidr.value,
 "services_subnet_name: " + .modules[].outputs.services_subnet_name.value,
 "services_subnet_gateway: " + .modules[].outputs.services_subnet_gateway.value,
 "services_subnet_ids: " + .modules[].outputs.services_subnet_ids.value[0],
-"services_subnet_dns: " + "10.0.0.2",
-"services_subnet_range: " + "10.0.8.0-10.0.8.9"
+"services_subnet_dns: " + "168.63.129.16"

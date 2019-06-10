@@ -28,8 +28,6 @@ product-properties:
   .properties.pks-vrops:
     selected_option: disabled
     value: disabled
-  .properties.pks_api_hostname:
-    value: api.test.com
   .properties.plan1_selector:
     selected_option: active
     value: Plan Active
@@ -136,7 +134,9 @@ resource-config:
       size_mb: automatic
     instance_type:
       id: automatic
-    internet_connected: true
+    internet_connected: false
+    elb_names:
+    - tcp:((pks_api_lb))
 
 errand-config:
   delete-all-clusters:

@@ -24,11 +24,12 @@ networks-configuration:
   networks:
   - name: infrastructure
     subnets:
-    - iaas_identifier: az-virtual-network/az-infrastructure-subnet
-      cidr: 10.0.8.0/26
-      dns: 168.63.129.16
-      gateway: 10.0.8.1
-      reserved_ip_ranges: 10.0.8.1-10.0.8.9
+    - iaas_identifier: ((network_name))/((infrastructure_subnet_name))
+      cidr: ((infrastructure_subnet_cid))
+      #dns: 168.63.129.16
+      dns: ((infrastructure_subnet_dns))
+      gateway: ((infrastructure_subnet_gateway))
+      reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
       - zone-1
       - zone-2

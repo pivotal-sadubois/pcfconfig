@@ -1,0 +1,1237 @@
+exit
+
+#AZURE DOWNLOAD
+om --skip-ssl-validation --target https://pcf.aws.pcfsdu.com/setup --username admin --password pivotal download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial --pivnet-file-glob bosh-stemcell-250.25-azure-hyperv-ubuntu-xenial-go_agent.tgz --pivnet-api-token  "fdb9b83f70714fdfbea611704c1adaeb-r" --product-version 250.25 
+
+pivnet product-files --product-slug stemcells-ubuntu-xenial -r 250.25
+#AWS
+om --skip-ssl-validation --target https://pcf.aws.pcfsdu.com/setup --username admin --password pivotal upload-stemcell --stemcell /Users/sadubois/Downloads/light-bosh-stemcell-250.25-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+#AZURE
+om --skip-ssl-validation --target https://pcf.az.pcfsdu.com/setup --username admin --password pivotal upload-stemcell --stemcell /Users/sadubois/Downloads/light-bosh-stemcell-250.25-aws-xen-hvm-ubuntu-xenial-go_agent.tgz
+processing stemcell
+beginning stemcell upload to Ops Manager
+ 19.87 KiB / 19.87 KiB [============================================] 100.00% 0s
+
+finished upload
+
+# PAS AWS
+product-properties:
+  .cloud_controller.allow_app_ssh_access:
+    value: true
+  .cloud_controller.apps_domain:
+    value: apps.awspas.pcfsdu.com
+  .cloud_controller.default_app_memory:
+    value: 1024
+  .cloud_controller.default_app_ssh_access:
+    value: true
+  .cloud_controller.default_disk_quota_app:
+    value: 1024
+  .cloud_controller.default_quota_max_number_services:
+    value: 100
+  .cloud_controller.default_quota_memory_limit_mb:
+    value: 10240
+  .cloud_controller.enable_custom_buildpacks:
+    value: true
+  .cloud_controller.max_disk_quota_app:
+    value: 2048
+  .cloud_controller.max_file_size:
+    value: 1024
+  .cloud_controller.security_event_logging_enabled:
+    value: true
+  .cloud_controller.staging_timeout_in_seconds:
+    value: 900
+  .cloud_controller.system_domain:
+    value: sys.awspas.pcfsdu.com
+  .diego_brain.starting_container_count_maximum:
+    value: 200
+  .ha_proxy.skip_cert_verify:
+    value: false
+  .mysql.cli_history:
+    value: true
+  .mysql.max_connections:
+    value: 3500
+  .mysql.prevent_node_auto_rejoin:
+    value: false
+  .mysql.remote_admin_access:
+    value: false
+  .mysql_monitor.poll_frequency:
+    value: 30
+  .mysql_monitor.recipient_email:
+    value: sadubois@pivotal.io
+  .mysql_monitor.write_read_delay:
+    value: 20
+  .mysql_proxy.shutdown_delay:
+    value: 30
+  .mysql_proxy.startup_delay:
+    value: 0
+  .nfs_server.blobstore_internal_access_rules:
+    value: allow 10.0.0.0/8;,allow 172.16.0.0/12;,allow 192.168.0.0/16;
+  .properties.autoscale_api_disable_connection_pooling:
+    value: false
+  .properties.autoscale_api_instance_count:
+    value: 1
+  .properties.autoscale_enable_notifications:
+    value: true
+  .properties.autoscale_enable_verbose_logging:
+    value: false
+  .properties.autoscale_instance_count:
+    value: 3
+  .properties.autoscale_metric_bucket_count:
+    value: 120
+  .properties.autoscale_scaling_interval_in_seconds:
+    value: 35
+  .properties.cc_api_rate_limit:
+    selected_option: disable
+    value: disable
+  .properties.cc_logging_level:
+    value: info
+  .properties.ccdb_connection_validation_timeout:
+    value: 3600
+  .properties.ccdb_read_timeout:
+    value: 3600
+  .properties.cf_networking_database_connection_timeout:
+    value: 120
+  .properties.cf_networking_enable_space_developer_self_service:
+    value: false
+  .properties.cf_networking_internal_domain:
+    value: apps.internal
+  .properties.cloud_controller_completed_tasks_cutoff_age_in_days:
+    value: 31
+  .properties.cloud_controller_default_health_check_timeout:
+    value: 60
+  .properties.cloud_controller_temporary_disable_deployments:
+    value: false
+  .properties.container_networking:
+    selected_option: enable
+    value: enable
+  .properties.container_networking_interface_plugin:
+    selected_option: silk
+    value: silk
+  .properties.container_networking_interface_plugin.silk.enable_log_traffic:
+    value: false
+  .properties.container_networking_interface_plugin.silk.enable_policy_enforcement:
+    value: true
+  .properties.container_networking_interface_plugin.silk.iptables_accepted_udp_logs_per_sec:
+    value: 100
+  .properties.container_networking_interface_plugin.silk.iptables_denied_logs_per_sec:
+    value: 1
+  .properties.container_networking_interface_plugin.silk.network_mtu:
+    value: 1454
+  .properties.container_networking_interface_plugin.silk.vtep_port:
+    value: 4789
+  .properties.credhub_database:
+    selected_option: internal_mysql
+    value: internal_mysql
+  .properties.credhub_key_encryption_passwords:
+    value:
+    - name: awspas-encryption-key
+      primary: true
+      provider: internal
+  .properties.diego_database_max_open_connections:
+    value: 100
+  .properties.diego_log_timestamp_format:
+    selected_option: rfc3339
+    value: rfc3339
+  .properties.enable_smb_volume_driver:
+    value: false
+  .properties.enable_tls_to_internal_pxc:
+    value: false
+  .properties.experimental_dynamic_egress_enforcement:
+    value: false
+  .properties.garden_disk_cleanup:
+    selected_option: reserved
+    value: reserved
+  .properties.gorouter_ssl_ciphers:
+    value: ECDHE-RSA-AES128-GCM-SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  .properties.haproxy_client_cert_validation:
+    selected_option: none
+    value: none
+  .properties.haproxy_forward_tls:
+    selected_option: disable
+    value: disable
+  .properties.haproxy_hsts_support:
+    selected_option: disable
+    value: disable
+  .properties.haproxy_max_buffer_size:
+    value: 16384
+  .properties.haproxy_ssl_ciphers:
+    value: DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384
+  .properties.istio:
+    selected_option: disable
+    value: disable
+  .properties.locket_database_max_open_connections:
+    value: 200
+  .properties.metric_registrar_blacklisted_tags:
+    value: deployment,job,index,id
+  .properties.metric_registrar_enabled:
+    value: false
+  .properties.metric_registrar_scrape_interval_in_seconds:
+    value: 35
+  .properties.mysql_activity_logging:
+    selected_option: enable
+    value: enable
+  .properties.mysql_activity_logging.enable.audit_logging_events:
+    value: connect,query
+  .properties.networking_poe_ssl_certs:
+    value:
+    - name: awspas-certificate
+  .properties.networkpolicyserver_database_max_open_connections:
+    value: 200
+  .properties.networkpolicyserverinternal_database_max_open_connections:
+    value: 200
+  .properties.nfs_volume_driver:
+    selected_option: enable
+    value: enable
+  .properties.push_apps_manager_app_poll_interval:
+    value: 10
+  .properties.push_apps_manager_currency_lookup:
+    value: '{ "usd": "$", "eur": "€" }'
+  .properties.push_apps_manager_display_plan_prices:
+    value: false
+  .properties.push_apps_manager_enable_invitations:
+    value: true
+  .properties.push_apps_manager_poll_interval:
+    value: 30
+  .properties.route_integrity:
+    selected_option: tls_verify
+    value: tls_verify
+  .properties.route_services:
+    selected_option: enable
+    value: enable
+  .properties.route_services.enable.ignore_ssl_cert_verification:
+    value: false
+  .properties.route_services.enable.internal_lookup:
+    value: false
+  .properties.router_backend_max_conn:
+    value: 500
+  .properties.router_client_cert_validation:
+    selected_option: request
+    value: request
+  .properties.router_enable_proxy:
+    value: false
+  .properties.router_keepalive_connections:
+    selected_option: enable
+    value: enable
+  .properties.routing_disable_http:
+    value: false
+  .properties.routing_log_client_ips:
+    selected_option: log_client_ips
+    value: log_client_ips
+  .properties.routing_minimum_tls_version:
+    selected_option: tls_v1_2
+    value: tls_v1_2
+  .properties.routing_tls_termination:
+    selected_option: load_balancer
+    value: load_balancer
+  .properties.saml_signature_algorithm:
+    value: SHA256
+  .properties.secure_service_instance_credentials:
+    value: false
+  .properties.security_acknowledgement:
+    value: X
+  .properties.silk_database_max_open_connections:
+    value: 200
+  .properties.smoke_tests:
+    selected_option: on_demand
+    value: on_demand
+  .properties.smtp_auth_mechanism:
+    value: plain
+  .properties.smtp_enable_starttls_auto:
+    value: false
+  .properties.stack_migration_acknowledgement:
+    value: X
+  .properties.syslog_drop_debug:
+    value: true
+  .properties.syslog_metrics_to_syslog_enabled:
+    value: true
+  .properties.syslog_tls:
+    selected_option: disabled
+    value: disabled
+  .properties.syslog_use_tcp_for_file_forwarding_local_transport:
+    value: false
+  .properties.system_blobstore:
+    selected_option: internal
+    value: internal
+  .properties.system_blobstore_ccdroplet_max_staged_droplets_stored:
+    value: 2
+  .properties.system_blobstore_ccpackage_max_valid_packages_stored:
+    value: 2
+  .properties.system_database:
+    selected_option: internal_pxc
+    value: internal_pxc
+  .properties.tcp_routing:
+    selected_option: disable
+    value: disable
+  .properties.uaa:
+    selected_option: internal
+    value: internal
+  .properties.uaa.internal.password_expires_after_months:
+    value: 0
+  .properties.uaa.internal.password_max_retry:
+    value: 5
+  .properties.uaa.internal.password_min_length:
+    value: 0
+  .properties.uaa.internal.password_min_lowercase:
+    value: 0
+  .properties.uaa.internal.password_min_numeric:
+    value: 0
+  .properties.uaa.internal.password_min_special:
+    value: 0
+  .properties.uaa.internal.password_min_uppercase:
+    value: 0
+  .properties.uaa_database:
+    selected_option: internal_mysql
+    value: internal_mysql
+  .properties.uaa_session_cookie_max_age:
+    value: 28800
+  .properties.uaa_session_idle_timeout:
+    value: 1800
+  .router.disable_insecure_cookies:
+    value: false
+  .router.drain_wait:
+    value: 20
+  .router.enable_isolated_routing:
+    value: false
+  .router.enable_write_access_logs:
+    value: true
+  .router.enable_zipkin:
+    value: true
+  .router.frontend_idle_timeout:
+    value: 900
+  .router.lb_healthy_threshold:
+    value: 20
+  .router.request_timeout_in_seconds:
+    value: 900
+  .uaa.apps_manager_access_token_lifetime:
+    value: 3600
+  .uaa.cf_cli_access_token_lifetime:
+    value: 7200
+  .uaa.cf_cli_refresh_token_lifetime:
+    value: 1209600
+  .uaa.customize_password_label:
+    value: Password
+  .uaa.customize_username_label:
+    value: Email
+  .uaa.proxy_ips_regex:
+    value: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}
+network-properties:
+  network:
+    name: pas-subnet
+  other_availability_zones:
+  - name: eu-central-1a
+  singleton_availability_zone:
+    name: eu-central-1a
+resource-config:
+  backup_restore:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  clock_global:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  cloud_controller:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  cloud_controller_worker:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  credhub:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  diego_brain:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  diego_cell:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  diego_database:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  doppler:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  ha_proxy:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  istio_control:
+    instances: 0
+    instance_type:
+      id: automatic
+    internet_connected: false
+  istio_router:
+    instances: 0
+    instance_type:
+      id: automatic
+    internet_connected: false
+  loggregator_trafficcontroller:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  mysql:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  mysql_monitor:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  mysql_proxy:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  nats:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  nfs_server:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  route_syncer:
+    instances: 0
+    instance_type:
+      id: automatic
+    internet_connected: false
+  router:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  syslog_adapter:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  syslog_scheduler:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  tcp_router:
+    instances: 0
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  uaa:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+errand-config:
+  deploy-autoscaler:
+    post-deploy-state: true
+  deploy-notifications:
+    post-deploy-state: true
+  deploy-notifications-ui:
+    post-deploy-state: true
+  metric_registrar_smoke_test:
+    post-deploy-state: false
+  nfsbrokerpush:
+    post-deploy-state: true
+  push-apps-manager:
+    post-deploy-state: true
+  push-usage-service:
+    post-deploy-state: true
+  smbbrokerpush:
+    post-deploy-state: false
+  smoke_tests:
+    post-deploy-state: true
+  test-autoscaling:
+    post-deploy-state: true
+
+om --skip-ssl-validation --target https://40.68.132.178/setup --username admin --password pivotal configure-director --config opsman_azure_2.5.yml
+
+Sachas-MacBook-Pro-2:terraforming-pks sadubois$ om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal available-products
++---------------------------+---------------+
+|           NAME            |    VERSION    |
++---------------------------+---------------+
+| pivotal-container-service | 1.3.6-build.4 |
++---------------------------+---------------+
+
+# GCP PKS HARBOR
+om --skip-ssl-validation --target https://pcf.sanrafael.cf-app.com/setup --username pivotalcf --password fjnstzrr5cyylbkh staged-config --product-name harbor-container-registry
+product-name: harbor-container-registry
+product-properties:
+  .properties.auth_mode:
+    selected_option: db_auth
+    value: db_auth
+  .properties.clair_updater_interval:
+    value: 0
+  .properties.customize_container_network:
+    selected_option: default
+    value: default
+  .properties.hostname:
+    value: harbor.pks.aws.pcfsdu.com
+  .properties.no_proxy:
+    value: 127.0.0.1,localhost,ui,registry
+  .properties.registry_storage:
+    selected_option: filesystem
+    value: filesystem
+  .properties.server_cert_ca:
+    value: "-----BEGIN CERTIFICATE-----\r\nMIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\r\nTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\r\ncmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4\r\nWhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu\r\nZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY\r\nMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc\r\nh77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+\r\n0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U\r\nA5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW\r\nT8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH\r\nB5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC\r\nB5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv\r\nKBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn\r\nOlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn\r\njh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw\r\nqHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI\r\nrU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV\r\nHRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq\r\nhkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL\r\nubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ\r\n3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK\r\nNFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5\r\nORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur\r\nTkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC\r\njNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc\r\noyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq\r\n4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA\r\nmRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d\r\nemyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=\r\n-----END
+      CERTIFICATE-----"
+  .properties.with_clair:
+    value: true
+  .properties.with_notary:
+    value: true
+network-properties:
+  network:
+    name: sanrafael-pks-subnet
+  other_availability_zones:
+  - name: europe-west1-c
+  singleton_availability_zone:
+    name: europe-west1-c
+resource-config:
+  harbor-app:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+  smoke-testing:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+errand-config:
+  smoke-testing:
+    post-deploy-state: when-changed
+  uaa-deregistration:
+    pre-delete-state: false
+
+# GCP PKS Toolsmith -  tcp:aws-pks-api
+om --skip-ssl-validation --target https://pcf.sanrafael.cf-app.com/setup --username pivotalcf --password fjnstzrr5cyylbkh staged-config --product-name pivotal-container-service
+product-name: pivotal-container-service
+product-properties:
+  .properties.cloud_provider:
+    selected_option: gcp
+    value: GCP
+  .properties.cloud_provider.gcp.master_service_account:
+    value: sanrafael-pks-master-node@pa-sadubois.iam.gserviceaccount.com
+  .properties.cloud_provider.gcp.network:
+    value: sanrafael-pcf-network
+  .properties.cloud_provider.gcp.project_id:
+    value: pa-sadubois
+  .properties.cloud_provider.gcp.worker_service_account:
+    value: sanrafael-pks-worker-node@pa-sadubois.iam.gserviceaccount.com
+  .properties.log_sink_resources_deploy:
+    value: true
+  .properties.metric_sink_resources_deploy:
+    value: true
+  .properties.network_selector:
+    selected_option: flannel
+    value: flannel
+  .properties.network_selector.flannel.pod_network_cidr:
+    value: 10.200.0.0/16
+  .properties.network_selector.flannel.service_cluster_cidr:
+    value: 10.100.200.0/24
+  .properties.pks-vrli:
+    selected_option: disabled
+    value: disabled
+  .properties.pks-vrops:
+    selected_option: disabled
+    value: disabled
+  .properties.pks_api_hostname:
+    value: api.pks.sanrafael.cf-app.com
+  .properties.plan1_selector:
+    selected_option: active
+    value: Plan Active
+  .properties.plan1_selector.active.allow_privileged_containers:
+    value: false
+  .properties.plan1_selector.active.description:
+    value: 'Example: This plan will configure a lightweight kubernetes cluster. Not
+      recommended for production workloads.'
+  .properties.plan1_selector.active.master_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan1_selector.active.master_instances:
+    value: 1
+  .properties.plan1_selector.active.master_vm_type:
+    value: small
+  .properties.plan1_selector.active.max_worker_instances:
+    value: 50
+  .properties.plan1_selector.active.name:
+    value: small
+  .properties.plan1_selector.active.worker_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan1_selector.active.worker_instances:
+    value: 3
+  .properties.plan1_selector.active.worker_vm_type:
+    value: small
+  .properties.plan2_selector:
+    selected_option: active
+    value: Plan Active
+  .properties.plan2_selector.active.allow_privileged_containers:
+    value: false
+  .properties.plan2_selector.active.description:
+    value: 'Example: This plan will configure a medium sized kubernetes cluster, suitable
+      for more pods.'
+  .properties.plan2_selector.active.master_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan2_selector.active.master_instances:
+    value: 3
+  .properties.plan2_selector.active.master_vm_type:
+    value: small
+  .properties.plan2_selector.active.max_worker_instances:
+    value: 50
+  .properties.plan2_selector.active.name:
+    value: medium
+  .properties.plan2_selector.active.worker_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan2_selector.active.worker_instances:
+    value: 3
+  .properties.plan2_selector.active.worker_vm_type:
+    value: small
+  .properties.plan3_selector:
+    selected_option: active
+    value: Plan Active
+  .properties.plan3_selector.active.allow_privileged_containers:
+    value: false
+  .properties.plan3_selector.active.description:
+    value: 'Example: This plan will configure a large kubernetes cluster for resource
+      heavy workloads, or a high number of workloads.'
+  .properties.plan3_selector.active.master_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan3_selector.active.master_instances:
+    value: 1
+  .properties.plan3_selector.active.master_vm_type:
+    value: large
+  .properties.plan3_selector.active.max_worker_instances:
+    value: 50
+  .properties.plan3_selector.active.name:
+    value: large
+  .properties.plan3_selector.active.worker_az_placement:
+    value:
+    - europe-west1-c
+  .properties.plan3_selector.active.worker_instances:
+    value: 4
+  .properties.plan3_selector.active.worker_vm_type:
+    value: large
+  .properties.plan4_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan5_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan6_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan7_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan8_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan9_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan10_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.proxy_selector:
+    selected_option: disabled
+    value: Disabled
+  .properties.syslog_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.telemetry_selector:
+    selected_option: enabled
+    value: enabled
+  .properties.telemetry_selector.enabled.billing_polling_interval:
+    value: 60
+  .properties.telemetry_selector.enabled.environment_provider:
+    value: pivotal-cf-toolsmiths
+  .properties.telemetry_selector.enabled.telemetry_polling_interval:
+    value: 600
+  .properties.telemetry_selector.enabled.telemetry_url:
+    value: https://vcsa.vmware.com/ph
+  .properties.uaa:
+    selected_option: internal
+    value: internal
+  .properties.uaa_oidc:
+    value: false
+  .properties.uaa_pks_cli_access_token_lifetime:
+    value: 600
+  .properties.uaa_pks_cli_refresh_token_lifetime:
+    value: 21600
+  .properties.vm_extensions:
+    value:
+    - public_ip
+  .properties.wavefront:
+    selected_option: disabled
+    value: disabled
+  .properties.worker_max_in_flight:
+    value: 1
+network-properties:
+  network:
+    name: sanrafael-pks-subnet
+  other_availability_zones:
+  - name: europe-west1-c
+  - name: europe-west1-d
+  - name: europe-west1-b
+  service_network:
+    name: sanrafael-pks-services-subnet
+  singleton_availability_zone:
+    name: europe-west1-c
+resource-config:
+  pivotal-container-service:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+    elb_names:
+    - tcp:sanrafael-pks-api
+errand-config:
+  delete-all-clusters:
+    pre-delete-state: true
+  pks-nsx-t-precheck:
+    post-deploy-state: false
+  smoke-tests:
+    post-deploy-state: false
+  upgrade-all-service-instances:
+    post-deploy-state: true
+  wavefront-alert-creation:
+    post-deploy-state: false
+  wavefront-alert-deletion:
+    pre-delete-state: false
+
+# GCP PKS Toolsmith https://pcf.carlsbad.cf-app.com/
+om --skip-ssl-validation --target https://pcf.carlsbad.cf-app.com --username pivotalcf --password dkh66ame2tzixs73 staged-director-config
+az-configuration:
+- name: europe-west1-c
+  iaas_configuration_guid: d3b155b9d83c00d17a6e
+- name: europe-west1-d
+  iaas_configuration_guid: d3b155b9d83c00d17a6e
+- name: europe-west1-b
+  iaas_configuration_guid: d3b155b9d83c00d17a6e
+network-assignment:
+  network:
+    name: carlsbad-management-subnet
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: europe-west1-c
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: carlsbad-management-subnet
+    subnets:
+    - iaas_identifier: carlsbad-pcf-network/carlsbad-management-subnet/europe-west1
+      cidr: 10.0.0.0/26
+      dns: 8.8.8.8
+      gateway: 10.0.0.1
+      reserved_ip_ranges: 10.0.0.0-10.0.0.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+  - name: carlsbad-pas-subnet
+    subnets:
+    - iaas_identifier: carlsbad-pcf-network/carlsbad-pas-subnet/europe-west1
+      cidr: 10.0.4.0/24
+      dns: 8.8.8.8
+      gateway: 10.0.4.1
+      reserved_ip_ranges: 10.0.4.0-10.0.4.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+  - name: carlsbad-services-subnet
+    subnets:
+    - iaas_identifier: carlsbad-pcf-network/carlsbad-services-subnet/europe-west1
+      cidr: 10.0.8.0/24
+      dns: 169.254.169.254
+      gateway: 10.0.8.1
+      reserved_ip_ranges: 10.0.8.0-10.0.8.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+  - name: carlsbad-pks-subnet
+    subnets:
+    - iaas_identifier: carlsbad-pcf-network/carlsbad-pks-subnet/europe-west1
+      cidr: 10.0.10.0/24
+      dns: 169.254.169.254
+      gateway: 10.0.10.1
+      reserved_ip_ranges: 10.0.10.1-10.0.10.9
+      availability_zone_names:
+      - europe-west1-b
+      - europe-west1-c
+      - europe-west1-d
+  - name: carlsbad-pks-services-subnet
+    subnets:
+    - iaas_identifier: carlsbad-pcf-network/carlsbad-pks-services-subnet/europe-west1
+      cidr: 10.0.11.0/24
+      dns: 169.254.169.254
+      gateway: 10.0.11.1
+      reserved_ip_ranges: 10.0.11.1-10.0.11.9
+      availability_zone_names:
+      - europe-west1-b
+      - europe-west1-c
+      - europe-west1-d
+properties-configuration:
+  director_configuration:
+    blobstore_type: local
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    director_worker_count: 5
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: false
+    keep_unreachable_vms: false
+    local_blobstore_options:
+      tls_enabled: true
+    ntp_servers_string: 169.254.169.254
+    post_deploy_enabled: false
+    resurrector_enabled: false
+    retry_bosh_deploys: false
+    skip_director_drain: false
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: true
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+vmextensions-configuration: []
+
+# GCP PAS Toolsmith (director)
+Sachas-MacBook-Pro-2:templates sadubois$ om --skip-ssl-validation --target https://pcf.budapest.cf-app.com --username pivotalcf --password ct1bzaeu4pim1es0 staged-director-config
+az-configuration:
+- name: europe-west1-c
+  iaas_configuration_guid: 8dc9c761c94d688233a0
+- name: europe-west1-d
+  iaas_configuration_guid: 8dc9c761c94d688233a0
+- name: europe-west1-b
+  iaas_configuration_guid: 8dc9c761c94d688233a0
+network-assignment:
+  network:
+    name: budapest-management-subnet
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: europe-west1-c
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: budapest-management-subnet
+    subnets:
+    - iaas_identifier: budapest-pcf-network/budapest-management-subnet/europe-west1
+      cidr: 10.0.0.0/26
+      dns: 8.8.8.8
+      gateway: 10.0.0.1
+      reserved_ip_ranges: 10.0.0.0-10.0.0.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+  - name: budapest-pas-subnet
+    subnets:
+    - iaas_identifier: budapest-pcf-network/budapest-pas-subnet/europe-west1
+      cidr: 10.0.4.0/24
+      dns: 8.8.8.8
+      gateway: 10.0.4.1
+      reserved_ip_ranges: 10.0.4.0-10.0.4.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+  - name: budapest-services-subnet
+    subnets:
+    - iaas_identifier: budapest-pcf-network/budapest-services-subnet/europe-west1
+      cidr: 10.0.8.0/24
+      dns: 169.254.169.254
+      gateway: 10.0.8.1
+      reserved_ip_ranges: 10.0.8.0-10.0.8.4
+      availability_zone_names:
+      - europe-west1-c
+      - europe-west1-d
+      - europe-west1-b
+properties-configuration:
+  director_configuration:
+    blobstore_type: local
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    director_worker_count: 5
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: false
+    keep_unreachable_vms: false
+    local_blobstore_options:
+      tls_enabled: true
+    ntp_servers_string: 169.254.169.254
+    post_deploy_enabled: false
+    resurrector_enabled: false
+    retry_bosh_deploys: false
+    skip_director_drain: false
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: true
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+vmextensions-configuration: []
+
+
+# AZURE
+Sachas-MacBook-Pro-2:terraforming-pks sadubois$ om --skip-ssl-validation --target https://40.68.132.178/setup --username admin --password pivotal staged-director-config
+az-configuration:
+- name: zone-1
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+- name: zone-2
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+- name: zone-3
+  iaas_configuration_guid: 5d61b0d25e22d3f5985d
+network-assignment:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: zone-1
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: infrastructure
+    subnets:
+    - iaas_identifier: az-virtual-network/az-infrastructure-subnet
+      cidr: 10.0.8.0/26
+      dns: 168.63.129.16
+      gateway: 10.0.8.1
+      reserved_ip_ranges: 10.0.8.1-10.0.8.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+  - name: pks
+    subnets:
+    - iaas_identifier: az-virtual-network/az-pks-subnet
+      cidr: 10.0.12.0/26
+      dns: 168.63.129.16
+      gateway: 10.0.12.1
+      reserved_ip_ranges: 10.0.12.1-10.0.12.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+  - name: services
+    subnets:
+    - iaas_identifier: az-virtual-network/az-pks-services-subnet
+      cidr: 10.0.16.0/22
+      dns: 168.63.129.16
+      gateway: 10.0.16.1
+      reserved_ip_ranges: 10.0.16.1-10.0.16.9
+      availability_zone_names:
+      - zone-1
+      - zone-2
+      - zone-3
+properties-configuration:
+  director_configuration:
+    blobstore_type: local
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    director_worker_count: 5
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: true
+    keep_unreachable_vms: false
+    local_blobstore_options:
+      tls_enabled: true
+    ntp_servers_string: 0.ch.pool.ntp.org, 1.ch.pool.ntp.org
+    post_deploy_enabled: true
+    resurrector_enabled: true
+    retry_bosh_deploys: true
+    skip_director_drain: true
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: false
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+vmextensions-configuration: []
+
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal stage-product --product-name pivotal-container-service --product-version 1.3.6-build.4
+staging pivotal-container-service 1.3.6-build.4
+finished staging
+
+awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' fullchain.pem | sed -e 's/^/container_service_pks_tls_cert_pem: \"/g' -e 's/$/\"/g' > /tmp/vars1.yml 
+awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' privkey.pem | sed -e 's/^/container_service_pks_tls_private_key_pem: \"/g' -e 's/$/\"/g' >> /tmp/vars1.yml
+jq -r '"pks_master_iam_instance_profile_name: " + .modules[0].outputs.pks_master_iam_instance_profile_name.value' ~/workspace/pivotal-cf-terraforming-aws-2.4.4/terraforming-pks/terraform.tfstate >> /tmp/vars1.yml
+jq -r '"pks_worker_iam_instance_profile_name: " + .modules[0].outputs.pks_worker_iam_instance_profile_name.value' ~/workspace/pivotal-cf-terraforming-aws-2.4.4/terraforming-pks/terraform.tfstate >> /tmp/vars1.yml
+jq -r '"pks_api_endpoint: " + .modules[0].outputs.pks_api_endpoint.value'  ~/workspace/pivotal-cf-terraforming-aws-2.4.4/terraforming-pks/terraform.tfstate >> /tmp/vars1.yml
+
+api.pks.awspas.pcfsdu.com
+
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal configure-product --config /tmp/pks1.yml --vars-file /tmp/vars1.yml
+
+
+######
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal config-template --output-directory ./dump --pivnet-api-token "fdb9b83f70714fdfbea611704c1adaeb-r" --pivnet-product-slug pivotal-container-service --product-version 1.3.6
+
+Sachas-MacBook-Pro-2:terraforming-pks sadubois$ om --skip-ssl-validation --target https://40.68.132.178/setup --username admin --password pivotal staged-config --product-name p-bosh
+product-name: p-bosh
+network-properties:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: zone-1
+resource-config:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal staged-config --product-name pivotal-container-service 
+product-name: pivotal-container-service
+product-name: pivotal-container-service
+product-properties:
+  .properties.cloud_provider.azure.azure_cloud_name:
+    value: AzurePublicCloud
+  .properties.network_selector:
+    selected_option: flannel
+    value: flannel
+  .properties.network_selector.flannel.pod_network_cidr:
+    value: 10.200.0.0/16
+  .properties.network_selector.flannel.service_cluster_cidr:
+    value: 10.100.200.0/24
+  .properties.pks-vrli:
+    selected_option: disabled
+    value: disabled
+  .properties.pks_api_hostname:
+    value: '*.apps.awspas.pcfsdu.com'
+
+  .properties.plan1_selector:
+    selected_option: active
+    value: Plan Active
+  .properties.plan1_selector.active.allow_privileged_containers:
+    value: true
+  .properties.plan1_selector.active.description:
+    value: 'Example: This plan will configure a lightweight kubernetes cluster. Not
+      recommended for production workloads.'
+  .properties.plan1_selector.active.disable_deny_escalating_exec:
+    value: true
+  .properties.plan1_selector.active.master_az_placement:
+    value:
+    - eu-central-1a
+  .properties.plan1_selector.active.master_instances:
+    value: 1
+  .properties.plan1_selector.active.max_worker_instances:
+    value: 50
+  .properties.plan1_selector.active.name:
+    value: small
+  .properties.plan1_selector.active.worker_az_placement:
+    value:
+    - eu-central-1c
+  .properties.plan1_selector.active.worker_instances:
+    value: 3
+  .properties.plan2_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan3_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan4_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan5_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan6_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan7_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan8_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan9_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan10_selector:
+    selected_option: inactive
+    value: Plan Inactive
+
+  .properties.proxy_selector:
+    selected_option: disabled
+    value: Disabled
+  .properties.sink_resources_selector:
+    selected_option: enabled
+    value: enabled
+  .properties.syslog_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.telemetry_selector.enabled.billing_polling_interval:
+    value: 60
+  .properties.telemetry_selector.enabled.environment_provider:
+    value: none
+  .properties.telemetry_selector.enabled.telemetry_polling_interval:
+    value: 600
+  .properties.telemetry_selector.enabled.telemetry_url:
+    value: https://vcsa.vmware.com/ph
+  .properties.uaa:
+    selected_option: internal
+    value: internal
+  .properties.uaa_oidc:
+    value: false
+  .properties.uaa_pks_cli_access_token_lifetime:
+    value: 600
+  .properties.uaa_pks_cli_refresh_token_lifetime:
+    value: 21600
+  .properties.wavefront:
+    selected_option: disabled
+    value: disabled
+  .properties.worker_max_in_flight:
+    value: 1
+network-properties:
+  network:
+    name: infrastructure
+  other_availability_zones:
+  - name: eu-central-1a
+  service_network:
+    name: services-subnet
+  singleton_availability_zone:
+    name: eu-central-1a
+resource-config:
+  pivotal-container-service:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+errand-config:
+  delete-all-clusters:
+    pre-delete-state: true
+  pks-nsx-t-precheck:
+    post-deploy-state: false
+  smoke-tests:
+    post-deploy-state: false
+  upgrade-all-service-instances:
+    post-deploy-state: true
+  wavefront-alert-creation:
+    post-deploy-state: false
+  wavefront-alert-deletion:
+    pre-delete-state: false
+
+
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal configure-product --config /tmp/pks.yml
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal configure-product --config /tmp/pks1.yml --vars-file /tmp/vars.yml
+
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal curl --path /api/v0/staged/products/pivotal-container-service-fb45f1e1e4af866b4f96
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal curl --path /api/v0/staged/products/pivotal-container-service-fb45f1e1e4af866b4f96/properties
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal curl --path /api/v0/staged/products/pivotal-container-service-fb45f1e1e4af866b4f96/resources
+om --skip-ssl-validation --target https://pcf.awspas.pcfsdu.com/setup --username admin --password pivotal curl --path /api/v0/staged/products/pivotal-container-service-fb45f1e1e4af866b4f96/errands
+
+

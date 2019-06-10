@@ -34,6 +34,17 @@ OPS_UPLOAD=1
 PAS_VERSION=""
 PAS_SRT=0
 PKS_VERSION=""
+PKS_ADMIN_USER=""
+PKS_ADMIN_PASS=""
+PKS_ADMIN_MAIL=""
+PKS_CLUSTER_1_NAME=""
+PKS_CLUSTER_2_NAME=""
+PKS_CLUSTER_3_NAME=""
+PKS_CLUSTER_1_PLAN=""
+PKS_CLUSTER_2_PLAN=""
+PKS_CLUSTER_3_PLAN=""
+
+
 TLS_CERTIFICATE=""
 TLS_PRIVATE_KEY=""
 
@@ -65,11 +76,20 @@ while [ "$1" != "" ]; do
     --decryption-key) DCRY=$2; shift;;              # PCFCONFIG-OPSMAN
     --pivnet-token) PIVNET_TOKEN=$2; shift;;        # PCFCONFIG-PKS
     --pks-version) PKS_VERSION=$2; shift;;          # PCFCONFIG-PKS
+    --pks-cluster-1-name) PKS_CLUSTER_1_NAME=$2; shift;; 
+    --pks-cluster-1-plan) PKS_CLUSTER_1_PLAN=$2; shift;; 
+    --pks-cluster-2-name) PKS_CLUSTER_2_NAME=$2; shift;; 
+    --pks-cluster-2-plan) PKS_CLUSTER_2_PLAN=$2; shift;; 
+    --pks-cluster-3-name) PKS_CLUSTER_3_NAME=$2; shift;; 
+    --pks-cluster-3-plan) PKS_CLUSTER_3_PLAN=$2; shift;; 
     --pas-version) PAS_VERSION=$2; shift;;          # PCFCONFIG-PAS
     --pas-srt) PAS_SRT=1;;                          # PCFCONFIG-PAS
     --tls_cert) TLS_CERTIFICATE=$2; shift;;         # PCFCONFIG-PAS
     --tls_private_key) TLS_PRIVATE_KEY=$2; shift;;  # PCFCONFIG-PAS
     --pks-tfvars) TF_PKS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
+    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
+    --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
+    --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
     --pas-tfvars) TF_PAS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;        # TERRAFORM VARIABLE FILE
     --cf-version) PCF_VERSION=$2; shift;;           # PCF VERSION
@@ -89,6 +109,20 @@ echo ""
 echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
 echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
+
+usage_pks_setup() {
+  echo "USAGE: $PCFCONFIG_BASE [options]"
+  echo "              OPTIONS: --pks-admin-user <user>          - PKS Administration User"
+  echo "                       --pas-admin-pass <password>      - PKS Administration Password"
+  echo "                       --pks-admin-mail <email>         - PKS Administration Email"
+  echo "                       --pks-cluster-1-name <name>      - PKS Kubernetes Cluster 1 Name"
+  echo "                       --pks-cluster-1-plan <name>      - PKS Kubernetes Cluster 1 Plan"
+  echo "                       --pks-cluster-2-name <name>      - PKS Kubernetes Cluster 2 Name"
+  echo "                       --pks-cluster-2-plan <name>      - PKS Kubernetes Cluster 2 Plan"
+  echo "                       --pks-cluster-3-name <name>      - PKS Kubernetes Cluster 3 Name"
+  echo "                       --pks-cluster-3-plan <name>      - PKS Kubernetes Cluster 3 Plan"
+  echo "                       --debug                          - Debugging"
+}
 
 usage_terraform() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
@@ -153,30 +187,12 @@ usage_pas() {
 environmentCleanUp() {
   TFDIR="$1"
 
- echo "-----------------------------------------------------------------------------------------------------------"
-
   if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
     ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-    ENV_REGO=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+    GCP_REGION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
 
-    cnt=$(gcloud compute networks subnets list --filter="name:gcppks* region:$ENV_REGO" 2>/dev/null | wc -l | sed 's/ *//g')
-    if [ $cnt -gt 0 ]; then
-      list=$(gcloud compute networks subnets list --filter="name:gcppks* region:$ENV_REGO" | grep -v "NAME" | awk '{ print $1 '})
-      echo "ERROR: Subnets from previous installation are still there, to delete: "
-      for n in $list; do
-        echo "       => gcloud -q compute networks subnets delete --region=$ENV_REGO $n"
-      done
-    fi
-
-    cnt=$(gcloud compute networks list 2>/dev/null | egrep -c "^gcppks-")
-    if [ $cnt -gt 0 ]; then
-      list=$(gcloud compute networks list | egrep "^gcppks-" | awk '{ print $1 '})
-      echo "ERROR: Network from previous installation are still there, to delete: "
-      for n in $list; do
-        echo "       => gcloud -q compute networks delete $n"
-      done
-
-    fi
+    messagePrint "Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
+    cleanGCPenv
   fi
 }
 
@@ -946,7 +962,6 @@ checkEnvironment() {
       messagePrint " - Ops Manager Public IP" "$OPS_MANAGER_PUBLIC_IP"
       messagePrint " - Ops Manager Private IP" "$OPS_MANAGER_PRIVATE_IP"
 
-echo "dns_google_stat:$dns_google_stat"
       if [ "$dns_google_stat" == "failed" ]; then
         messagePrint "   Verify DNS lookup Google (8.8.8.8)" "$dns_stat"
         subdomain=$(echo $OPS_MANAGER_DNS | sed -e 's/\./<1>/' -e 's/^.*<1>//g')
@@ -1016,6 +1031,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     usage_opsman
     echo ""
     echo "ERROR: $PCFCONFIG_BASE requires the options -u <admin> -p <admin> --decryption-key) <phrase>"; exit 1
+  fi
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
+  if [ "${PKS_ADMIN_USER}" == "" -o "${PKS_ADMIN_PASS}" == "" -o "${PKS_ADMIN_MAIL}" == "" ]; then
+    usage_pks_setup
+    echo ""
+    echo "ERROR: $PCFCONFIG_BASE requires the options --pks-admin-user <user> --pks-admin-pass <pass> --pks-admin-mail <mail>"; exit 1
   fi
 fi
 
@@ -1249,9 +1272,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
     fi
   fi
 
+  ##############################################################################################
+  ########################################## CLEAN-UP ##########################################
+  ##############################################################################################
 
   echo ""
+  echo "-----------------------------------------------------------------------------------------------------------"
   if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
+    messagePrint "Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
     environmentCleanUp $TF_HOME/terraforming-pks
 
     echo "Terraform configuration completed. Change to the terraform directory:"
@@ -1367,13 +1395,16 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   # --- COPY JQ FILES FROM THE TEMPLATES ---
   JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.jq
 
+  if [ ! -f $JQ_FILTER ]; then 
+    echo "ERROR: Filter JQ Script: $JQ_FILTER does not exist"; exit 1
+  fi
+
   # --- GET AWS INSTANCE ---
   if [ $DEBUG -gt 0 ]; then
     echo "# -------------------------- DEBUGGING START -----------------------------"
     $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | sort -u
     echo "# -------------------------- DEBUGGING END -------------------------------"
   fi
-
 
   VARFILE=./opsman_vars.yml
   echo "# GENERATED BY $0 - $(date)" > $VARFILE
@@ -1388,14 +1419,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
 
-    echo "infrastructure_subnet_range: ${rng_inf}"       >> $VARFILE
+    echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
 
-    #echo "project: $GCP_SVC_PRJID"                      >> $VARFILE
-    #echo "associated_service_account: ${GCP_SVC_NAME}"  >> $VARFILE
-    #echo "associated_service_account: gcppks PKS Service Account"  >> $VARFILE
-    echo "default_deployment_tag: gcppks"            >> $VARFILE
+    # HANDLED NY THE FILTER SCRIPT
+    #echo "project: $GCP_SVC_PRJID"                     >> $VARFILE
+    #echo "associated_service_account: ${GCP_SVC_NAME}" >> $VARFILE
+    echo "default_deployment_tag: $DNS_PREFIX"          >> $VARFILE
     echo "region: ${GCP_REGION}"                        >> $VARFILE
   fi
 
@@ -1406,6 +1437,20 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
+    cid_inf=$($JQ -r '.modules[].outputs.infrastructure_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_inf=$(echo "$cid_inf" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+    cid_svc=$($JQ -r '.modules[].outputs.services_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+
+    echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
+    echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
+    echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
+
     echo "subscription_id: $AZURE_SUBSCRIPTION"         >> $VARFILE
     echo "tenant_id: $AZURE_TENNENT"                    >> $VARFILE
     echo "client_id: $AZURE_CLIENT"                     >> $VARFILE
@@ -1459,6 +1504,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       echo "-----------------------------------------------------------------------------------------------------------"
     else
       $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: OpsManager apply changes failed, please try again"; exit 1
+      fi
     fi
   else
     echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-1 ------------------------------------------"
@@ -1489,6 +1537,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
       else
         $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+        if [ $? -ne 0 ]; then 
+          echo "ERROR: Applying Changes failed, try manual"
+          echo "       => $OM $OM_LOGIN apply-changes "
+          exit 1
+        fi
       fi
     fi
   fi
@@ -1570,7 +1623,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "apt-get -qq install om > /dev/null 2>&1"                                                                                     >> $TMP_SCRIPT
 
     # --- CLEANUP OLD ENTRIES FROM KNOWN_HOSTS FILE ---
-    sed -in "/$OPS_MANAGER_DNS/d" /Users/sadubois/.ssh/known_hosts 
+#ggggg
+    sed -in "/$OPS_MANAGER_DNS/d" ~/.ssh/known_hosts 
     scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
     if [ ${ret} -ne 0 ]; then 
       echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -1673,7 +1727,15 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
       messagePrint " - Verify download and caching options" "ops-manager"
-      echo "if [ ! -f /tmp/$PIVNET_GLOB ]; then"                                                                 >> $TMP_SCRIPT
+      echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                            >  $TMP_SCRIPT
+      echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                   >> $TMP_SCRIPT
+      echo "  if [ \$? -ne 0 ]; then"                                                                       >> $TMP_SCRIPT
+      echo "    echo \"validation of /tmp/$PIVNET_GLOB failed\""                                            >> $TMP_SCRIPT
+      echo "    rm -f /tmp/$PIVNET_GLOB"                                                                    >> $TMP_SCRIPT
+      echo "  fi"                                                                                           >> $TMP_SCRIPT
+      echo "fi"                                                                                             >> $TMP_SCRIPT
+      echo ""                                                                                               >> $TMP_SCRIPT
+      echo "if [ ! -f /tmp/$PIVNET_GLOB ]; then"                                                            >> $TMP_SCRIPT
       echo "  om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"  >> $TMP_SCRIPT
       echo "      download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"              >> $TMP_SCRIPT
       echo "      --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"               >> $TMP_SCRIPT
@@ -1681,6 +1743,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "  if [ \$? -ne 0 ]; then exit 1; fi"                                                            >> $TMP_SCRIPT
       echo "fi"                                                                                             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
+      echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                            >> $TMP_SCRIPT
+      echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                   >> $TMP_SCRIPT
+      echo "  if [ \$? -ne 0 ]; then"                                                                       >> $TMP_SCRIPT
+      echo "    echo \"validation of /tmp/$PIVNET_GLOB failed\""                                            >> $TMP_SCRIPT
+      echo "    exit 1"                                                                                     >> $TMP_SCRIPT
+      echo "  fi"                                                                                           >> $TMP_SCRIPT
+      echo "fi"                                                                                             >> $TMP_SCRIPT
       echo ""                                                                                               >> $TMP_SCRIPT
       echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"    >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                  >> $TMP_SCRIPT
@@ -1871,9 +1940,9 @@ EOF
         fi
 
       fi
-    else
-      echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
-      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
+#    else
+#      echo "INFO: Pleae set an alias in the DNS Record of your domain ${DNS_PREFIX}.${DNS_SUFFIX} in the record"
+#      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
     fi
 
     echo "Uploading Stemcell for PAS"
@@ -1956,8 +2025,10 @@ EOF
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
-      echo "pks_api_lb: az-pks-lb" >> $VARFILE
-      echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
+      #echo "pks_api_lb: az-pks-lb" >> $VARFILE
+      echo "pks_api_lb: ${DNS_PREFIX}-pks-lb" >> $VARFILE
+      #echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
+      echo "pks_api_hostname:  api.pks.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
@@ -2015,7 +2086,6 @@ EOF
       echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
     fi
 
-#gaga
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
@@ -2135,14 +2205,125 @@ EOF
   fi
 fi
 
-exit
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
+  checkEnvironment
+
+  OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+
+  # GET CREDENTIALS
+  TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
+  $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
+  if [ $ret -eq 0 ]; then 
+    prd="xxx"; i=0
+    while [ "${prd}" != "null" ]; do
+      prd=$(jq -r ".[$i].type" $TMP_JQ)
+      if [ "${prd}" == "pivotal-container-service" ]; then
+        inm=$(jq -r ".[$i].installation_name" $TMP_JQ)
+        str="/api/v0/deployed/products/${inm}/credentials/.properties.pks_uaa_management_admin_client"
+        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
+        if [ $ret -eq 0 ]; then 
+          sec=$(jq -r '.credential.value.secret' $TMP_SEC) 
+        else
+          echo "ERROR: 1Can not connect to $OPS_MANAGER_URL"; exit 1
+        fi
+
+        # --- UAA-ADMIN-PASSWORD ---
+        str="/api/v0/deployed/products/${inm}/credentials/.properties.uaa_admin_password"
+        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
+        if [ $ret -eq 0 ]; then
+          admin_sec=$(jq -r '.credential.value.secret' $TMP_SEC)
+        else
+          echo "ERROR: 2Can not connect to $OPS_MANAGER_URL"; exit 1
+        fi
+      fi 
+
+      let i=i+1
+    done
+
+    rm -f $$TMP_JQ
+  else
+    echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
+  fi
+
+  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+  $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
+  $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
+  touch $TMP_SCRIPT
+  chmod 600 $TMP_OPSMAN
+  chmod 777 $TMP_SCRIPT
+
+  nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+  if [ $ret -eq 0 ]; then 
+    TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
+    echo "echo '# Connecting to ${TLS_HOST_NAME}'"                                                         >  $TMP_SCRIPT
+    echo "uaac target ${TLS_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
+    echo "if [ \$? -ne 0 ]; then"                                                                          >> $TMP_SCRIPT
+    echo "  exit 1"                                                                                        >> $TMP_SCRIPT
+    echo "fi"                                                                                              >> $TMP_SCRIPT
+    echo "echo '# Grant Enterprise PKS Access to a User'"                                                  >> $TMP_SCRIPT
+    echo "uaac token client get admin -s ${sec}"                                                           >> $TMP_SCRIPT
+    echo "echo '# Add User: ${PKS_ADMIN_USER} / ${PKS_ADMIN_MAIL}'"                                        >> $TMP_SCRIPT
+    echo "uaac user add ${PKS_ADMIN_USER} --emails ${PKS_ADMIN_MAIL} -p ${PKS_ADMIN_PASS}"                 >> $TMP_SCRIPT
+    echo "uaac member add pks.clusters.admin ${PKS_ADMIN_USER}"                                            >> $TMP_SCRIPT
+
+    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+      echo "       Please try manually:"
+      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh"
+      exit 1
+    fi
+  
+    echo "-----------------------------------------------------------------------------------------------------------"
+    #ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh" | sed '/^$/d'; ret=$?
+    (ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
+    echo "-----------------------------------------------------------------------------------------------------------"
+  echo "RET:$ret"
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+      echo "       Please try manually:"
+      echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"sudo /tmp/om-install.sh\""
+      exit 1
+    fi
+
+    if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
+      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
+  
+      if [ "${PKS_CLUSTER_1_NAME}" != "" ]; then 
+        pks cluster PKS_CLUSTER_1_NAME > /dev/null 2>&1
+        if [ $? -ne 0 ]; then 
+          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "creating"
+          pks create-cluster $PKS_CLUSTER_1_NAME \
+             --external-hostname ${PKS_CLUSTER_1_NAME}.pks.${DNS_PREFIX}.${DNS_SUFFIX} \
+             --plan $PKS_CLUSTER_1_PLAN --wait 
+        else
+          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "pending"
+        fi
+      fi
+    fi
+
+    echo ""
+    echo "Configuration of the PKS Swtup Completed is completed. Please login to PKS:"
+    echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+    echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation   #ADMIN"
+  else
+    echo ""
+    echo "ERROR: API Host: $TLS_HOST_NAME can not be resolved by DNS"; exit 1
+  fi
+fi
 
 # CLEANUP
 
-	aws iam list-instance-profilea
+	aws iam list-instance-profiles
         aws iam delete-instance-profile --instance-profile-name ppp_ops_manager
 	aws kms list-aliases --region eu-central-1
 	aws kms delete-alias --alias-name alias/ppp --region eu-central-1
+        aws elbv2 describe-target-groups --region eu-central-1
+
+        #gcloud compute instances list
+        #gcloud compute instances delete gcppas-ops-manager --zone europe-west4-b -q
 
 	#gcloud compute networks subnets delete gcppks-infrastructure-subnet --region europe-west1
         #gcloud compute networks list

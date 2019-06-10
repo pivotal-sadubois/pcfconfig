@@ -1,4 +1,4 @@
-# GENETATED BY getPASSmallRuntime.sh (Sun May 26 00:00:26 CEST 2019)
+# GENETATED BY getPASSmallRuntime.sh (Mon Jun 10 10:51:37 CEST 2019)
 378195:2.5.4:Small Footprint PAS:srt-2.5.4-build.5.pivotal
 375579:2.5.3:Small Footprint PAS:srt-2.5.3-build.17.pivotal
 358342:2.5.2:Small Footprint PAS:srt-2.5.2-build.7.pivotal

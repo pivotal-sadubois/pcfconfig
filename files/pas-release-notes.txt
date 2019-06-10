@@ -1,4 +1,4 @@
-# GENETATED BY getPASReleases.sh (Sat May 25 16:55:52 CEST 2019)
+# GENETATED BY getPASReleases.sh (Mon Jun 10 10:37:31 CEST 2019)
 378183:2.5.4:Pivotal Application Service:cf-2.5.4-build.5.pivotal
 375564:2.5.3:Pivotal Application Service:cf-2.5.3-build.17.pivotal
 358334:2.5.2:Pivotal Application Service:cf-2.5.2-build.7.pivotal

@@ -1,6 +1,7 @@
 #https://docs.pivotal.io/pivotalcf/2-5/pcf-release-notes/runtime-rn.html#2.5.3
 #https://docs.pivotal.io/pivotalcf/2-4/pcf-release-notes/runtime-rn.html#2.4.6
 #pas-ver:min-opsman:stemcell:version:azure:aws:gcp:
+2.5.3:azure:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_azure_pas.yml
 2.5.3:aws:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_aws_pas.yml
 2.5.2:aws:default:2.5:default:ubuntu-xenial-stemcell:250.29:opsman_aws_pas.yml
 2.5.1:aws:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_aws_pas.yml

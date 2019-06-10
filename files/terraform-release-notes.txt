@@ -1,4 +1,7 @@
-# GENETATED BY getTerraformReleases.sh (Sat May 11 20:02:09 CEST 2019)
+# GENETATED BY getTerraformReleases.sh (Mon Jun 10 10:42:17 CEST 2019)
+337679:2.5.4:gcp:GCP Terraform Templates 0.74.0:terraforming-gcp-0.74.0.zip:2019-05-21:2019-12-31:Maintenance Release
+351857:2.5.4:azure:Azure Terraform Templates 0.40.0:terraforming-azure-0.40.0.zip:2019-05-21:2019-12-31:Maintenance Release
+351840:2.5.4:aws:AWS Terraform Templates 0.37.0:terraforming-aws-0.37.0.zip:2019-05-21:2019-12-31:Maintenance Release
 337679:2.5.3:gcp:GCP Terraform Templates 0.74.0:terraforming-gcp-0.74.0.zip:2019-05-08:2019-12-31:Maintenance Release
 351857:2.5.3:azure:Azure Terraform Templates 0.40.0:terraforming-azure-0.40.0.zip:2019-05-08:2019-12-31:Maintenance Release
 351840:2.5.3:aws:AWS Terraform Templates 0.37.0:terraforming-aws-0.37.0.zip:2019-05-08:2019-12-31:Maintenance Release
@@ -11,6 +14,9 @@
 294717:2.5.0:gcp:GCP Terraform Templates 0.63.0:terraforming-gcp-0.63.0.zip:2019-03-28:2019-12-31:Minor Release
 330184:2.5.0:azure:Azure Terraform Templates 0.37.0:terraforming-azure-0.37.0.zip:2019-03-28:2019-12-31:Minor Release
 303790:2.5.0:aws:AWS Terraform Templates 0.24.0:terraforming-aws-0.24.0.zip:2019-03-28:2019-12-31:Minor Release
+337679:2.4.8:gcp:GCP Terraform Templates 0.74.0:terraforming-gcp-0.74.0.zip:2019-05-21:2019-09-30:Security Release
+351857:2.4.8:azure:Azure Terraform Templates 0.40.0:terraforming-azure-0.40.0.zip:2019-05-21:2019-09-30:Security Release
+351840:2.4.8:aws:AWS Terraform Templates 0.37.0:terraforming-aws-0.37.0.zip:2019-05-21:2019-09-30:Security Release
 337679:2.4.7:gcp:GCP Terraform Templates 0.74.0:terraforming-gcp-0.74.0.zip:2019-05-08:2019-09-30:Maintenance Release
 351857:2.4.7:azure:Azure Terraform Templates 0.40.0:terraforming-azure-0.40.0.zip:2019-05-08:2019-09-30:Maintenance Release
 351840:2.4.7:aws:AWS Terraform Templates 0.37.0:terraforming-aws-0.37.0.zip:2019-05-08:2019-09-30:Maintenance Release
@@ -23,9 +29,3 @@
 294717:2.4.4:gcp:GCP Terraform Templates 0.63.0:terraforming-gcp-0.63.0.zip:2019-03-01:2019-09-30:Security Release
 277284:2.4.4:azure:Azure Terraform Templates 0.29.0:terraforming-azure-0.29.0.zip:2019-03-01:2019-09-30:Security Release
 303790:2.4.4:aws:AWS Terraform Templates 0.24.0:terraforming-aws-0.24.0.zip:2019-03-01:2019-09-30:Security Release
-294717:2.4.3:gcp:GCP Terraform Templates 0.63.0:terraforming-gcp-0.63.0.zip:2019-02-19:2019-09-30:Maintenance Release
-277284:2.4.3:azure:Azure Terraform Templates 0.29.0:terraforming-azure-0.29.0.zip:2019-02-19:2019-09-30:Maintenance Release
-303790:2.4.3:aws:AWS Terraform Templates 0.24.0:terraforming-aws-0.24.0.zip:2019-02-19:2019-09-30:Maintenance Release
-277283:2.4.2:gcp:GCP Terraform Templates 0.54.0:terraforming-gcp-0.54.0.zip:2019-01-28:2019-09-30:Security Release
-277284:2.4.2:azure:Azure Terraform Templates 0.29.0:terraforming-azure-0.29.0.zip:2019-01-28:2019-09-30:Security Release
-258595:2.4.2:aws:AWS Terraform Templates 0.22.0:terraforming-aws-0.22.0.zip:2019-01-28:2019-09-30:Security Release
