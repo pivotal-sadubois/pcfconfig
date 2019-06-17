@@ -116,12 +116,17 @@ product-properties:
     value: disabled
   .properties.worker_max_in_flight:
     value: 1
+  .properties.vm_extensions:
+    value:
+    - public_ip
 
 network-properties:
   network:
-    name: infrastructure
+    name: pks
   other_availability_zones:
+  - name: ((zone-1))
   - name: ((zone-2))
+  - name: ((zone-3))
   service_network:
     name: services
   singleton_availability_zone:

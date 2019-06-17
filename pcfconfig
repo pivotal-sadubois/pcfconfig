@@ -103,6 +103,7 @@ while [ "$1" != "" ]; do
     --gcp-project) GCP_PROJECT=$2; shift;;       # GCP PROJECT
     --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
     --pks-version) PKS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
+    --pas-version) PAS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
     --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
     --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
     --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
@@ -112,7 +113,6 @@ while [ "$1" != "" ]; do
     --pks-cluster-2-plan) PKS_CLUSTER_2_PLAN=$2; shift;;
     --pks-cluster-3-name) PKS_CLUSTER_3_NAME=$2; shift;;
     --pks-cluster-3-plan) PKS_CLUSTER_3_PLAN=$2; shift;;
-    --pas-version) PAS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;                     # TERRAFORM VARIABLE FILE
     --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
     --admin-user) OPSMAN_USER=$2; shift;;                        # PCFCONFIG-OPSMAN / PCFCONFIG-PKS/PAS
@@ -169,10 +169,6 @@ if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
 fi
 
 # --- CHECK PRODUCT SELECTION ---
-if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
-  echo "ERROR: Either PKS or PAS Version needs to be provided"; exit 1
-fi
-
 if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
   echo "ERROR: Either PKS or PAS Version needs to be provided"; exit 1
 fi
@@ -427,7 +423,8 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
                                         --deployment $CLOUD_PROVIDER \
                                         --cf-version $PCF_LATEST \
                                         --directory-prefix cf-terraform \
-                                        --install-mode delete
+                                        --install-mode delete --no-ask \
+                                        --aws-route53 $ROUTE53_TOKEN
   if [ $? -ne 0 ]; then 
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
     echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
