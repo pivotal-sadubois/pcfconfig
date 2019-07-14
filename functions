@@ -14,6 +14,224 @@ getPCFconfigState() {
   fi
 }
 
+installJumpHost() {
+  if [ "${CLOUD_PROVIDER}" == "aws" ]; then
+    messagePrint "Creating Jump-Server" "$JUMP_HOST"
+
+    # --- CREATE NEW KEY IF PEM FILE IS MISSING ---
+    if [ ! -s ~/.ssh/${JUMP_HOST}.pem ]; then
+      messagePrint " - Missing pem file, deleting Key Pair" "pcfjump"
+      aws ec2 --region=$AWS_REGION delete-key-pair --key-name pcfjump
+    fi
+
+    aws ec2 --region=$AWS_REGION describe-key-pairs --key-names pcfjump > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      messagePrint " - Creating Key Pair" "pcfjump"
+      aws ec2 --region=$AWS_REGION create-key-pair --key-name pcfjump \
+              --query 'KeyMaterial' --output text > ~/.ssh/${JUMP_HOST}.pem 2>/dev/null
+      chmod 600 ~/.ssh/${JUMP_HOST}.pem
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Key Pairs failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-key-pair --key-name pcfjump  \\"
+        echo "                  --query 'KeyMaterial' --output text > ~/.ssh/${JUMP_HOST}.pem"; exit 1
+      fi
+    else
+      messagePrint " - Verify Key Pair" "pcfjump"
+    fi
+
+    # --- CREATE VPC ---
+    vpc=$(aws ec2 --region=$AWS_REGION describe-vpcs --filters Name=tag:type,Values="pcfjump" | jq -r '.Vpcs[].VpcId')
+    if [ "${vpc}" == "" ]; then
+      vpc=$(aws ec2 --region=$AWS_REGION create-vpc --cidr-block 10.0.0.0/16 | jq -r '.Vpc.VpcId')
+      aws ec2 --region=$AWS_REGION create-tags --resources $vpc --tags Key=type,Value=pcfjump
+      messagePrint " - Creating VPC: $vpc" "10.0.0.0/16"
+    else
+      messagePrint " - Verify VPC: $vpc" "10.0.0.0/16"
+    fi
+
+    i=1
+    for zone in $(aws ec2 --region=$AWS_REGION describe-availability-zones | jq -r '.AvailabilityZones[].ZoneName'); do
+      sid=$(aws ec2 --region=$AWS_REGION describe-subnets --filters Name=tag:type,Values="pcfjump" \
+          Name=availability-zone,Values=$zone | jq -r '.Subnets[].SubnetId')
+      if [ "${sid}" == "" ]; then
+        sid=$(aws ec2 --region=$AWS_REGION create-subnet --vpc-id $vpc --availability-zone $zone \
+                      --cidr-block 10.0.$i.0/24 2>/dev/null | jq -r '.Subnet.SubnetId')
+        messagePrint " - Creating Subnet: $sid" "10.0.$i.0/16"
+        if [ "${sid}" == "" ]; then
+          echo "ERROR: Creating of default subnet in zone $zone failed"
+          echo "       => aws ec2 --region=$AWS_REGION create-subnet --vpc-id $vpc \\"
+          echo "                  --cidr-block 10.0.$i.0/24 --availability-zone $zone"; exit 1
+        fi
+
+        aws ec2 --region=$AWS_REGION create-tags --resources $sid --tags Key=type,Value=pcfjump > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating of Tags failed"
+          echo "       => aws ec2 --region=$AWS_REGION create-tags --resources $sid --tags Key=type,Value=pcfjump"; exit 1
+        fi
+      else
+        messagePrint " - Verify Subnet: $sid" "10.0.$i.0/16"
+      fi
+
+      let i=i+1
+    done
+
+    igw=$(aws ec2 --region=$AWS_REGION describe-internet-gateways --filters Name=tag:type,Values="pcfjump" | \
+        jq -r ".InternetGateways[].InternetGatewayId")
+    if [ "${igw}" == "" ]; then
+      igw=$(aws ec2 --region=$AWS_REGION create-internet-gateway | jq -r '.InternetGateway.InternetGatewayId')
+      messagePrint " - Creating Internet Gateway" "$igw"
+      if [ "${sid}" == "" ]; then
+        echo "ERROR: Creating of Internet Gateway failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-internet-gateway"; exit 1
+      fi
+
+      aws ec2 --region=$AWS_REGION create-tags --resources $igw --tags Key=type,Value=pcfjump > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating of Tags failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-tags --resources $sid --tags Key=type,Value=pcfjump"; exit 1
+      fi
+    else
+      messagePrint " - Verify Internet Gateway" "$igw"
+    fi
+
+    att=$(aws ec2 --region=$AWS_REGION describe-internet-gateways --filters Name=tag:type,Values="pcfjump" | \
+        jq -r ".InternetGateways[].Attachments[].VpcId")
+    if [ "${att}" == "" ]; then
+      aws ec2 --region=$AWS_REGION attach-internet-gateway --vpc-id $vpc --internet-gateway-id $igw > /dev/null 2>&1
+      messagePrint " - Attaching Internet Gateway" "$vpc"
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Attaching Internet Gateway to VPC: $vpc failed"
+        echo "       => aws ec2 --region=$AWS_REGION attach-internet-gateway --vpc-id $vpc --internet-gateway-id $igw "; exit 1
+      fi
+    fi
+
+    # --- CREATE ROUTING TABLE ---
+    rtb=$(aws ec2 --region=$AWS_REGION describe-route-tables --filters Name=tag:type,Values="pcfjump" | \
+        jq -r ".RouteTables[].RouteTableId")
+    if [ "${rtb}" == "" ]; then
+      rtb=$(aws ec2 --region=$AWS_REGION create-route-table --vpc-id $vpc| jq -r '.RouteTable.RouteTableId')
+      messagePrint " - Creating Routing Table" "$igw"
+      if [ "${sid}" == "" ]; then
+        echo "ERROR: Creating of Routing Table failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-route-table"; exit 1
+      fi
+
+      aws ec2 --region=$AWS_REGION create-tags --resources $rtb --tags Key=type,Value=pcfjump > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating of Tags failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-tags --resources $rtb --tags Key=type,Value=pcfjump"; exit 1
+      fi
+
+      aws ec2 --region=$AWS_REGION create-route --route-table-id ärtb --destination-cidr-block 0.0.0.0/0 --gateway-id $igw
+      #aws ec2 --region=$AWS_REGION describe-route-tables --route-table-id rtb-0483bed5665fd7eff
+
+    else
+      messagePrint " - Verify Internet Gateway" "$igw"
+    fi
+
+    for zone in $(aws ec2 --region=$AWS_REGION describe-availability-zones | jq -r '.AvailabilityZones[].ZoneName'); do
+      sid=$(aws ec2 --region=$AWS_REGION describe-subnets --filters Name=tag:type,Values="pcfjump" \
+          Name=availability-zone,Values=$zone | jq -r '.Subnets[].SubnetId')
+
+      messagePrint " - Associate Routing Table $rtb" "Subnet $sid"
+      aws ec2 --region=$AWS_REGION associate-route-table  --subnet-id $sid --route-table-id $rtb > /dev/null 2>&1
+      aws ec2 --region=$AWS_REGION modify-subnet-attribute --subnet-id $sid --map-public-ip-on-launch > /dev/null 2>&1
+    done
+
+    # --- CREATE SECURITY GROUP ---
+    gid=$(aws ec2 --region=$AWS_REGION  describe-security-groups \
+                  --filters Name=vpc-id,Values=$vpc Name=group-name,Values=pcfjump-sg | jq -r ".SecurityGroups[].GroupId")
+    if [ "${gid}" == "" -o "${gid}" == "null" ]; then
+      gid=$(aws ec2 --region=$AWS_REGION create-security-group --group-name pcfjump-sg --vpc-id $vpc \
+              --description "PCF Jump Server" 2>/dev/null | jq -r ".GroupId")
+      messagePrint " - Creating Security Group (pcfjump-sg)" "$gid"
+      if [ "${gid}" == "" ]; then
+        echo "ERROR: Creating security Group failed"
+        echo "       => aws ec2 --region=$AWS_REGION create-security-group --group-name pcfjump-sg \\"
+        echo "                  --vpc-id $vpc --description \"PCF Jump Server\""; exit 1
+      fi
+
+      messagePrint " - Creating Security Group Ingress for ssh" "Port: tcp/22 Cidr: 0.0.0.0/0"
+      aws ec2 --region=$AWS_REGION authorize-security-group-ingress --group-id $gid \
+              --protocol tcp --port 22 --cidr 0.0.0.0/0 > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating security Group ingress failed"
+        echo "       => aws ec2 --region=$AWS_REGION authorize-security-group-ingress --group-id $gid \\"
+        echo "                  --protocol tcp --port 22 --cidr 0.0.0.0/0"; exit 1
+      fi
+
+    else
+      messagePrint " - Verify Security Group (pcfjump-sg)" "$gid"
+    fi
+
+    aim=ami-0015c36f           # Amazon Linux  t2.nano
+    aim=ami-0085d4f8878cddc81  # Ubunto Server t2.micro
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+         Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+    if [ "${ins}" == "" ]; then
+      messagePrint " - Create Instance" "pcfjump"
+      aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
+             --instance-type t2.micro --key-name pcfjump --count 1 --subnet-id $sid --associate-public-ip-address \
+             --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating of Instance failed"
+        echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
+        echo "                  --instance-type t2.nano --key-name pcfjump --subnet-id $sid \\"
+        echo "                  --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'"
+        exit 1
+      else
+        sleep 300
+      fi
+    else
+      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+          jq -r ".Reservations[].Instances[].State.Name")
+      messagePrint " - Verify Instance: $ins" "$stt"
+      if [ "${stt}" == "stopped" ]; then
+        messagePrint " - Starting Instance: $ins" ""
+        aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
+        sleep 300
+      fi
+    fi
+
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+         Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+    stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+         jq -r ".Reservations[].Instances[].State.Name")
+    dns=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+         jq -r ".Reservations[].Instances[].PublicDnsName")
+    pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+         jq -r ".Reservations[].Instances[].PublicIpAddress")
+
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${ENV_NAME}.${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
+    ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+    messagePrint " - DNS Zone (${ENV_NAME}.${DNS_DOMAIN}:" "zone managed by route53"
+    messagePrint " - Updating Zone Record:" "$JUMP_HOST"
+
+    # --- ROUTE53 TOKEN SPECIDIED ---
+    if [ "${ROUTE53_TOKEN}" != "" ]; then
+
+cat << EOF | sed -e "s/FQHN/$JUMP_HOST/g" -e "s/IPADDR/$pip/g" > /tmp/$$_zone_record
+{
+            "Comment": "CREATE/DELETE/UPSERT a record ",
+            "Changes": [{
+            "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                                    "Name": "FQHN",
+                                    "Type": "A",
+                                    "TTL": 300,
+                                 "ResourceRecords": [{ "Value": "IPADDR"}]
+}}]
+}
+EOF
+    fi
+
+    echo "-----------------------------------------------------------------------------------------------------------"
+    aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+  fi
+}
+
 cleanRoute53() {
   if [ "${ROUTE53_TOKEN}" != "" -a "${DNS_SUFFIX}" != "" ]; then 
     aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
@@ -191,16 +409,17 @@ cleanAWSenv() {
 
 
   # --- DELETE LOAD BALANCERS ---
-  for arn in $(aws --region $AWS_LOCATION elb describe-load-balancers | jq -r '.LoadBalancers[].LoadBalancerArn' 2>/dev/null); do
-    nam=$(aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-arns $arn | \
-        jq -r '.LoadBalancers[].LoadBalancerName')
-
-    cnt=$(echo $nam | egrep -c "^${ENV_NAME}-")
+  TMPAWS=/tmp/$$_aws.json
+  for nam in $(aws --region $AWS_LOCATION elb describe-load-balancers | jq -r '.LoadBalancerDescriptions[].LoadBalancerName' 2>/dev/null); do
+    cnt=$(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam | \
+        jq -r '.TagDescriptions[].Tags[].Value' | grep -c "${ENV_NAME}")
     if [ $cnt -gt 0 ]; then
-      aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-arn $arn
+      aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam
       messagePrint " - Cleaning up elp LoadBalancers:" "$nam"
     fi
   done
+
+  rm -f $TMPAWS
 
   # --- DELETE LOAD BALANCERS ---
   for arn in $(aws --region $AWS_LOCATION elbv2 describe-load-balancers | jq -r '.LoadBalancers[].LoadBalancerArn' 2>/dev/null); do
@@ -312,10 +531,6 @@ cleanAWSenv() {
 
     sleep 10
 
-#subnet
-#network-interfaces
-#internet-gateways 
-
     # --- DELETE NETWORK INTERFACVE ---
 #    for id in $(aws --region $AWS_LOCATION ec2 describe-network-interfaces --filter "Name=vpc-id,Values=$vpc" | \
 #                jq -r ".NetworkInterfaces[].NetworkInterfaceId" 2>/dev/null $TMPVAL); do
@@ -330,6 +545,47 @@ cleanAWSenv() {
 #    done
 
     sleep 60
+
+    # --- DELETE ADDRESSES ---
+    SECGRP=/tmp/$$_aws_routing_table.json
+    aws --region $AWS_LOCATION ec2 describe-addresses > $SECGRP
+    tot=$(grep -c "PublicIp" $SECGRP); i=0; let tot=tot-1
+    while [ $i -le $tot ]; do
+      pid=$(jq -r ".Addresses[$i].PublicIp" 2>/dev/null $SECGRP)
+      aid=$(jq -r ".Addresses[$i].AllocationId" 2>/dev/null $SECGRP)
+
+      cnt=$(jq -r ".Addresses[$i].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}")
+      if [ $cnt -gt 0 ]; then
+        messagePrint " - Release PublicIP:" "$pid"
+        aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid > /dev/null 2>&1; re1=$?
+        aws --region $AWS_LOCATION ec2 release-address --public-ip $pid > /dev/null 2>&1; re2=$?
+        if [ $re1 -ne 0 -a $re2 -ne 0 ]; then
+          echo "ERROR: failed to release IP: $pid"
+          echo "aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid"
+          echo "aws --region $AWS_LOCATION ec2 release-address --public-ip $pid"
+          exit 1
+        fi
+
+        sleep 20
+      fi
+
+      let i=i+1
+    done
+
+    # --- CLEANUP ---
+    rm -f $TMPAWS
+
+    # --- DELETE LOAD BALANCERS ---
+    for nam in $(aws --region $AWS_LOCATION elb describe-load-balancers | \
+         jq -r '.LoadBalancerDescriptions[].LoadBalancerName' 2>/dev/null); do
+      tvpc=$(aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-name $nam | \
+          jq -r '.LoadBalancerDescriptions[].VPCId')
+      if [ "$tvpc" == "${vpc}" ]; then
+        aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam
+        messagePrint " - Cleaning up elp LoadBalancers:" "$nam"
+        sleep 30
+      fi
+    done
 
     # --- DELETE INTERNET GATEWAYS ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$vpc" | \
@@ -365,7 +621,6 @@ cleanAWSenv() {
       fi
     done
 
-#xxx
     SECGRP=/tmp/$$_aws_security_groups.json
     aws --region $AWS_LOCATION ec2 describe-security-groups --filter "Name=vpc-id,Values=$vpc" > $SECGRP
     tot=$(grep -c "GroupName" $SECGRP); i=0; let tot=tot-1
@@ -388,6 +643,26 @@ cleanAWSenv() {
         fi
       fi
       let i=i+1
+    done
+
+    # --- DELETE ALL SCURITY GROUPS ATTACHED TO THIS VPC ---
+    for gid in $(aws --region $AWS_LOCATION ec2 describe-security-groups | \
+         jq -r '.SecurityGroups[].GroupId' 2>/dev/null); do
+      sgnm=$(aws --region $AWS_LOCATION ec2 describe-security-groups --group-ids  $gid | \
+          jq -r '.SecurityGroups[].GroupName')
+      tvpc=$(aws --region $AWS_LOCATION ec2 describe-security-groups --group-ids  $gid | \
+          jq -r '.SecurityGroups[].VpcId')
+      if [ "$tvpc" == "${vpc}" -a "${sgnm}" != "default" ]; then
+        messagePrint " - Cleaning up SecurityGroup:" "$gid"
+        aws --region $AWS_LOCATION ec2 delete-security-group --group-id $gid > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: failled to delete security group"
+          echo "aws --region $AWS_LOCATION ec2 delete-security-group --group-id $gid"
+          exit 1
+        fi
+      fi
+
+      sleep 30
     done
 
     # --- CLEANUP ---
@@ -434,6 +709,7 @@ cleanAWSenv() {
 
   # --- CLEANUP ---
   rm -f $TMPVCP
+#xxxxxxxxxxxxxx END
 
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-route-tables > $SECGRP
