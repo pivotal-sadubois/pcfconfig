@@ -988,6 +988,59 @@ cleanGCPenv() {
   #gcloud compute target-http-proxies list
 }
 
+checkOpsMantools() {
+  # --- CHECK FOR OM UTILITY ---
+  OM=$(which om)
+  if [ "${OM}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the om utility from https://github.com/pivotal-cf/om"; exit 0
+  else
+    # --- TEST FOR WORKING OM UTILITY ---
+    OM_VERSION=$(OM version 2>/dev/null); ret=$?
+    if [ ${ret} -ne 0 -o "${OM_VERSION}" == "" ]; then
+      echo ""
+      echo "ERROR: the om utility $(which om) does not seam to be correct"
+      echo "       please install the om utility from https://github.com/pivotal-cf/om"; exit 0
+    else
+      messagePrint "checking for the om utility" "Installed - ${OM_VERSION}"
+    fi
+  fi
+
+  # --- CHECK FOR JQ UTILITY ---
+  JQ=$(which jq)
+  if [ "${JQ}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the jq utility from https://stedolan.github.io/jq/download"; exit 0
+  else
+    # --- TEST FOR WORKING JQ UTILITY ---
+    JQ_VERSION=$(JQ -V 2>/dev/null); ret=$?
+    if [ "$(JQ -V | egrep -c '^jq-')" -eq 1 -a "$(echo '{"foo": 42}' | jq .foo)" != "42" ]; then
+      echo ""
+      echo "ERROR: the jq utility $(which jq) does not seam to be correct"
+      echo "       please install the om utility from https://stedolan.github.io/jq/download/"; exit 0
+    else
+      messagePrint "checking for the jq utility" "Installed - ${JQ_VERSION}"
+    fi
+  fi
+
+  # --- CHECK FOR TERRAFORMS ---
+  TF=$(which terraform)
+  if [ "${TF}" == "" ]; then
+    echo ""
+    echo "ERROR: please install the terraform from https://www.terraform.io/downloads.html"; exit 0
+  else
+    # --- TEST FOR WORKING JQ UTILITY ---
+    TF_VERSION=$($TF -v 2>/dev/null | head -1 | awk '{ print $2 }'); ret=$?
+    if [ ${ret} -ne 0 -o "${TF_VERSION}" == "" ]; then
+      echo ""
+      echo "ERROR: the terraform $(which terraform) does not seam to be correct"
+      echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+    else
+      messagePrint "checking for the terraform " "Installed - ${TF_VERSION}"
+    fi
+  fi
+}
+
 checkCloudCLI() {
   if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
     # --- CHECK FOR AWS CLI ---
@@ -1014,7 +1067,6 @@ checkCloudCLI() {
   if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
     # --- CHECK FOR AWS CLI ---
     AWSCLI=$(which aws)
-echo "AWSCLI:$AWSCLI"
     if [ "${AWSCLI}" != "" ]; then
       $AWSCLI --version >/dev/null 2>&1; ret=$?
       if [ ${ret} -eq 0 ]; then
@@ -1045,7 +1097,7 @@ echo "AWSCLI:$AWSCLI"
       else
         echo ""
         echo "ERROR: the $cloud CLI $(which az) does not seam to be correct"
-        echo "       please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest"; exit 0
+        echo "       please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest"; exit 1
       fi
     else
       messagePrint "checking for $cloud CLI utility" "no installed"
