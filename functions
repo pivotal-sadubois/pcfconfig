@@ -1014,6 +1014,7 @@ checkCloudCLI() {
   if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
     # --- CHECK FOR AWS CLI ---
     AWSCLI=$(which aws)
+echo "AWSCLI:$AWSCLI"
     if [ "${AWSCLI}" != "" ]; then
       $AWSCLI --version >/dev/null 2>&1; ret=$?
       if [ ${ret} -eq 0 ]; then
