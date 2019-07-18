@@ -1,3 +1,5 @@
+#!/bin/bash
+# ############################################################################################
 # File: ........: pcfconfig
 # Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
@@ -49,10 +51,12 @@ GCP_REGION=""
 GCP_PROJECT=""
 CLOUD_PROVIDER=""
 PRODUCT_TILE=""
+JUMP_SERVER=0
 
 usage() {
   echo "USAGE: $PCFCONFIG_BASE [options]"
   echo "             Configuration Settings"
+  echo "                       --jump-server                    - Use a jump Server"
   echo "                       --admin-user <login>             - OpsManager Admin User"
   echo "                       --admin-pass <password>          - OpsManager Admin Password"
   echo "                       --decryption-key <phrase>        - OpsManager Decryption Prhase"
@@ -94,10 +98,13 @@ if [ "${1}" == "" ]; then
   usage; exit 0
 fi
 
+CMDLINE_ARGS=$(echo "$*" | sed -e 's/--jump-server//g' -e 's/ - / "-" /g' -e 's/ -$/ "-" /g') 
+
 while [ "$1" != "" ]; do
   case $1 in
     --debug) DEBUG=1;; 
     --usage) USAGE=1;;
+    --jump-server) JUMP_SERVER=1;;
     --pas-srt ) PAS_SRT="--pas-srt";;
     --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;       # GCP SERVICE_ACCOUNT
     --gcp-project) GCP_PROJECT=$2; shift;;       # GCP PROJECT
@@ -136,6 +143,7 @@ while [ "$1" != "" ]; do
   shift
 done
 
+
 # --- CHECK CLOUD CREDENTIALS ---
 if [ "${AZURE_SUBSCRIPTION_ID}" == "" -a "${AWS_ACCESS_KEY}" == "" -a "${GCP_SERVICE_ACCOUNT}" == "" ]; then
   echo "ERROR: Either Azure, AWS or GCP credentials needs to be provided"; exit 1
@@ -167,6 +175,56 @@ if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
     CLOUD_PROVIDER="gcp"
   fi
 fi
+
+# gaga
+if [ ${JUMP_SERVER} -eq 1 ]; then
+echo "########### JUMP SERVER ############"
+  echo ""
+  echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
+  echo "by Sacha Dubois, Pivotal Inc,"
+  echo "-----------------------------------------------------------------------------------------------------------"
+  TF_DEPLOYMENT=$CLOUD_PROVIDER
+  JUMP_HOST="pcfjump.${ENV_NAME}.${DNS_DOMAIN}"
+
+echo jjjjjjjjjj1
+  checkCloudCLI
+echo jjjjjjjjjj2
+  checkOpsMantools
+echo jjjjjjjjjj3
+  #installJumpHost
+echo jjjjjjjjjj1
+
+  sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+  echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/pcfjump.awspas.pcfsdu.com.pem ec2-user@$JUMP_HOST"
+  echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+
+  # --- INSTALL SOFTWARE ---
+  SSHPAR="-qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+  GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
+  PCFHOME="/home/ubuntu/pcfconfig"
+
+  echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+  ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+  echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+  #ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && nohup sh ${PCFHOME}/scripts/jumpInstallUtilities.sh"
+  echo "-----------------------------------------------------------------------------------------------------------"
+
+  if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
+    scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+  fi
+
+  echo "AWS_REGION:$AWS_REGION" 
+  echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+
+echo gaga1
+  #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+  ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+echo gaga2
+  exit 1
+fi 
+
+
 
 # --- CHECK PRODUCT SELECTION ---
 if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
@@ -218,6 +276,7 @@ echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
 TF_DEPLOYMENT=$CLOUD_PROVIDER
 checkCloudCLI
+checkOpsMantools
 
 # --- VERIFY PRODUCT VERSION ---
 if [ "$PRODUCT_TILE" == "pks" ]; then 
@@ -457,7 +516,8 @@ if [ "$(getPCFconfigState $PCFCONFIG_OPSMAN_STATE)" != "completed" ]; then
   cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
   setPCFconfigState $PCFCONFIG_OPSMAN_STATE "started"
-  pcfconfig-opsman -u $OPSMAN_USER -p $OPSMAN_PASS -dp $OPSMAN_DKEY --aws-route53 $ROUTE53_TOKEN
+  pcfconfig-opsman -u $OPSMAN_USER -p $OPSMAN_PASS -dp $OPSMAN_DKEY --aws-route53 $ROUTE53_TOKEN 
+
   if [ $? -ne 0 ]; then
     setPCFconfigState $PCFCONFIG_OPSMAN_STATE "failed"
     echo "ERROR: Problem with pcfconfig-opsman occured"; exit 1
@@ -493,7 +553,7 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
   
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     pcfconfig-pks-setup --pks-admin-user $PKS_ADMIN_USER --pks-admin-pass $PKS_ADMIN_PASS \
-         --pks-admin-mail $PKS_ADMIN_MAIL \
+         --pks-admin-mail $PKS_ADMIN_MAIL --aws-route53 $ROUTE53_TOKEN \
          --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
          --pks-cluster-1-plan $PKS_CLUSTER_1_PLAN \
          --pks-cluster-2-name $PKS_CLUSTER_2_NAME \
