@@ -997,14 +997,17 @@ checkCloudCLI() {
       if [ ${ret} -eq 0 ]; then
         GCLOUD_VERSION=$($GCLOUD --version 2>/dev/null | grep "Google Cloud SDK" | awk '{ print $NF}')
         GCP_CLI_ENABLED=1
-        messagePrint "checking for $cloud CLI utility" "installed - ${GCLOUD_VERSION}"
+        messagePrint "checking for gcloud CLI utility" "installed - ${GCLOUD_VERSION}"
       else
         echo ""
-        echo "ERROR: the terraform $(which terraform) does not seam to be correct"
-        echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+        echo "ERROR: The gcloud utility does not seam to be correct"
+        echo "       please install gcloud from https://cloud.google.com/sdk/install"; exit 1
       fi
     else
-      messagePrint "checking for $cloud CLI utility" "not installed"
+      messagePrint "checking for gcloud CLI utility" "not installed"
+      echo ""
+      echo "ERROR: gcloud utility is not installed. please install terraform from"
+      echo "       https://cloud.google.com/sdk/install"; exit 1
     fi
   fi
 
@@ -1016,14 +1019,16 @@ checkCloudCLI() {
       if [ ${ret} -eq 0 ]; then
         AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
         AWS_CLI_ENABLED=1
-        messagePrint "checking for $cloud CLI utility" "installed - ${AWS_VERSION}"
+        messagePrint "checking for AWS CLI utility" "installed - ${AWS_VERSION}"
       else
         echo ""
-        echo "ERROR: the terraform $(which terraform) does not seam to be correct"
-        echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
+        echo "ERROR: the AWS cli utility does not seam to be correct, please reinstall it from:"
+        echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
       fi
     else
-      messagePrint "checking for $cloud CLI utility" "no installed"
+      messagePrint "checking for AWS CLI utility" "not installed"
+      echo "ERROR: the AWS cli utility is not installed, please install it from:"
+      echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
     fi
   fi
 
