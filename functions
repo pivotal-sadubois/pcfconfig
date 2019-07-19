@@ -991,6 +991,7 @@ cleanGCPenv() {
 checkOpsMantools() {
   # --- CHECK FOR OM UTILITY ---
   OM=$(which om)
+echo "11 OM:$OM"
   if [ "${OM}" == "" ]; then
     echo ""
     echo "ERROR: please install the om utility from https://github.com/pivotal-cf/om"; exit 0
