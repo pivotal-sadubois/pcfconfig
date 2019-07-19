@@ -45,7 +45,6 @@ PKS_CLUSTER_1_PLAN=""
 PKS_CLUSTER_2_PLAN=""
 PKS_CLUSTER_3_PLAN=""
 
-
 TLS_CERTIFICATE=""
 TLS_PRIVATE_KEY=""
 
@@ -102,6 +101,13 @@ while [ "$1" != "" ]; do
   esac
   shift
 done
+
+[ "$PKS_CLUSTER_1_NAME" == "-" ] && PKS_CLUSTER_1_NAME=""
+[ "$PKS_CLUSTER_1_PLAN" == "-" ] && PKS_CLUSTER_1_PLAN=""
+[ "$PKS_CLUSTER_2_NAME" == "-" ] && PKS_CLUSTER_2_NAME=""
+[ "$PKS_CLUSTER_2_PLAN" == "-" ] && PKS_CLUSTER_2_PLAN=""
+[ "$PKS_CLUSTER_3_NAME" == "-" ] && PKS_CLUSTER_3_NAME=""
+[ "$PKS_CLUSTER_3_PLAN" == "-" ] && PKS_CLUSTER_3_PLAN=""
 
 ##############################################################################################
 ########################################## FUNCTIONS #########################################
@@ -217,73 +223,20 @@ environmentCleanUp() {
 }
 
 checkPKStools() {
-  # --- CHECK FOR OM UTILITY ---
+  # --- CHECK FOR OPENSSL UTILITY ---
   OPENSSL=$(which openssl)
   if [ "${OPENSSL}" == "" ]; then
     echo ""
     echo "ERROR: please install the openssl utility"; exit 0
   else
-    # --- TEST FOR WORKING OM UTILITY ---
+    # --- TEST FOR WORKING OPENSSL UTILITY ---
     OPENSSL_VERSION=$(OPENSSL version 2>/dev/null); ret=$?
     if [ ${ret} -ne 0 -o "${OPENSSL_VERSION}" == "" ]; then
       echo ""
-      echo "ERROR: the om utility $(which openssl) does not seam to be correct"
+      echo "ERROR: the utility $(which openssl) does not seam to be correct"
       echo "       please install the openssl utility"; exit 0
     else
       messagePrint "checking for the openssl utility" "Installed - ${OPENSSL_VERSION}"
-    fi
-  fi
-}
-
-checkOpsMantools() {
-  # --- CHECK FOR OM UTILITY ---
-  OM=$(which om)
-  if [ "${OM}" == "" ]; then
-    echo ""
-    echo "ERROR: please install the om utility from https://github.com/pivotal-cf/om"; exit 0
-  else
-    # --- TEST FOR WORKING OM UTILITY ---
-    OM_VERSION=$(OM version 2>/dev/null); ret=$?
-    if [ ${ret} -ne 0 -o "${OM_VERSION}" == "" ]; then
-      echo ""
-      echo "ERROR: the om utility $(which om) does not seam to be correct"
-      echo "       please install the om utility from https://github.com/pivotal-cf/om"; exit 0
-    else
-      messagePrint "checking for the om utility" "Installed - ${OM_VERSION}"
-    fi
-  fi
-
-  # --- CHECK FOR JQ UTILITY ---
-  JQ=$(which jq)
-  if [ "${JQ}" == "" ]; then
-    echo ""
-    echo "ERROR: please install the jq utility from https://stedolan.github.io/jq/download"; exit 0
-  else
-    # --- TEST FOR WORKING JQ UTILITY ---
-    JQ_VERSION=$(JQ -V 2>/dev/null); ret=$?
-    if [ "$(JQ -V | egrep -c '^jq-')" -eq 1 -a "$(echo '{"foo": 42}' | jq .foo)" != "42" ]; then
-      echo ""
-      echo "ERROR: the jq utility $(which jq) does not seam to be correct"
-      echo "       please install the om utility from https://stedolan.github.io/jq/download/"; exit 0
-    else
-      messagePrint "checking for the jq utility" "Installed - ${JQ_VERSION}"
-    fi
-  fi
-
-  # --- CHECK FOR TERRAFORMS ---
-  TF=$(which terraform)
-  if [ "${TF}" == "" ]; then
-    echo ""
-    echo "ERROR: please install the terraform from https://www.terraform.io/downloads.html"; exit 0
-  else
-    # --- TEST FOR WORKING JQ UTILITY ---
-    TF_VERSION=$($TF -v 2>/dev/null | head -1 | awk '{ print $2 }'); ret=$?
-    if [ ${ret} -ne 0 -o "${TF_VERSION}" == "" ]; then
-      echo ""
-      echo "ERROR: the terraform $(which terraform) does not seam to be correct"
-      echo "       please install terraform from https://www.terraform.io/downloads.html"; exit 0
-    else
-      messagePrint "checking for the terraform " "Installed - ${TF_VERSION}"
     fi
   fi
 }
@@ -1444,9 +1397,16 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 
     # HANDLED NY THE FILTER SCRIPT
     #echo "project: $GCP_SVC_PRJID"                     >> $VARFILE
-    #echo "associated_service_account: ${GCP_SVC_NAME}" >> $VARFILE
     echo "default_deployment_tag: $DNS_PREFIX"          >> $VARFILE
     echo "region: ${GCP_REGION}"                        >> $VARFILE
+    
+    
+    sed -n '/SERVICE_ACCOUNT_KEY/,/SERVICE_ACCOUNT_KEY/p' terraform.tfvars | sed -e '1d' -e '$d' | \
+    jq 'tostring' | sed 's/^/pcfconfig_service_account: /g' >> $VARFILE
+
+    sva=$(sed -n '/SERVICE_ACCOUNT_KEY/,/SERVICE_ACCOUNT_KEY/p' terraform.tfvars | sed -e '1d' -e '$d')
+    cem=$(echo $sva | jq -r '.client_email')
+    echo "associated_service_account: ${cem}" >> $VARFILE
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
@@ -1529,13 +1489,16 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     fi
   else
     echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-1 ------------------------------------------"
-    $OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
+    $OM $OM_LOGIN configure-director --ignore-verifier-warnings --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
+    #$OM $OM_LOGIN configure-director --config /tmp/$$_tmpcfg.yml --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
       echo "ERROR: OpsManager configure-direcotr failed, please try again"; exit 1
     fi
 
     echo "--------------------------------- CONFIGURING OPSMANAGER STAGE-2 ------------------------------------------"
-    $OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
+echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSMAN_CONFIG --vars-file $VARFILE"
+    $OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
+    #$OM $OM_LOGIN configure-director --config $OPSMAN_CONFIG --vars-file $VARFILE; ret=$?
     if [ $? -ne 0 ]; then 
       echo "ERROR: OpsManager configure-direcotr failed, please try again"; exit 1
     fi
@@ -1548,19 +1511,25 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       echo "ERROR: Updating OpsManager via API failed"; exit 1
     fi
   
+#XXX gcloud projects add-iam-policy-binding  pa-sadubois-4ecf9e2c --member=serviceAccount:pcfconfig@pa-sadubois-4ecf9e2c.iam.gserviceaccount.com --role=roles/browser
+
     if [ $NO_APPLY -eq 0 ]; then
       echo "Applying Changes to OpsManager"
-      if [ $DEBUG -gt 0 ]; then
-        echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN apply-changes
-        echo "-----------------------------------------------------------------------------------------------------------"
-      else
-        $OM $OM_LOGIN apply-changes > /dev/null 2>&1
-        if [ $? -ne 0 ]; then 
-          echo "ERROR: Applying Changes failed, try manual"
-          echo "       => $OM $OM_LOGIN apply-changes "
-          exit 1
+      i=1; ret=1; 
+      while [ $i -le 3 -a $ret -ne 0 ]; do
+        if [ $DEBUG -gt 0 ]; then
+          $OM $OM_LOGIN apply-changes; ret=$?
+        else
+          $OM $OM_LOGIN apply-changes > /dev/null 2>&1; ret=$?
         fi
+  
+        let i=i+1
+      done
+
+      if [ $ret -ne 0 ]; then 
+        echo "ERROR: Applying Changes failed, try manual"
+        echo "       => $OM $OM_LOGIN apply-changes "
+        exit 1
       fi
     fi
   fi
@@ -1909,7 +1878,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       messagePrint " - Subnet-3:" "$SUB3"
       messagePrint " - Security Group:" "$SECG"
 
-      aws elb --region eu-central-1 describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
+      aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
       if [ ${ret} -gt 0 ]; then
         aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" \
         --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
@@ -1945,7 +1914,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
           list=$(echo $TLS_HOST_NAME | sed 's/,/ /g')
 
           for n in $list; do
-    cat << EOF | sed -e "s/FQHN/$n/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+    cat << EOF | sed -e "s/FQHN/$n/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$ZONEID/g" > /tmp/$$_zone_record
 {
             "Comment": "CREATE/DELETE/UPSERT a record ",
             "Changes": [{
@@ -2080,7 +2049,6 @@ EOF
       echo "subscription_id: $AZURE_SUBSCRIPTION" >> $VARFILE
       echo "tenant_id: $AZURE_TENNENT" >> $VARFILE
       echo "primary_availability_set: ${DNS_PREFIX}-pks-as" >> $VARFILE
-    fi
 
       echo "Verify $cloud configuration:"
       messagePrint " - Azure SubscriptionId" "$AZURE_SUBSCRIPTION"
@@ -2092,6 +2060,7 @@ EOF
       messagePrint " - DNS Domain Prefix" "$AZURE_DNS_PREFIX"
       messagePrint " - DNS SubDomain" "$AZURE_DNS_SUBDOMAIN"
       messagePrint " - OPS Manager Image" "$AZURE_OPS_MANAGER_IMAGE"
+    fi
 
 #ggggg
 
@@ -2171,9 +2140,9 @@ EOF
       messagePrint " - Subnet-3:" "$SUB3"
       messagePrint " - Security Group:" "$SECG"
 
-      aws elb --region eu-central-1 describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
+      aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
       if [ ${ret} -gt 0 ]; then
-        aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" \
+        aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
         --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
                     "Protocol=TCP,LoadBalancerPort=9021,InstanceProtocol=TCP,InstancePort=9021" \
         --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG
@@ -2203,6 +2172,7 @@ EOF
         messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
         messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
 
+#pppp
         if [ "${ZONE_ID}" != "" ]; then 
     cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
@@ -2313,6 +2283,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
   $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
   if [ $ret -eq 0 ]; then 
+    director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+                  jq -r '.instance_groups[].properties.director.address')
+    director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+                  jq -r '.credential.value.password')
+
     prd="xxx"; i=0
     while [ "${prd}" != "null" ]; do
       prd=$(jq -r ".[$i].type" $TMP_JQ)
@@ -2352,63 +2327,356 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   chmod 600 $TMP_OPSMAN
   chmod 777 $TMP_SCRIPT
 
+  # --- CHEKING DNS ---
+  echo "Validating API GATEWAY DNS record ($TLS_HOST_NAME)"
+  nslookup -timeout=10 $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+  if [ $ret -ne 0 ]; then
+    i=1; ret="failed"; dns_google_stat="failed"
+     while [ $i -lt 10 -a ${ret} == "failed" ]; do
+      sleep 10
+      nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+      if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+      messagePrint "   => Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
+      let i=i+1
+    done
+  else
+    messagePrint "   => Verify DNS lookup Google (8.8.8.8)" "successful"
+  fi
+
+  localdns=$(nslookup localhost | grep Server:  | awk '{ print $2 }')
+  i=1; ret="failed"; dns_google_stat="failed"
+   while [ $i -lt 30 -a ${ret} == "failed" ]; do
+    sleep 10
+    nslookup $TLS_HOST_NAME > /dev/null 2>&1; ret=$?
+    if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
+    messagePrint "   => Verify DNS lookup localhost ($localdns)" "$dns_google_stat"
+    let i=i+1
+  done
+
+#xxxx
+
   nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -eq 0 ]; then 
-    TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
-    echo "echo '# Connecting to ${TLS_HOST_NAME}'"                                                         >  $TMP_SCRIPT
-    echo "uaac target ${TLS_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
-    echo "if [ \$? -ne 0 ]; then"                                                                          >> $TMP_SCRIPT
-    echo "  exit 1"                                                                                        >> $TMP_SCRIPT
-    echo "fi"                                                                                              >> $TMP_SCRIPT
-    echo "echo '# Grant Enterprise PKS Access to a User'"                                                  >> $TMP_SCRIPT
-    echo "uaac token client get admin -s ${sec}"                                                           >> $TMP_SCRIPT
-    echo "echo '# Add User: ${PKS_ADMIN_USER} / ${PKS_ADMIN_MAIL}'"                                        >> $TMP_SCRIPT
-    echo "uaac user add ${PKS_ADMIN_USER} --emails ${PKS_ADMIN_MAIL} -p ${PKS_ADMIN_PASS}"                 >> $TMP_SCRIPT
-    echo "uaac member add pks.clusters.admin ${PKS_ADMIN_USER}"                                            >> $TMP_SCRIPT
+    ##############################################################################################
+    ############################### CONFIGURE PKS AUTHENTIFICATION ###############################
+    ##############################################################################################
 
-    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
-    if [ ${ret} -ne 0 ]; then
-      echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
-      echo "       Please try manually:"
-      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh"
-      exit 1
-    fi
+    # --- CHECK IF AUTHENTIFICATION HAS ALREADY BEEN CONFIGURED ---
+    pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
+    if [ $ret -ne 0 ]; then 
+      echo "Creating PKS Authentification"
+      messagePrint " - PKS Administration User:" "$PKS_ADMIN_USER"
+      messagePrint " - PKS Administration Password:" "$PKS_ADMIN_PASS"
+      messagePrint " - PKS Administration Email:" "$PKS_ADMIN_MAIL"
+      messagePrint " - PKS Administration Role:" "pks.clusters.admin"
+
+      # SLEEP AS CRACE PERIOD 
+      sleep 240
+
+      # --- UAAC LOGIN SCRIPT ---
+      TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
+      echo "echo '# Connecting to ${TLS_HOST_NAME}'"                                                          >  $TMP_SCRIPT
+      #echo "uaac target ${TLS_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
+      echo "uaac target ${TLS_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
+      echo "if [ \$? -ne 0 ]; then"                                                                           >> $TMP_SCRIPT
+      echo "  exit 1"                                                                                         >> $TMP_SCRIPT
+      echo "fi"                                                                                               >> $TMP_SCRIPT
+      echo "echo '# Grant Enterprise PKS Access to a User'"                                                   >> $TMP_SCRIPT
+      echo "uaac token client get admin -s ${sec} 2>/dev/null"                                                >> $TMP_SCRIPT
+      echo "echo '# Add User: ${PKS_ADMIN_USER} / ${PKS_ADMIN_MAIL}'"                                         >> $TMP_SCRIPT
+      echo "sudo uaac user get ${PKS_ADMIN_USER} 2>/dev/null"                                                 >> $TMP_SCRIPT
+      echo "if [ \$? -ne 0 ]; then"                                                                           >> $TMP_SCRIPT
+      echo "  uaac user add ${PKS_ADMIN_USER} --emails ${PKS_ADMIN_MAIL} -p ${PKS_ADMIN_PASS} 2>/dev/null"    >> $TMP_SCRIPT
+      echo "  uaac member add pks.clusters.admin ${PKS_ADMIN_USER} 2>/dev/null"                               >> $TMP_SCRIPT
+      echo "fi"                                                                                               >> $TMP_SCRIPT
   
-    echo "-----------------------------------------------------------------------------------------------------------"
-    #ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh" | sed '/^$/d'; ret=$?
-    (ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
-    echo "-----------------------------------------------------------------------------------------------------------"
-    if [ ${ret} -ne 0 ]; then
-      echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
-      echo "       Please try manually:"
-      echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"sudo /tmp/om-install.sh\""
-      exit 1
+      scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
+      if [ ${ret} -ne 0 ]; then
+        echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+        echo "       Please try manually:"
+        echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh"
+        exit 1
+      fi
+
+      echo "-----------------------------------------------------------------------------------------------------------"
+      (ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
+      echo "-----------------------------------------------------------------------------------------------------------"
+      if [ ${ret} -ne 0 ]; then
+        echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+        echo "       Please try manually:"
+        echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"sudo /tmp/om-install.sh\""
+        exit 1
+      fi
+
+      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
+      if [ $ret -ne 0 ]; then
+        echo "ERROR: Accessing API gateway $OPS_MANAGER_DNS failed"; exit 1
+      fi
     fi
+
+    ##############################################################################################
+    ################################ CONFIGURE PKS LOADBALANCERS #################################
+    ##############################################################################################
+
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        if [ ${ret} -gt 0 ]; then
+          # --- CREATE TARGET POOL ---
+          echo "Creating Target Pool (${GCP_DNS_PREFIX}-$n)"
+          gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+          if [ ${ret} -ne 0 ]; then
+            echo "ERROR: Creating target-pools (${GCP_DNS_PREFIX}-$n)"
+            echo "gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
+            exit 1
+          fi
+        fi
+
+        gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        if [ ${ret} -gt 0 ]; then
+          # --- CREATE LOAD BALANCER ---
+          echo "Creating LoadBalancer (${GCP_DNS_PREFIX}-$n) for cluster: $n"
+	  gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 \
+            --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+          if [ ${ret} -ne 0 ]; then
+            echo "ERROR: Creating forwarding-rules (${GCP_DNS_PREFIX}-$n)"
+            echo "gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
+            exit 1
+          fi
+        fi
+
+        cnt=$(gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name "${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}." \
+                --type=A 2> /dev/null | wc -l | sed 's/ //g')
+        if [ ${cnt} -eq 0 ]; then
+          echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
+          ipa=$(gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION | \
+              grep IPAddress | awk '{ print $NF }')
+          gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone
+          gcloud dns record-sets transaction add "$ipa" --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. \
+             --type A -z ${GCP_DNS_PREFIX}-zone --ttl=300
+          gcloud dns record-sets transaction execute -z ${GCP_DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
+          if [ ${ret} -ne 0 ]; then
+            echo "ERROR: Creating DNS record-sets for zone (${GCP_DNS_PREFIX}-zone)"
+            exit 1
+          fi
+        fi
+      done
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      # --- CREATE ELB LOADBALANCER ---
+      SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
+      SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
+         grep -v null | sed '/: $/d' | sort -u)
+
+      echo "Creating ELB Loadbalancer (k8s-master-$n)"
+      messagePrint " - Subnet-1:" "$SUB1"
+      messagePrint " - Subnet-2:" "$SUB2"
+      messagePrint " - Subnet-3:" "$SUB3"
+      messagePrint " - Security Group:" "$SECG"
+
+      #echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh"
+      #echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"sudo /tmp/om-install.sh\""
+
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" > /dev/null 2>&1; ret=$?
+        if [ ${ret} -gt 0 ]; then
+          echo "Creating LoadBalancer (k8s-master-$n) for cluster: $n"
+
+          aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "k8s-master-$n" \
+             --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
+             --listeners "Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443" \
+             --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG > /dev/null 2>&1; ret=$?
+          if [ ${ret} -ne 0 ]; then
+            echo "ERROR: Creating LoadBalancer"
+            echo "aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name \"k8s-master-$n\" \\"
+            echo "  --tags \"Key=Environment,Value=$AWS_DNS_PREFIX\" \\"
+            echo "  --listeners \"Protocol=TCP,LoadBalancerPort=8443,InstanceProtocol=TCP,InstancePort=8443\" \\"
+            echo "  --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG"
+            exit 1
+          fi
+
+          aws elb configure-health-check --region $AWS_REGION --load-balancer-name k8s-master-$n \
+             --health-check "Target=TCP:8443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3" > /dev/null 2>&1; ret=$?
+          if [ ${ret} -ne 0 ]; then
+            echo "ERROR: Configure Healhcheck"
+            echo "aws elb configure-health-check --region $AWS_REGION --load-balancer-name k8s-master-$n \\"
+            echo "  --health-check \"Target=TCP:8443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3\""
+            exit 1
+          fi
+        fi
+
+        if [ "${ROUTE53_TOKEN}" != "" ]; then
+          DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
+            jq -r '.LoadBalancerDescriptions[0].DNSName')
+          DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
+            jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+          ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+          ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+
+#ppppp
+          if [ "${ZONE_ID}" != "" ]; then
+            ZONE="${n}.${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}"
+
+    cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+{
+            "Comment": "CREATE/DELETE/UPSERT a record ",
+            "Changes": [{
+            "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                                    "Name": "FQHN.",
+                                    "Type": "A",
+                                    "AliasTarget": {
+                                                    "HostedZoneId": "ZZID",
+                                                    "DNSName": "dualstack.AAAA.",
+                                                    "EvaluateTargetHealth": true
+                                                }
+}}]
+}
+EOF
+
+
+            echo "-----------------------------------------------------------------------------------------------------------"
+            aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record
+            echo "-----------------------------------------------------------------------------------------------------------"
+
+            cp /tmp/$$_zone_record /tmp/aws_zone_record
+            rm -f /tmp/$$_zone_record
+          fi
+        fi
+      done
+    fi
+
+    ##############################################################################################
+    #################################### CREATE PKS CLUSTERS #####################################
+    ##############################################################################################
+
+echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
 
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
       if [ $? -ne 0 ]; then
-    echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation   #ADMIN"
         echo "ERROR: login to pks failled"; exit 1
       fi
   
       if [ "${PKS_CLUSTER_1_NAME}" != "" ]; then 
-        pks cluster PKS_CLUSTER_1_NAME > /dev/null 2>&1
+        pks cluster $PKS_CLUSTER_1_NAME > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
-          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "creating"
+          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME" "creating"
+          messagePrint " - External Hostnama:" "$PKS_CLUSTER_1_NAME.${DNS_PREFIX}.${DNS_SUFFIX}"
+          messagePrint " - Plan:" "$PKS_CLUSTER_1_PLAN"
           pks create-cluster $PKS_CLUSTER_1_NAME \
-             --external-hostname ${PKS_CLUSTER_1_NAME}.pks.${DNS_PREFIX}.${DNS_SUFFIX} \
+             --external-hostname $PKS_CLUSTER_1_NAME.${DNS_PREFIX}.${DNS_SUFFIX} \
              --plan $PKS_CLUSTER_1_PLAN --wait 
+          echo "-----------------------------------------------------------------------------------------------------------"
+          if [ $? -ne 0 ]; then 
+            echo "ERROR: Creating PKS Cluster $PKS_CLUSTER_1_NAME failed"
+            echo "       => pks create-cluster $PKS_CLUSTER_1_NAME --external-hostname ${lbdns} --plan $PKS_CLUSTER_1_PLAN  --wait"
+            exit 1
+          fi
+
+          stt=$(pks cluster $PKS_CLUSTER_1_NAME | egrep "Last Action State:" | awk '{ print $NF }')
+          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "$stt"
+          if [ "$stt" != "succeeded" ]; then
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) creation failed"; exit 1
+          fi
         else
-          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "pending"
+          stt=$(pks cluster $PKS_CLUSTER_1_NAME | egrep "Last Action State:" | awk '{ print $NF }')
+          messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "$stt"
+
+          if [ "$stt" == "failed" ]; then
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) is in failed state, please delete cluster and restart"
+            echo "       => pks delete-cluster $PKS_CLUSTER_1_NAME"
+            exit 1
+          fi
         fi
       fi
+    fi
+
+    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+
+    ##############################################################################################
+    ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
+    ##############################################################################################
+
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
+
+        # --- ADD CLUSTER UUID TO AWS SUBNETS AT TAG ---
+        for net in $(aws ec2 --region=$AWS_REGION describe-subnets | jq -r '.Subnets[].SubnetId'); do
+          cnt=$(aws ec2 --region=$AWS_REGION describe-subnets --subnet-id $net | jq -r '.Subnets[].Tags[].Value' | \
+              egrep -c "^${DNS_PREFIX}-public-subnet")
+          if [ $cnt -gt 0 ]; then
+            aws ec2 --region=$AWS_REGION create-tags --resources $net \
+                --tags Key="kubernetes.io/cluster/service-instance_$uid",Value=""
+          fi
+        done
+
+        ##############################################################################################
+        ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
+        ##############################################################################################
+
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >> $TMP_LBSCRIPT
+        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
+
+        scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh"
+          exit 1
+        fi
+
+        ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" >/dev/null 2>&1; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: executing remote-script: /tmp/masters.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+          exit 1
+        else
+          mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
+        fi
+
+        ##############################################################################################
+        ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
+        ##############################################################################################
+
+        aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" > /dev/null 2>&1; ret=$?
+        if [ ${ret} -eq 0 ]; then
+          for ins in $mst; do
+            aws elb --region $AWS_REGION register-instances-with-load-balancer \
+               --load-balancer-name k8s-master-$n --instances "${ins}" > /dev/null 2>&1; ret=$?
+            if [ ${ret} -ne 0 ]; then
+              echo "ERROR: Register Instances"
+              echo "aws elb --region $AWS_REGION register-instances-with-load-balancer \\"
+              echo "  --load-balancer-name k8s-master-$n --instances $ins"
+              exit 1
+            fi
+          done
+        fi
+      done
     fi
 
     echo ""
     echo "Configuration of the PKS Swtup Completed is completed. Please login to PKS:"
     echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
     echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation" 
+    echo "pks get-credentials $PKS_CLUSTER_1_NAME"
+    echo ""
+    echo "Setup Kubernetes:"
+    echo "kubectl config use-context $PKS_CLUSTER_1_NAME"
+    echo "kubectl cluster-info"
+
   else
     echo ""
     echo "ERROR: API Host: $TLS_HOST_NAME can not be resolved by DNS"; exit 1

@@ -207,7 +207,7 @@ echo jjjjjjjjjj1
   ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
   ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
   echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
-  #ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && nohup sh ${PCFHOME}/scripts/jumpInstallUtilities.sh"
+  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && nohup sh ${PCFHOME}/scripts/jumpInstallUtilities.sh"
   echo "-----------------------------------------------------------------------------------------------------------"
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
