@@ -997,9 +997,10 @@ checkOpsMantools() {
   else
     # --- TEST FOR WORKING OM UTILITY ---
     OM_VERSION=$($OM version 2>/dev/null); ret=$?
-    if [ ${ret} -ne 0 -o "${OM_VERSION}" == "" ]; then
+echo "OM_VERSION:$OM_VERSION OM:$OM"
+    if [ ${ret} -ne 0 "${OM_VERSION}" == "" ]; then
       echo ""
-      echo "ERROR: the om utility $(which om) does not seam to be correct"
+      echo "ERROR: The om utility $(which om) does not seam to be correct"
       echo "       please install the om utility from https://github.com/pivotal-cf/om"; exit 0
     else
       messagePrint "checking for the om utility" "Installed - ${OM_VERSION}"
