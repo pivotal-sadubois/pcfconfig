@@ -1015,7 +1015,7 @@ echo "11 OM:$OM"
   else
     # --- TEST FOR WORKING JQ UTILITY ---
     JQ_VERSION=$(JQ -V 2>/dev/null); ret=$?
-    if [ "$(JQ -V | egrep -c '^jq-')" -eq 1 -a "$(echo '{"foo": 42}' | jq .foo)" != "42" ]; then
+    if [ "$($JQ -V | egrep -c '^jq-')" -eq 1 -a "$(echo '{"foo": 42}' | jq .foo)" != "42" ]; then
       echo ""
       echo "ERROR: the jq utility $(which jq) does not seam to be correct"
       echo "       please install the om utility from https://stedolan.github.io/jq/download/"; exit 0
