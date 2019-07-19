@@ -998,6 +998,7 @@ echo "11 OM:$OM"
   else
     # --- TEST FOR WORKING OM UTILITY ---
     OM_VERSION=$(OM version 2>/dev/null); ret=$?
+echo "OM_VERSION:$OM_VERSION"
     if [ ${ret} -ne 0 -o "${OM_VERSION}" == "" ]; then
       echo ""
       echo "ERROR: the om utility $(which om) does not seam to be correct"
