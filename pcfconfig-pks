@@ -231,7 +231,6 @@ checkPKStools() {
   else
     # --- TEST FOR WORKING OPENSSL UTILITY ---
     OPENSSL_VERSION=$($OPENSSL version 2>/dev/null); ret=$?
-echo "RET:$ret OPENSSL_VERSION:$OPENSSL_VERSION"
     if [ ${ret} -ne 0 -o "${OPENSSL_VERSION}" == "" ]; then
       echo ""
       echo "ERROR: the utility $(which openssl) does not seam to be correct"
