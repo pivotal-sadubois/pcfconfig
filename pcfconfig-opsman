@@ -209,8 +209,11 @@ environmentCleanUp() {
 
     messagePrint "Cleaning up Leftover AWS Objects" "Environment: $ENV_NAME Location: $AWS_LOCATION"
 
+echo gaga1
     cleanRoute53
+echo gaga2
     cleanAWSenv
+echo gaga3
   fi
 
   if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
