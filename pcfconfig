@@ -213,6 +213,7 @@ echo "########### JUMP SERVER ############"
   echo "AWS_REGION:$AWS_REGION" 
   echo "CMDLINE_ARGS:$CMDLINE_ARGS"
 
+echo xxxxxxxxx
   ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   exit 1
