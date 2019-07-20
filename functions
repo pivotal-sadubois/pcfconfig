@@ -268,10 +268,13 @@ cleanAWSenv() {
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
   tot=$(grep -c "InstanceId" $SECGRP); i=0; let tot=tot-1
+echo xx1
+cp $SECGRP /tmp/1
   while [ $i -le $tot ]; do
     gid=$(jq -r ".Reservations[$i].Instances[].InstanceId" 2>/dev/null $SECGRP)
 
     cnt=$(jq -r ".Reservations[$i].Instances[].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}|p-bosh")
+echo "xx1 =>  CNT:$cnt $GID:¨gid"
     if [ $cnt -gt 0 ]; then
       cnt=$(jq -r ".Reservations[$i].Instances[].State.Name" 2>/dev/null $SECGRP | egrep -c "terminated")
       if [ $cnt -eq 0 ]; then
@@ -289,6 +292,7 @@ cleanAWSenv() {
     
     let i=i+1
   done
+echo gaga2
 
   # --- CLEANUP ---
   rm -f $SECGRP
