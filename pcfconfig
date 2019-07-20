@@ -184,15 +184,11 @@ echo "########### JUMP SERVER ############"
   echo "by Sacha Dubois, Pivotal Inc,"
   echo "-----------------------------------------------------------------------------------------------------------"
   TF_DEPLOYMENT=$CLOUD_PROVIDER
-  JUMP_HOST="pcfjump.${ENV_NAME}.${DNS_DOMAIN}"
+  JUMP_HOST="jump-${ENV_NAME}.${DNS_DOMAIN}"
 
-echo jjjjjjjjjj1
   checkCloudCLI
-echo jjjjjjjjjj2
   checkOpsMantools
-echo jjjjjjjjjj3
-  #installJumpHost
-echo jjjjjjjjjj1
+  installJumpHost
 
   sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
   echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/pcfjump.awspas.pcfsdu.com.pem ec2-user@$JUMP_HOST"
@@ -217,10 +213,8 @@ echo jjjjjjjjjj1
   echo "AWS_REGION:$AWS_REGION" 
   echo "CMDLINE_ARGS:$CMDLINE_ARGS"
 
-echo gaga1
-  #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
-  ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
-echo gaga2
+  ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+  #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   exit 1
 fi 
 

@@ -202,9 +202,11 @@ installJumpHost() {
     pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
          jq -r ".Reservations[].Instances[].PublicIpAddress")
 
-    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${ENV_NAME}.${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
+    #ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${ENV_NAME}.${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
+    #ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
     ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-    messagePrint " - DNS Zone (${ENV_NAME}.${DNS_DOMAIN}:" "zone managed by route53"
+    messagePrint " - DNS Zone (${DNS_DOMAIN}:" "zone managed by route53"
     messagePrint " - Updating Zone Record:" "$JUMP_HOST"
 
     # --- ROUTE53 TOKEN SPECIDIED ---
