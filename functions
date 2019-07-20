@@ -292,7 +292,7 @@ echo "xx1 =>  CNT:$cnt $GID:¨gid"
     
     let i=i+1
   done
-echo gaga2
+echo xx2
 
   # --- CLEANUP ---
   rm -f $SECGRP
@@ -302,6 +302,7 @@ echo gaga2
   aws --region $AWS_LOCATION iam list-instance-profiles > $TMPAWS
   tot=$(grep -c "InstanceProfileId" $TMPAWS); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
+echo xx21
     arn=$(jq -r ".InstanceProfiles[$i].InstanceProfileId" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".InstanceProfiles[$i].InstanceProfileName" 2>/dev/null $TMPAWS)
 
@@ -323,6 +324,7 @@ echo gaga2
     let i=i+1
   done
  
+echo xx3
   # --- CLEANUP ---
   rm -f $TMPAWS
 
@@ -331,6 +333,7 @@ echo gaga2
   aws --region $AWS_LOCATION iam list-roles > $TMPAWS
   tot=$(grep -c "RoleName" $TMPAWS); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
+echo xx41
     arn=$(jq -r ".Roles[$i].RoleId" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".Roles[$i].RoleName" 2>/dev/null $TMPAWS)
 
@@ -353,6 +356,7 @@ echo gaga2
     let i=i+1
   done
   
+echo xx4
   # --- CLEANUP ---
   rm -f $TMPAWS
 
