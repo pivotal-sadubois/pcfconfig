@@ -166,6 +166,7 @@ installJumpHost() {
 
     aim=ami-0015c36f           # Amazon Linux  t2.nano
     aim=ami-0085d4f8878cddc81  # Ubunto Server t2.micro
+    aim=ami-0085d4f8878cddc81  # Ubunto Server t2.medium
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
          Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
     if [ "${ins}" == "" ]; then
