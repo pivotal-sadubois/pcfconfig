@@ -269,13 +269,10 @@ cleanAWSenv() {
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
   tot=$(grep -c "InstanceId" $SECGRP); i=0; let tot=tot-1
-echo xx1
-cp $SECGRP /tmp/1
   while [ $i -le $tot ]; do
     gid=$(jq -r ".Reservations[$i].Instances[].InstanceId" 2>/dev/null $SECGRP)
 
     cnt=$(jq -r ".Reservations[$i].Instances[].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}|p-bosh")
-echo "xx1 =>  CNT:$cnt $GID:¨gid"
     if [ $cnt -gt 0 ]; then
       cnt=$(jq -r ".Reservations[$i].Instances[].State.Name" 2>/dev/null $SECGRP | egrep -c "terminated")
       if [ $cnt -eq 0 ]; then
@@ -293,7 +290,6 @@ echo "xx1 =>  CNT:$cnt $GID:¨gid"
     
     let i=i+1
   done
-echo xx2
 
   # --- CLEANUP ---
   rm -f $SECGRP
@@ -303,7 +299,6 @@ echo xx2
   aws --region $AWS_LOCATION iam list-instance-profiles > $TMPAWS
   tot=$(grep -c "InstanceProfileId" $TMPAWS); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
-echo xx21
     arn=$(jq -r ".InstanceProfiles[$i].InstanceProfileId" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".InstanceProfiles[$i].InstanceProfileName" 2>/dev/null $TMPAWS)
 
@@ -325,7 +320,6 @@ echo xx21
     let i=i+1
   done
  
-echo xx3
   # --- CLEANUP ---
   rm -f $TMPAWS
 
@@ -334,7 +328,6 @@ echo xx3
   aws --region $AWS_LOCATION iam list-roles > $TMPAWS
   tot=$(grep -c "RoleName" $TMPAWS); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
-echo xx41
     arn=$(jq -r ".Roles[$i].RoleId" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".Roles[$i].RoleName" 2>/dev/null $TMPAWS)
 
@@ -357,7 +350,6 @@ echo xx41
     let i=i+1
   done
   
-echo xx4
   # --- CLEANUP ---
   rm -f $TMPAWS
 
@@ -397,7 +389,6 @@ echo xx4
     fi
   done
 
-echo xx5
 #  # --- IAM DELETE POLICIES ---
 #  for arn in $(aws --region $AWS_LOCATION iam list-policies | jq -r '.Policies[].Arn' 2>/dev/null); do
 #echo "arn:$arn"
@@ -432,7 +423,6 @@ echo xx5
   done
 
   rm -f $TMPAWS
-echo xx6
 
   # --- DELETE LOAD BALANCERS ---
   for arn in $(aws --region $AWS_LOCATION elbv2 describe-load-balancers | jq -r '.LoadBalancers[].LoadBalancerArn' 2>/dev/null); do
@@ -446,7 +436,6 @@ echo xx6
     fi
   done
 
-echo xx7
   # --- DELETE TARGET GROUPS ---
   SECGRP=/tmp/$$_aws_tgp.json
   aws --region $AWS_LOCATION elbv2 describe-target-groups > $SECGRP
@@ -470,7 +459,6 @@ echo xx7
 
   # --- CLEANUP ---
   rm -f $SECGRP
-echo xx8
 
   for key in $(aws --region $AWS_LOCATION ec2 describe-key-pairs | jq -r '.KeyPairs[].KeyName' 2>/dev/null); do
     cnt=$(echo $key | egrep -c "^${ENV_NAME}-")
@@ -484,7 +472,6 @@ echo xx8
     fi
   done
 
-echo xx9
   # --- DELETE VPC's ---
   TMPVCP=/tmp/$$_aws_vpc.json
   aws --region $AWS_LOCATION ec2 describe-vpcs > $TMPVCP
@@ -493,7 +480,6 @@ echo xx9
     vpc=$(jq -r ".Vpcs[$i].VpcId" 2>/dev/null $TMPVCP)
     cnt=$(jq -r ".Vpcs[$i].Tags[].Value" 2>/dev/null $TMPVCP | egrep -c "^${ENV_NAME}")
     if [ $cnt -eq 0 ]; then let i=i+1; continue; fi
-echo xx91
 
     # --- DELETE SECURITY GROUPS BY ID ---
 #    for id in $(aws --region $AWS_LOCATION ec2 describe-security-groups --filter "Name=vpc-id,Values=$vpc" | \
@@ -546,7 +532,6 @@ echo xx91
       fi
     done
 
-echo xx92
     sleep 10
 
     # --- DELETE NETWORK INTERFACVE ---
@@ -564,7 +549,6 @@ echo xx92
 
     sleep 60
 
-echo xx93
     # --- DELETE ADDRESSES ---
     SECGRP=/tmp/$$_aws_routing_table.json
     aws --region $AWS_LOCATION ec2 describe-addresses > $SECGRP
@@ -591,7 +575,6 @@ echo xx93
       let i=i+1
     done
 
-echo xx94
     # --- CLEANUP ---
     rm -f $TMPAWS
 
@@ -607,7 +590,6 @@ echo xx94
       fi
     done
 
-echo xx95
     # --- DELETE INTERNET GATEWAYS ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$vpc" | \
                 jq -r ".InternetGateways[].InternetGatewayId" 2>/dev/null); do
@@ -628,7 +610,6 @@ echo xx95
         exit 1
       fi
     done
-echo xx96
 
     # --- DELETE SUBNETS ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-subnets --filter "Name=vpc-id,Values=$vpc" | \
@@ -643,7 +624,6 @@ echo xx96
       fi
     done
 
-echo xx97
     SECGRP=/tmp/$$_aws_security_groups.json
     aws --region $AWS_LOCATION ec2 describe-security-groups --filter "Name=vpc-id,Values=$vpc" > $SECGRP
     tot=$(grep -c "GroupName" $SECGRP); i=0; let tot=tot-1
@@ -732,7 +712,6 @@ echo xx97
 
   # --- CLEANUP ---
   rm -f $TMPVCP
-#xxxxxxxxxxxxxx END
 
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-route-tables > $SECGRP

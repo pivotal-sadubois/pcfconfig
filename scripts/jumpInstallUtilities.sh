@@ -29,7 +29,11 @@ fi
 
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
-  sudo apt-get install terraform -y
+  wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
+  unzip terraform_0.11.14_linux_amd64.zip
+  sudo mv terraform /usr/local/bin/
+  which terraform
+  #sudo apt-get install terraform -y
 fi
 
 if [ ! -x /usr/bin/zipinfo ]; then 
