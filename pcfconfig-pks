@@ -2411,6 +2411,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         exit 1
       fi
 
+echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
       if [ $ret -ne 0 ]; then
         echo "ERROR: Accessing API gateway $OPS_MANAGER_DNS failed"; exit 1
