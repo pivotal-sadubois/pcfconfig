@@ -8,10 +8,11 @@ echo "- Update GIT repo https://github.com/pivotal-sadubois/pcfconfig.git"
 
 if [ ! -x /usr/local/bin/aws ]; then 
   echo "- Install AWS CLI"
-  sudo apt install python-pip -y
-  sudo apt install python3-pip -y
-  pip install --upgrade pip
-  sudo pip3 install awscli --upgrade 
+  #sudo apt install python-pip -y
+  #sudo apt install python3-pip -y
+  #pip install --upgrade pip
+  #sudo pip3 install awscli --upgrade 
+  sudo apt install awscli -y^C
 fi
 
 if [ ! -x /usr/bin/om ]; then 

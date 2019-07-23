@@ -2256,10 +2256,10 @@ EOF
       echo "Applying Changes"
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN apply-changes
+        $OM $OM_LOGIN --request-timeout=60 apply-changes
         echo "-----------------------------------------------------------------------------------------------------------"
       else
-        $OM $OM_LOGIN apply-changes > /dev/null 2>&1
+        $OM $OM_LOGIN --request-timeout=60 apply-changes > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
           echo "ERROR: Applying Changes has been failed, please try manual"
           echo "       $OM $OM_LOGIN apply-changes"; exit 1
@@ -2389,6 +2389,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       echo "  uaac user add ${PKS_ADMIN_USER} --emails ${PKS_ADMIN_MAIL} -p ${PKS_ADMIN_PASS} 2>/dev/null"    >> $TMP_SCRIPT
       echo "  uaac member add pks.clusters.admin ${PKS_ADMIN_USER} 2>/dev/null"                               >> $TMP_SCRIPT
       echo "fi"                                                                                               >> $TMP_SCRIPT
+
+      cp $TMP_OPSMAN ~/opsman.pem
+      echo "ssh -qi ~/opsman.pem ubuntu@${OPS_MANAGER_DNS}" > ~/ssh-opsman.sh
   
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
