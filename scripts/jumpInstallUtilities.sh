@@ -36,7 +36,6 @@ if [ ! -x /usr/bin/zipinfo ]; then
   sudo apt-get install zip -y
 fi
 
-
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
   wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
@@ -47,7 +46,7 @@ if [ ! -x /usr/bin/terraform ]; then
 fi
 
 if [ ! -x /usr/bin/zipinfo ]; then 
-  wget -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod +x pivnet && sudo mv pivnet /usr/local/bin
+  wget -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod a+x pivnet && sudo mv pivnet /usr/local/bin
 fi
 
 if [ ! -x /usr/bin/pks ]; then 
@@ -56,7 +55,7 @@ if [ ! -x /usr/bin/pks ]; then
   PRODUCT_ID=`pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).id'`
   pivnet download-product-files -p pivotal-container-service -r $PRODUCT_VERSION -i $PRODUCT_ID
   FILE_NAME=$(pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).aws_object_key' | awk -F'/' '{ print $NF }')
-  chmod +x $FILE_NAME
+  chmod a+x $FILE_NAME
   sudo mv $FILE_NAME /usr/local/pks
 fi
 
