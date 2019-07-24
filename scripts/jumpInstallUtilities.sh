@@ -15,7 +15,7 @@ if [ ! -x /usr/local/bin/aws ]; then
   #sudo apt install python3-pip -y
   #pip install --upgrade pip
   #sudo pip3 install awscli --upgrade 
-  sudo apt install awscli -y^C
+  sudo apt install awscli -y
 fi
 
 if [ ! -x /usr/bin/om ]; then 
