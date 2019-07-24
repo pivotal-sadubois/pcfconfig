@@ -206,6 +206,7 @@ echo "########### JUMP SERVER ############"
   ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
       nohup ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
   echo "-----------------------------------------------------------------------------------------------------------"
+exit 1
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
     scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
