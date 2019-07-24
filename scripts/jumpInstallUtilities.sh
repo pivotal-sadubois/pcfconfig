@@ -45,7 +45,8 @@ if [ ! -x /usr/bin/terraform ]; then
   #sudo apt-get install terraform -y
 fi
 
-if [ ! -x /usr/bin/zipinfo ]; then 
+if [ ! -x /usr/local/bin/pivnet ]; then 
+  echo "- Installing Pivnet"
   wget -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod a+x pivnet && sudo mv pivnet /usr/local/bin
 fi
 
