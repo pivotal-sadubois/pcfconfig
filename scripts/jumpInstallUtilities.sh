@@ -50,16 +50,14 @@ if [ ! -x /usr/local/bin/pivnet ]; then
   wget -q -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod a+x pivnet && sudo mv pivnet /usr/local/bin
 fi
 
-if [ ! -x /usr/bin/pks ]; then 
+if [ ! -x /usr/bin/bin/pks ]; then 
   pivnet login --api-token=$PIVNET_TOKEN
   PRODUCT_VERSION=$(pivnet releases -p pivotal-container-service --format json | jq -r '.[].version' | head -1)
   PRODUCT_ID=`pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).id'`
   pivnet download-product-files -p pivotal-container-service -r $PRODUCT_VERSION -i $PRODUCT_ID
   FILE_NAME=$(pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).aws_object_key' | awk -F'/' '{ print $NF }')
-echo "FILE_NAME:$FILE_NAME"
   chmod a+x $FILE_NAME
-echo xxxxx
-  sudo mv $FILE_NAME /usr/local/pks
+  sudo mv $FILE_NAME /usr/local/bin/pks
 fi
 
 
