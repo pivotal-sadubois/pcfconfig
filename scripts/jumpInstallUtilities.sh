@@ -2,6 +2,7 @@
 
 export PIVNET_TOKEN=$1
 export LC_ALL=en_US.UTF-8
+sudo mkdir -p /usr/local /usr/local/bin
 
 echo "Install Software on Jumphost"
 echo "- Pivnet Token: $PIVNET_TOKEN"
@@ -30,6 +31,12 @@ if [ ! -x /usr/bin/jq ]; then
   sudo apt-get install jq -y
 fi
 
+if [ ! -x /usr/bin/zipinfo ]; then
+  echo "- Install ZIP"
+  sudo apt-get install zip -y
+fi
+
+
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
   wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
@@ -37,11 +44,6 @@ if [ ! -x /usr/bin/terraform ]; then
   sudo mv terraform /usr/local/bin/
   which terraform
   #sudo apt-get install terraform -y
-fi
-
-if [ ! -x /usr/bin/zipinfo ]; then 
-  echo "- Install ZIP"
-  sudo apt-get install zip -y
 fi
 
 if [ ! -x /usr/bin/zipinfo ]; then 
