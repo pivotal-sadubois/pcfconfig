@@ -203,7 +203,8 @@ echo "########### JUMP SERVER ############"
   ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
   ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
   echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
-  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && nohup sh ${PCFHOME}/scripts/jumpInstallUtilities.sh"
+  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+      nohup ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
   echo "-----------------------------------------------------------------------------------------------------------"
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then 

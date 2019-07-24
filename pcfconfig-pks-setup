@@ -2393,6 +2393,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       cp $TMP_OPSMAN ~/opsman.pem
       echo "ssh -qi ~/opsman.pem ubuntu@${OPS_MANAGER_DNS}" > ~/ssh-opsman.sh
   
+echo gaga1
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
         echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -2401,6 +2402,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         exit 1
       fi
 
+echo gaga2
       echo "-----------------------------------------------------------------------------------------------------------"
       (ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
       echo "-----------------------------------------------------------------------------------------------------------"
