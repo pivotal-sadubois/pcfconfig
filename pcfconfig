@@ -195,19 +195,23 @@ echo "########### JUMP SERVER ############"
   echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
   # --- INSTALL SOFTWARE ---
-  SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5-i -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+  SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
   GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
   PCFHOME="/home/ubuntu/pcfconfig"
 
+date
+
   ret=1
   while [ $ret -ne 0 ]; do
-echo "=> "
-echo "   `date`XXX => Start"
+#echo "=> "
+#echo "   `date` XXX => Start"
     ssh ${SSHPAR} -n id > /dev/null 2>&1; ret=$?
-echo "   `date`XXX => end"
+#echo "   `date` XXX => end - $ret"
 
     sleep 10
   done
+
+date
 
   echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
   ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"

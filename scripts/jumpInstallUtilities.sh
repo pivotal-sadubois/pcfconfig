@@ -38,7 +38,7 @@ fi
 
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
-  wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
+  wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
   unzip terraform_0.11.14_linux_amd64.zip
   sudo mv terraform /usr/local/bin/
   which terraform
@@ -47,7 +47,7 @@ fi
 
 if [ ! -x /usr/local/bin/pivnet ]; then 
   echo "- Installing Pivnet"
-  wget -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod a+x pivnet && sudo mv pivnet /usr/local/bin
+  wget -q -O pivnet github.com/pivotal-cf/pivnet-cli/releases/download/v0.0.55/pivnet-linux-amd64-0.0.55 && chmod a+x pivnet && sudo mv pivnet /usr/local/bin
 fi
 
 if [ ! -x /usr/bin/pks ]; then 

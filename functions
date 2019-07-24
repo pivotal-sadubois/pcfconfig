@@ -181,7 +181,7 @@ installJumpHost() {
         echo "                  --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'"
         exit 1
       else
-        sleep 800
+        sleep 20
       fi
     else
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
