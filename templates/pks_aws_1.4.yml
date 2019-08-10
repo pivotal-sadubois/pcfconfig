@@ -1,9 +1,9 @@
 product-name: pivotal-container-service
 network-properties:
   singleton_availability_zone:
-    name: eu-central-1a
+    name: ((availability_zone_1))
   other_availability_zones:
-  - name: eu-central-1a
+  - name: ((availability_zone_1))
   network:
     name: infrastructure
   service_network:
@@ -26,24 +26,24 @@ product-properties:
  .properties.plan1_selector.active.name:
    value: small
  .properties.plan1_selector.active.description:
-   value: 'This is an example'
+   value: 'PKS Cluster with 3 Masters / 3 Workers'
  .properties.plan1_selector.active.master_instances:
-   value: 1
+   value: 3
  .properties.plan1_selector.active.master_az_placement:
    value:
-   - eu-central-1a
+   - ((availability_zone_1))
  .properties.plan1_selector.active.max_worker_instances:
    value: 50
  .properties.plan1_selector.active.worker_az_placement:
    value:
-   - eu-central-1a
+   - ((availability_zone_1))
  .properties.plan1_selector.active.worker_instances:
    value: 3
  .properties.plan1_selector.active.allow_privileged_containers:
    value: true
  .properties.plan1_selector.active.admission_plugins:
    value:
-   - pod_security_policy
+#   - pod_security_policy
 #   - deny_escalating_exec
    - security_context_deny
 # Configuration for Plan 2

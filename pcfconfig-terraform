@@ -2602,6 +2602,39 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
           fi
         fi
       fi
+
+      if [ "${PKS_CLUSTER_2_NAME}" != "" ]; then
+        pks cluster $PKS_CLUSTER_2_NAME > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          messagePrint "PKS Cluster 2: $PKS_CLUSTER_1_NAME" "creating"
+          messagePrint " - External Hostnama:" "$PKS_CLUSTER_2_NAME.${DNS_PREFIX}.${DNS_SUFFIX}"
+          messagePrint " - Plan:" "$PKS_CLUSTER_2_PLAN"
+          pks create-cluster $PKS_CLUSTER_2_NAME \
+             --external-hostname $PKS_CLUSTER_2_NAME.${DNS_PREFIX}.${DNS_SUFFIX} \
+             --plan $PKS_CLUSTER_2_PLAN --wait
+          echo "-----------------------------------------------------------------------------------------------------------"
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Creating PKS Cluster $PKS_CLUSTER_2_NAME failed"
+            echo "       => pks create-cluster $PKS_CLUSTER_2_NAME --external-hostname ${lbdns} --plan $PKS_CLUSTER_2_PLAN  --wait"
+            exit 1
+          fi
+
+          stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
+          messagePrint "PKS Cluster 2: $PKS_CLUSTER_2_NAME ($PKS_CLUSTER_2_PLAN)" "$stt"
+          if [ "$stt" != "succeeded" ]; then
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) creation failed"; exit 1
+          fi
+        else
+          stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
+          messagePrint "PKS Cluster 2: $PKS_CLUSTER_2_NAME ($PKS_CLUSTER_2_PLAN)" "$stt"
+
+          if [ "$stt" == "failed" ]; then
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) is in failed state, please delete cluster and restart"
+            echo "       => pks delete-cluster $PKS_CLUSTER_2_NAME"
+            exit 1
+          fi
+        fi
+      fi
     fi
 
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
@@ -2612,6 +2645,7 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo "N:$n"
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 
         # --- ADD CLUSTER UUID TO AWS SUBNETS AT TAG ---

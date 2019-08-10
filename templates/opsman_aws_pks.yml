@@ -30,7 +30,7 @@ properties-configuration:
     reimbursable: true
     director_worker_count: 5
     post_deploy_enabled: true
-    retry_bosh_deploys: false
+    retry_bosh_deploys: true
     keep_unreachable_vms: false
     # LOCAL BLOBSTORE
     blobstore_type: local

@@ -6,19 +6,14 @@ properties-configuration:
     project: ((project))
     associated_service_account: ((associated_service_account))
     default_deployment_tag: ((default_deployment_tag))
+    #auth_json: ((director_blobstore_service_account_key))
+    auth_json: ((pcfconfig_service_account))
 
-#END-STAGE-1
 az-configuration:
   - name: ((zone-1))
   - name: ((zone-2))
   - name: ((zone-3))
-network-assignment:
-  network:
-    name: infrastructure
-  other_availability_zones: []
-  singleton_availability_zone:
-    name: ((zone-1))
-
+#END-STAGE-1
 networks-configuration:
   icmp_checks_enabled: false
   networks:
@@ -55,6 +50,13 @@ networks-configuration:
       - ((zone-1))
       - ((zone-2))
       - ((zone-3))
+network-assignment:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: ((zone-1))
+
 properties-configuration:
   director_configuration:
     blobstore_type: local

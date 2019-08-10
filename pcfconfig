@@ -199,19 +199,11 @@ echo "########### JUMP SERVER ############"
   GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
   PCFHOME="/home/ubuntu/pcfconfig"
 
-date
-
   ret=1
   while [ $ret -ne 0 ]; do
-#echo "=> "
-#echo "   `date` XXX => Start"
     ssh ${SSHPAR} -n id > /dev/null 2>&1; ret=$?
-#echo "   `date` XXX => end - $ret"
-
     sleep 10
   done
-
-date
 
   echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
   ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
@@ -220,7 +212,6 @@ date
   ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
       nohup ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
   echo "-----------------------------------------------------------------------------------------------------------"
-exit 1
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
     scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
