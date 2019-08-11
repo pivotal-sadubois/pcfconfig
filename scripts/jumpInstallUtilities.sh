@@ -9,13 +9,9 @@ echo "- Pivnet Token: $PIVNET_TOKEN"
 echo "- Update GIT repo https://github.com/pivotal-sadubois/pcfconfig.git"
 (cd /home/ubuntu/pcfconfig; git fetch)
 
-if [ ! -x /usr/local/bin/aws ]; then 
+if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
-  #sudo apt install python-pip -y
-  #sudo apt install python3-pip -y
-  #pip install --upgrade pip
-  #sudo pip3 install awscli --upgrade 
-  sudo apt install awscli -y
+  sudo apt install awscli -ys
 fi
 
 if [ ! -x /usr/bin/om ]; then 
