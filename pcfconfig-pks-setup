@@ -2652,11 +2652,14 @@ echo "N:$n"
         for net in $(aws ec2 --region=$AWS_REGION describe-subnets | jq -r '.Subnets[].SubnetId'); do
           cnt=$(aws ec2 --region=$AWS_REGION describe-subnets --subnet-id $net | jq -r '.Subnets[].Tags[].Value' | \
               egrep -c "^${DNS_PREFIX}-public-subnet")
+echo " - NET:$net CNT:$cnt"
           if [ $cnt -gt 0 ]; then
             aws ec2 --region=$AWS_REGION create-tags --resources $net \
                 --tags Key="kubernetes.io/cluster/service-instance_$uid",Value=""
           fi
         done
+
+echo "xxxxx"
 
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
