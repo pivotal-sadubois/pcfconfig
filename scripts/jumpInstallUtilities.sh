@@ -9,27 +9,29 @@ echo "- Pivnet Token: $PIVNET_TOKEN"
 echo "- Update GIT repo https://github.com/pivotal-sadubois/pcfconfig.git"
 (cd /home/ubuntu/pcfconfig; git fetch)
 
+sudo apt-get update > /dev/null 2>&1
+
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
-  sudo apt install awscli -ys
+  #sudo apt-get install awscli -y
+  sudo apt-get install awscli -y > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/om ]; then 
   echo "- Install OM"
   sudo wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | sudo  apt-key add -
   sudo echo "deb http://apt.starkandwayne.com stable main" | sudo  tee /etc/apt/sources.list.d/starkandwayne.list
-  sudo apt-get update
-  sudo apt-get install om -y
+  sudo apt-get install om -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/jq ]; then 
   echo "- Install JQ"
-  sudo apt-get install jq -y
+  sudo apt-get install jq -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/zipinfo ]; then
   echo "- Install ZIP"
-  sudo apt-get install zip -y
+  sudo apt-get install zip -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/terraform ]; then 
