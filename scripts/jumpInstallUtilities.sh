@@ -7,7 +7,7 @@ sudo mkdir -p /usr/local /usr/local/bin
 echo "Install Software on Jumphost"
 echo "- Pivnet Token: $PIVNET_TOKEN"
 echo "- Update GIT repo https://github.com/pivotal-sadubois/pcfconfig.git"
-(cd /home/ubuntu/pcfconfig; git fetch)
+(cd ~/pcfconfig; git fetch)
 
 apt-get update > /dev/null 2>&1
 
@@ -15,6 +15,20 @@ if [ ! -x /usr/bin/aws ]; then
   echo "- Install AWS CLI"
   apt-get install awscli -y > /dev/null 2>&1
 fi
+
+while  [ ! -x /usr/bin/gcloud ]; do 
+  echo "- Install GCP SDK"
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
+  sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
+  apt-get install apt-transport-https ca-certificates -y > /dev/null 2>&1
+
+  echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | \
+  sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+  sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - > /dev/null
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - > /dev/null
+  sudo apt-get update && sudo apt-get install google-cloud-sdk -y > /dev/null 2>&1
+done
 
 while  [ ! -x /usr/bin/om ]; do 
   echo "- Install OM"
