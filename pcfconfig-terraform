@@ -2645,21 +2645,17 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "N:$n"
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 
         # --- ADD CLUSTER UUID TO AWS SUBNETS AT TAG ---
         for net in $(aws ec2 --region=$AWS_REGION describe-subnets | jq -r '.Subnets[].SubnetId'); do
-          cnt=$(aws ec2 --region=$AWS_REGION describe-subnets --subnet-id $net | jq -r '.Subnets[].Tags[].Value' | \
+          cnt=$(aws ec2 --region=$AWS_REGION describe-subnets --subnet-id $net | jq -r '.Subnets[].Tags[].Value' 2>/dev/null | \
               egrep -c "^${DNS_PREFIX}-public-subnet")
-echo " - NET:$net CNT:$cnt"
           if [ $cnt -gt 0 ]; then
             aws ec2 --region=$AWS_REGION create-tags --resources $net \
                 --tags Key="kubernetes.io/cluster/service-instance_$uid",Value=""
           fi
         done
-
-echo "xxxxx"
 
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
@@ -2689,6 +2685,8 @@ echo "xxxxx"
         else
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
+echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+echo "MST:$mst"
 
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
