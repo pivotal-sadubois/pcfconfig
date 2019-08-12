@@ -18,15 +18,21 @@ fi
 
 while  [ ! -x /usr/bin/gcloud ]; do 
   echo "- Install GCP SDK"
+echo gaga1
   echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
   sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
+echo gaga2
   apt-get install apt-transport-https ca-certificates -y > /dev/null 2>&1
+echo gaga3
 
   echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | \
   sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
+echo gaga5
   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
   sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - > /dev/null
+echo gaga6
   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - > /dev/null
+echo gaga7
   sudo apt-get update && sudo apt-get install google-cloud-sdk -y > /dev/null 2>&1
 done
 
@@ -36,8 +42,8 @@ while  [ ! -x /usr/bin/om ]; do
   #sudo echo "deb http://apt.starkandwayne.com stable main" | sudo  tee /etc/apt/sources.list.d/starkandwayne.list
   #sudo apt-get update > /dev/null 2>&1
   #sudo apt-get install om -y  > /dev/null 2>&1
-  wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add -
-  echo "deb http://apt.starkandwayne.com stable main" | tee /etc/apt/sources.list.d/starkandwayne.list
+  wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add - > /dev/null
+  echo "deb http://apt.starkandwayne.com stable main" | tee /etc/apt/sources.list.d/starkandwayne.list > /dev/null
   apt-get update > /dev/null 2>&1
   apt-get install om -y  > /dev/null 2>&1
 done
