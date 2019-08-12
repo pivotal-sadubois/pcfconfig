@@ -18,23 +18,11 @@ fi
 
 while  [ ! -x /usr/bin/gcloud ]; do 
   echo "- Install GCP SDK"
-echo xxx1
   echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
   tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
-echo xxx2
   apt-get install apt-transport-https ca-certificates -y > /dev/null 2>&1
-echo xxx3
-
-sleep 1000
-echo gaga1
-  echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | \
-  sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
-echo gaga2
   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg 2>/dev/null | \
   sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - 
-echo gaga3
-  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg 2>/dev/null | sudo apt-key add -
-echo gaga4
   sudo apt-get update && sudo apt-get install google-cloud-sdk -y > /dev/null 2>&1
 done
 
