@@ -190,38 +190,69 @@ echo "########### JUMP SERVER ############"
   checkOpsMantools
   installJumpHost
 
-  sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-  echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/pcfjump.awspas.pcfsdu.com.pem ec2-user@$JUMP_HOST"
-  echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+  if [ "${CLOUD_PROVIDER}" == "aws" ]; then
+    sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/pcfjump.awspas.pcfsdu.com.pem ec2-user@$JUMP_HOST"
+    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
-  # --- INSTALL SOFTWARE ---
-  SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
-  GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
-  PCFHOME="/home/ubuntu/pcfconfig"
+    # --- INSTALL SOFTWARE ---
+    SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+    GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
+    PCFHOME="/home/ubuntu/pcfconfig"
 
-  ret=1
-  while [ $ret -ne 0 ]; do
-    ssh ${SSHPAR} -n id > /dev/null 2>&1; ret=$?
-    sleep 10
-  done
+    ret=1
+    while [ $ret -ne 0 ]; do
+      ssh ${SSHPAR} -n id > /dev/null 2>&1; ret=$?
+      [ $ret -ne 0 ] && sleep 10
+    done
 
-  echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
-  ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
-  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
-  echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
-  ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
-      nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
-  echo "-----------------------------------------------------------------------------------------------------------"
+    echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+    ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+    echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+        nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
+    echo "-----------------------------------------------------------------------------------------------------------"
 
-  if [ "${CLOUD_PROVIDER}" == "aws" ]; then 
     scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+
+exit
+    ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
+    #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+    #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   fi
 
-  echo "AWS_REGION:$AWS_REGION" 
-  echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+  if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
+    GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
+    PCFHOME="~/pcfconfig"
+    ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
-  ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
-  #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+    ret=1
+    while [ $ret -ne 0 ]; do
+      gcloud compute ssh --zone=$ZONE pcfjump -- hostname > /dev/null 2>&1; ret=$?
+      [ $ret -ne 0 ] && sleep 10
+    done
+
+    echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+    gcloud compute ssh --zone=$ZONE pcfjump -- "[ ! -d ~/pcfconfig ] && git clone $GITPCF" 2>/dev/null
+    gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && cd $PCFHOME; git pull" 2>/dev/null
+    echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+    gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+        sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 2>/dev/null
+    echo "-----------------------------------------------------------------------------------------------------------"
+
+    GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
+    GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
+    gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
+    gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
+
+    gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
+          --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
+
+echo "~/pcfconfig/pcfconfig $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
+    gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
+  fi
+
   exit 1
 fi 
 
@@ -590,7 +621,6 @@ else
     messagePrint "pcfconfig-pas already done" "skipping"
   fi
 fi
-
 
 
 
