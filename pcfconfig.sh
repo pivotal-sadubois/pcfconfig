@@ -15,13 +15,13 @@ if [ -f ~/pcfconfig.pid ]; then
   if [ $cnt -eq 0 ]; then 
     [ -f ~/nohup.out ] && rm -f ~/nohup.out
     #nohup /tmp/tttt 2>/dev/null &
-    nohup /home/ubuntu/pcfconfig/pcfconfig $* 2>/dev/null &
+    nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
     echo $! > ~/pcfconfig.pid
   fi
 else
   [ -f ~/nohup.out ] && rm -f ~/nohup.out
   #nohup /tmp/tttt 2>/dev/null &
-  nohup /home/ubuntu/pcfconfig/pcfconfig $* 2>/dev/null &
+  nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
   echo $! > ~/pcfconfig.pid
 fi
 
