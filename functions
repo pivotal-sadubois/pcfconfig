@@ -893,6 +893,7 @@ cleanGCPenv() {
 
     # --- DONT DELETE PCFJUMP VM ---
     cnt=$(echo "$n" | egrep -c "^pcfjump")
+echo "n:$n CNT:$cnt"
     if [ $cnt -eq 0 ]; then
       messagePrint " - Cleaning up GCP Image:" "$n"
       gcloud compute images delete ${n} -q > /dev/null 2>&1
