@@ -893,9 +893,8 @@ cleanGCPenv() {
 
     # --- DONT DELETE PCFJUMP VM ---
     cnt=$(echo "$n" | egrep -c "^pcfjump")
-echo "n:$n CNT:$cnt"
     if [ $cnt -eq 0 ]; then
-      messagePrint " - Cleaning up GCP Image:" "$n"
+      messagePrint " - Cleaning up GCP1 Image:" "$n"
       gcloud compute images delete ${n} -q > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         gcloud compute images delete ${n} -q
@@ -908,13 +907,17 @@ echo "n:$n CNT:$cnt"
   for n in $(gcloud compute instances list --filter="zone:($GCP_REGION)" 2>/dev/null | \
         grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
 
-    nam=$(echo $n | awk -F: '{ print $1 }')
-    zon=$(echo $n | awk -F: '{ print $2 }')
-    messagePrint " - Cleaning up GCP Instance:" "$n"
-    gcloud compute instances delete ${nam} --zone ${zon} -q > /dev/null 2>&1
-    if [ $? -ne 0 ]; then 
-      gcloud compute instances delete ${nam} --zone ${zon} -q
-      exit 1
+    # --- DONT DELETE PCFJUMP VM ---
+    cnt=$(echo "$n" | egrep -c "^pcfjump")
+    if [ $cnt -eq 0 ]; then
+      nam=$(echo $n | awk -F: '{ print $1 }')
+      zon=$(echo $n | awk -F: '{ print $2 }')
+      messagePrint " - Cleaning up GCP Instance:" "$n"
+      gcloud compute instances delete ${nam} --zone ${zon} -q > /dev/null 2>&1
+      if [ $? -ne 0 ]; then 
+        gcloud compute instances delete ${nam} --zone ${zon} -q
+        exit 1
+      fi
     fi
   done
 
