@@ -32,7 +32,7 @@ while  [ ! -x /usr/bin/om ]; do
   #sudo echo "deb http://apt.starkandwayne.com stable main" | sudo  tee /etc/apt/sources.list.d/starkandwayne.list
   #sudo apt-get update > /dev/null 2>&1
   #sudo apt-get install om -y  > /dev/null 2>&1
-  wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add - > /dev/null
+  wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add - 
   echo "deb http://apt.starkandwayne.com stable main" | tee /etc/apt/sources.list.d/starkandwayne.list > /dev/null
   apt-get update > /dev/null 2>&1
   apt-get install om -y  > /dev/null 2>&1
