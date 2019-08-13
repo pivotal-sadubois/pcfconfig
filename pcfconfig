@@ -216,8 +216,7 @@ echo "########### JUMP SERVER ############"
 
     scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
 
-exit
-    ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
+    ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   fi
