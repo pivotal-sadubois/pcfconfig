@@ -14,7 +14,7 @@ if [ -f $LOGFILE ]; then
   fi
 fi
 
-if [ -f ~/pcfconfig.pid ]; then
+if [ -f $PIDFILE ]; then
   read pid < $PIDFILE
   cnt=$(ps -p $pid -o pid,comm | sed 1d | grep -c " ${pid} ") 
   if [ $cnt -eq 0 ]; then 
@@ -27,6 +27,6 @@ else
 fi
 
 sleep 2
-if [ -f ~/nohup.out ]; then
-  tail -100f ~/nohup.out
+if [ -f $LOGFILE ]; then
+  tail -100f $LOGFILE
 fi
