@@ -429,6 +429,8 @@ checkEnvironment() {
       nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
       if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then
         # --- CHECK IF ZONE RECORDS ARE AVAILABLE ---
+echo "aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN"
+echo gaga1
         aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
         if [ $? -eq 0 ]; then
           ROUTE53_STAT="zone managed by route53"
@@ -473,6 +475,7 @@ checkEnvironment() {
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
+cat $TMPROUTE53
 
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
@@ -483,6 +486,9 @@ checkEnvironment() {
           echo "WARNING: Unable to update AWS Route53 record $GCP_DNS_SUBDOMAIN for zone $GCP_DNS_SUFFIX"
           echo "         please try manually"
         fi
+
+echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
+exit 1
 
         wait_loop 60 "Waiting for DNS records to be pushed"
       fi
@@ -540,7 +546,7 @@ checkEnvironment() {
         echo ""
 
         echo "OpsManager Name can not be resolved through DNS"
-echo "gaga AWS_DNS_SUFFIX:$AWS_DNS_SUFFIX"
+echo "gaga GCP_DNS_SUFFIX:$GCP_DNS_SUFFIX"
       exit 1
       else
         OPS_MANAGER=OPS_MANAGER_DNS
