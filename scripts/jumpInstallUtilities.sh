@@ -72,4 +72,5 @@ if [ ! -x /usr/bin/bin/pks ]; then
   mv $FILE_NAME /usr/local/bin/pks
 fi
 
+touch  /jump_software_installed
 

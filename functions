@@ -39,6 +39,7 @@ installJumpHost() {
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
          Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+echo "gaga INS:$ins"
     if [ "${ins}" == "" ]; then
       messagePrint "Creating AWS Jump-Server" "$JUMP_HOST"
 

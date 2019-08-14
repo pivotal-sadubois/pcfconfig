@@ -212,6 +212,7 @@ echo "########### JUMP SERVER ############"
 
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
+    stt=$(ssh ${SSHPAR} -n "[ -f /jump_software_installed ] && echo true")
     if [ "${stt}" == "" ]; then 
       echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
