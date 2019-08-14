@@ -223,6 +223,7 @@ echo "########### JUMP SERVER ############"
 
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh"
 
+echo halleluia1
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
