@@ -5,19 +5,24 @@ PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND="$HOME/pcfconfig/pcfconfig $*"
 
+echo gaga1
 eof=0
 
 if [ -f $LOGFILE ]; then
+echo gaga2
   eof=$(egrep -c "################################ EOF ################################" $LOGFILE)
   if [ $eof -gt 0 ]; then 
     cat $LOGFILE
   fi
   exit
 fi 
+echo gaga3
 
 if [ -f $PIDFILE ]; then
+echo gaga3
   stt=$(pgrep -F /tmp/pcfconfig.pid)
   if [ "$stt" == "" ]; then 
+echo gaga4
     echo "$0 NOT RUNNING, RESTARTING"
     nohup $COMMAND >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
