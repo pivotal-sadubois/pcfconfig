@@ -28,5 +28,6 @@ fi
 
 sleep 2
 if [ -f $LOGFILE ]; then
-  tail -100f $LOGFILE
+  read pid < $PIDFILE
+  tail --pid $pid -100f $LOGFILE
 fi
