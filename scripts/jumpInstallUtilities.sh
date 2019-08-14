@@ -62,7 +62,8 @@ if [ ! -x /usr/local/bin/pivnet ]; then
 fi
 
 if [ ! -x /usr/bin/bin/pks ]; then 
-  pivnet login --api-token=$PIVNET_TOKEN
+  echo "- Installing PKS Utility from Pivnet"
+  pivnet login --api-token=$PIVNET_TOKEN 2>/dev/null
   PRODUCT_VERSION=$(pivnet releases -p pivotal-container-service --format json | jq -r '.[].version' | head -1)
   PRODUCT_ID=`pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).id'`
   pivnet download-product-files -p pivotal-container-service -r $PRODUCT_VERSION -i $PRODUCT_ID

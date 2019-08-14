@@ -9,12 +9,14 @@ if [ -f $PIDFILE ]; then
   stt=$(pgrep -F /tmp/pcfconfig.pid)
   if [ "$stt" == "" ]; then 
     echo "$0 NOT RUNNING, RESTARTING"
-    nohup $COMMAND > $LOGFILE 2>&1 &
+    date +%s > $LOGFILE
+    nohup $COMMAND >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
   fi
 else
   echo "$0 1NOT RUNNING, RESTARTING"
-  nohup $COMMAND > $LOGFILE 2>&1 &
+  date +%s > $LOGFILE
+  nohup $COMMAND >> $LOGFILE 2>&1 &
   echo $! > $PIDFILE
 fi
 
