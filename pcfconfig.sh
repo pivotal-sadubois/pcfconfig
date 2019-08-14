@@ -29,5 +29,6 @@ fi
 sleep 2
 if [ -f $LOGFILE ]; then
   read pid < $PIDFILE
+echo "tail --pid $pid -100f $LOGFILE"
   tail --pid $pid -100f $LOGFILE
 fi
