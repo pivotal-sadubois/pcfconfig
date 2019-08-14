@@ -206,19 +206,23 @@ echo "########### JUMP SERVER ############"
       [ $ret -ne 0 ] && sleep 10
     done
 
-    echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
-    ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
-    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
-    echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
-    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
-        nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
-    echo "-----------------------------------------------------------------------------------------------------------"
+    # --- TEST FOR RUNNING REMOTE SCRIPT ---
+    stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
+    if | "${stt}" == "" ]; then 
+      echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+      ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+      ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+      echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+      ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+          nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
+      echo "-----------------------------------------------------------------------------------------------------------"
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+    fi
 
-    scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh"
 
-echo gaga1
-    ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
-echo gaga2
+exit
+    #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
   fi
