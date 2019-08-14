@@ -2449,6 +2449,7 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
                 --type=A 2> /dev/null | wc -l | sed 's/ //g')
         if [ ${cnt} -eq 0 ]; then
           echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
+echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
           ipa=$(gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION | \
               grep IPAddress | awk '{ print $NF }')
           gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone
