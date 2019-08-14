@@ -206,12 +206,13 @@ echo "########### JUMP SERVER ############"
       [ $ret -ne 0 ] && sleep 10
     done
 
+    echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+    ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
-    if | "${stt}" == "" ]; then 
-      echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
-      ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
-      ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+    if [ "${stt}" == "" ]; then 
       echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
           nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 
