@@ -14,14 +14,14 @@ if [ -f ~/pcfconfig.pid ]; then
   cnt=$(ps -p $pid -o pid,comm | sed 1d | grep -c " ${pid} ") 
   if [ $cnt -eq 0 ]; then 
     [ -f ~/nohup.out ] && rm -f ~/nohup.out
-    #nohup /tmp/tttt 2>/dev/null &
-    nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
+    nohup /tmp/tttt 2>/dev/null &
+    #nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
     echo $! > ~/pcfconfig.pid
   fi
 else
   [ -f ~/nohup.out ] && rm -f ~/nohup.out
-  #nohup /tmp/tttt 2>/dev/null &
-  nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
+  nohup /tmp/tttt 2>/dev/null &
+  #nohup ~/pcfconfig/pcfconfig $* 2>/dev/null &
   echo $! > ~/pcfconfig.pid
 fi
 
