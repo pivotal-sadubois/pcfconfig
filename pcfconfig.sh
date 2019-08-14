@@ -6,13 +6,6 @@ COMMAND="~/pcfconfig/pcfconfig $*"
 COMMAND=/tmp/tttt 
 
 cd $HOME
-if [ -f $LOGFILE ]; then
-  cnt=$(egrep -c "################################ EOF ################################" $LOGFILE)
-  if [ $cnt -gt 0 ]; then 
-    cat $LOGFILE
-    exit 0
-  fi
-fi
 
 if [ -f $PIDFILE ]; then
   read pid < $PIDFILE
@@ -29,6 +22,5 @@ fi
 sleep 2
 if [ -f $LOGFILE ]; then
   read pid < $PIDFILE
-echo "tail --pid $pid -100f $LOGFILE"
-  tail --pid $pid -100f $LOGFILE
+  tail -f $LOGFILE --pid $pid
 fi
