@@ -51,9 +51,8 @@ fi
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
   wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
-  unzip terraform_0.11.14_linux_amd64.zip
+  unzip -q terraform_0.11.14_linux_amd64.zip
   mv terraform /usr/local/bin/
-  which terraform
   #sudo apt-get install terraform -y
 fi
 
@@ -69,7 +68,7 @@ if [ ! -x /usr/bin/bin/pks ]; then
   pivnet download-product-files -p pivotal-container-service -r $PRODUCT_VERSION -i $PRODUCT_ID
   FILE_NAME=$(pivnet product-files -p pivotal-container-service -r $PRODUCT_VERSION --format json | jq -r '.[] | select(.aws_object_key | contains("product-files/pivotal-container-service/pks-linux-amd64")).aws_object_key' | awk -F'/' '{ print $NF }')
   chmod a+x $FILE_NAME
-  sudo mv $FILE_NAME /usr/local/bin/pks
+  mv $FILE_NAME /usr/local/bin/pks
 fi
 
 
