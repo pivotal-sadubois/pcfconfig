@@ -6,13 +6,14 @@ COMMAND=/tmp/tttt
 COMMAND="$HOME/pcfconfig/pcfconfig $*"
 
 if [ -f $PIDFILE ]; then
-  read pid < $PIDFILE
-  cnt=$(ps -p $pid -o pid,comm | sed 1d | grep -c " ${pid} ") 
-  if [ $cnt -eq 0 ]; then 
+  stt=$(pgrep -F /tmp/pcfconfig.pid)
+  if [ "$stt" == "" ]; then 
+    echo "$0 NOT RUNNING, RESTARTING"
     nohup $COMMAND > $LOGFILE 2>&1 &
     echo $! > $PIDFILE
   fi
 else
+  echo "$0 1NOT RUNNING, RESTARTING"
   nohup $COMMAND > $LOGFILE 2>&1 &
   echo $! > $PIDFILE
 fi
