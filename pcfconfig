@@ -221,9 +221,6 @@ echo "########### JUMP SERVER ############"
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
-    #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh"
-
-echo halleluia1
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
     #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
@@ -234,30 +231,39 @@ echo halleluia1
     PCFHOME="~/pcfconfig"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
+echo xx1
     ret=1
     while [ $ret -ne 0 ]; do
       gcloud compute ssh --zone=$ZONE pcfjump -- hostname > /dev/null 2>&1; ret=$?
       [ $ret -ne 0 ] && sleep 10
     done
+echo xx2
 
     echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ ! -d ~/pcfconfig ] && git clone $GITPCF" 2>/dev/null
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && cd $PCFHOME; git pull" 2>/dev/null
-    echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
-    gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
-        sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 2>/dev/null
-    echo "-----------------------------------------------------------------------------------------------------------"
+echo xx3
+    stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- "[ -f /jump_software_installed ] && echo true" 2>/dev/null)
+    if [ "${stt}" == "" ]; then
+      echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+      gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+          sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 2>/dev/null
 
-    GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
-    GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
-    gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
-    gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
+    fi
+echo xx4
+      echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
+      GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
+      GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
+      gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
+      gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
+      gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
+            --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
+      echo "-----------------------------------------------------------------------------------------------------------"
+echo xx5
 
-    gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
-          --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
+    gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
 
-echo "~/pcfconfig/pcfconfig $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
-    gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
+    #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
   fi
 
   exit 1
