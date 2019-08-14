@@ -540,16 +540,8 @@ checkEnvironment() {
         echo ""
 
         echo "OpsManager Name can not be resolved through DNS"
-        while [ 1 ]; do
-          echo -e "Do you want to configure the OpsManager with its ip-address $OPS_MANAGER_PUBLIC_IP instead <y/n>: \c"; read x
-          if [ "$x" == "y" -o "$x" == "n" ]; then break; fi
-        done
-
-        if [ $x == "y" ]; then
-          OPS_MANAGER=$OPS_MANAGER_PUBLIC_IP
-        else
-          echo "$0 - Programm Ended"; exit 1
-        fi
+echo "gaga AWS_DNS_SUFFIX:$AWS_DNS_SUFFIX"
+      exit 1
       else
         OPS_MANAGER=OPS_MANAGER_DNS
       fi
