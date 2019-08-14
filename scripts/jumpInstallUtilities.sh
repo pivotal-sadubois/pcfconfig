@@ -2,7 +2,7 @@
 
 export PIVNET_TOKEN=$1
 export LC_ALL=en_US.UTF-8
-sudo mkdir -p /usr/local /usr/local/bin
+sudo 2>/dev/null  mkdir -p /usr/local /usr/local/bin
 
 echo "Install Software on Jumphost"
 echo "- Pivnet Token: $PIVNET_TOKEN"
@@ -22,8 +22,8 @@ while  [ ! -x /usr/bin/gcloud ]; do
   tee -a /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
   apt-get install apt-transport-https ca-certificates -y > /dev/null 2>&1
   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg 2>/dev/null | \
-  sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - 
-  sudo apt-get update && sudo apt-get install google-cloud-sdk -y > /dev/null 2>&1
+  sudo 2>/dev/null apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - 
+  apt-get update && apt-get install google-cloud-sdk -y > /dev/null 2>&1
 done
 
 while  [ ! -x /usr/bin/om ]; do 
@@ -40,19 +40,19 @@ done
 
 if [ ! -x /usr/bin/jq ]; then 
   echo "- Install JQ"
-  sudo apt-get install jq -y  > /dev/null 2>&1
+  apt-get install jq -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/zipinfo ]; then
   echo "- Install ZIP"
-  sudo apt-get install zip -y  > /dev/null 2>&1
+  apt-get install zip -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/terraform ]; then 
   echo "- Install Terraform"
   wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
   unzip terraform_0.11.14_linux_amd64.zip
-  sudo mv terraform /usr/local/bin/
+  mv terraform /usr/local/bin/
   which terraform
   #sudo apt-get install terraform -y
 fi

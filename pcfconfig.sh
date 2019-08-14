@@ -5,6 +5,10 @@ PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND="~/pcfconfig/pcfconfig $*"
 
+echo "HOME:$HOME"
+echo "$HOME/pcfconfig/pcfconfig"
+echo "COMMAND:$COMMAND"
+
 cd $HOME
 
 if [ -f $PIDFILE ]; then
