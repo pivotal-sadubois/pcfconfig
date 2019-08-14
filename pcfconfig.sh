@@ -3,13 +3,7 @@
 LOGFILE=/tmp/pcfconfig.log
 PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
-COMMAND="~/pcfconfig/pcfconfig $*"
-
-echo "HOME:$HOME"
-echo "$HOME/pcfconfig/pcfconfig"
-echo "COMMAND:$COMMAND"
-
-cd $HOME
+COMMAND="$HOME/pcfconfig/pcfconfig $*"
 
 if [ -f $PIDFILE ]; then
   read pid < $PIDFILE
