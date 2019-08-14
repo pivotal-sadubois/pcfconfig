@@ -475,8 +475,6 @@ echo gaga1
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
-cat $TMPROUTE53
-
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then
@@ -488,7 +486,6 @@ cat $TMPROUTE53
         fi
 
 echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
-exit 1
 
         wait_loop 60 "Waiting for DNS records to be pushed"
       fi
@@ -546,8 +543,7 @@ exit 1
         echo ""
 
         echo "OpsManager Name can not be resolved through DNS"
-echo "gaga GCP_DNS_SUFFIX:$GCP_DNS_SUFFIX"
-      exit 1
+        exit 1
       else
         OPS_MANAGER=OPS_MANAGER_DNS
       fi

@@ -231,26 +231,24 @@ echo "########### JUMP SERVER ############"
     PCFHOME="~/pcfconfig"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
-echo xx1
     ret=1
     while [ $ret -ne 0 ]; do
       gcloud compute ssh --zone=$ZONE pcfjump -- hostname > /dev/null 2>&1; ret=$?
       [ $ret -ne 0 ] && sleep 10
     done
-echo xx2
 
     echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ ! -d ~/pcfconfig ] && git clone $GITPCF" 2>/dev/null
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && cd $PCFHOME; git pull" 2>/dev/null
-echo xx3
     stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- "[ -f /jump_software_installed ] && echo true" 2>/dev/null)
     if [ "${stt}" == "" ]; then
       echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
       gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
           sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN" 2>/dev/null
 
-    fi
-echo xx4
+      # --- COPY AWS CREDENTIALS FOR ROUTE53 ---
+      gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
+
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
       GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
       GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
@@ -259,7 +257,7 @@ echo xx4
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
             --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
       echo "-----------------------------------------------------------------------------------------------------------"
-echo xx5
+    fi
 
     gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
 
