@@ -22,5 +22,5 @@ fi
 sleep 2
 if [ -f $LOGFILE ]; then
   read pid < $PIDFILE
-  tail -1000f $LOGFILE --pid $pid
+  tail -n 1000 -f $LOGFILE --pid $pid
 fi
