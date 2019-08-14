@@ -5,6 +5,14 @@ PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND="$HOME/pcfconfig/pcfconfig $*"
 
+if [ -f $LOGFILE ]; then
+  cnt=$(egrep -c "################################ EOF ################################" $LOGFILE)
+  if [ $cnt -gt 0 ]; then 
+    cat $LOGFILE
+  fi
+  exit
+fi 
+
 if [ -f $PIDFILE ]; then
   stt=$(pgrep -F /tmp/pcfconfig.pid)
   if [ "$stt" == "" ]; then 
