@@ -7,7 +7,7 @@ COMMAND=/tmp/tttt
 
 cd $HOME
 if [ -f $LOGFILE ]; then
-  cnt=$(egrep -c "################################ EOF ################################" ~/nohup.out)
+  cnt=$(egrep -c "################################ EOF ################################" $LOGFILE)
   if [ $cnt -gt 0 ]; then 
     cat $LOGFILE
     exit 0
