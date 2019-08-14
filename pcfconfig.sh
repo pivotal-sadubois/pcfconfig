@@ -2,8 +2,8 @@
 
 LOGFILE=/tmp/pcfconfig.log
 PIDFILE=/tmp/pcfconfig.pid
-COMMAND="~/pcfconfig/pcfconfig $*"
 COMMAND=/tmp/tttt 
+COMMAND="~/pcfconfig/pcfconfig $*"
 
 cd $HOME
 
