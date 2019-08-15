@@ -150,7 +150,7 @@ while [ "$1" != "" ]; do
 done
 
 if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "QQQQQQ: `hostname` $*"
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
   exit
 fi
 
