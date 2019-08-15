@@ -1,11 +1,11 @@
-# GENETATED BY getPASReleases.sh (Mon Jun 10 10:37:31 CEST 2019)
-378183:2.5.4:Pivotal Application Service:cf-2.5.4-build.5.pivotal
-375564:2.5.3:Pivotal Application Service:cf-2.5.3-build.17.pivotal
-358334:2.5.2:Pivotal Application Service:cf-2.5.2-build.7.pivotal
-348827:2.5.1:Pivotal Application Service:cf-2.5.1-build.5.pivotal
-336533:2.5.0:Pivotal Application Service:cf-2.5.0-build.297.pivotal
-379093:2.4.8:Pivotal Application Service:cf-2.4.8-build.9.pivotal
-375592:2.4.7:Pivotal Application Service:cf-2.4.7-build.16.pivotal
-357891:2.4.6:Pivotal Application Service:cf-2.4.6-build.5.pivotal
-349697:2.4.5:Pivotal Application Service:cf-2.4.5-build.25.pivotal
-317700:2.4.4:Pivotal Application Service:cf-2.4.4-build.2.pivotal
+# GENETATED BY getPASReleases.sh (Thu Aug 15 18:53:18 CEST 2019)
+458650:2.8.0-build.39:Pivotal Application Service:cf-2.8.0-build.39.pivotal
+457854:2.8.0-build.38:Pivotal Application Service:cf-2.8.0-build.38.pivotal
+457697:2.8.0-build.37:Pivotal Application Service:cf-2.8.0-build.37.pivotal
+456841:2.8.0-build.33:Pivotal Application Service:cf-2.8.0-build.33.pivotal
+451593:2.8.0-build.17:Pivotal Application Service:cf-2.8.0-build.17.pivotal
+450922:2.8.0-build.16:Pivotal Application Service:cf-2.8.0-build.16.pivotal
+450677:2.8.0-build.13:Pivotal Application Service:cf-2.8.0-build.13.pivotal
+450475:2.8.0-build.12:Pivotal Application Service:cf-2.8.0-build.12.pivotal
+449352:2.8.0-build.11:Pivotal Application Service:cf-2.8.0-build.11.pivotal
+446480:2.8.0-build.1:Pivotal Application Service:cf-2.8.0-build.1.pivotal

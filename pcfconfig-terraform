@@ -2659,7 +2659,7 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
         ##############################################################################################
 
-        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >> $TMP_LBSCRIPT
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
         echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
         echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
         echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
@@ -2683,8 +2683,6 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
         else
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
-echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
-echo "MST:$mst"
 
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################

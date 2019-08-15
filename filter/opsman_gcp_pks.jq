@@ -1,9 +1,11 @@
 # IAAS_CONFIGURATION
 "project: " + .modules[].outputs.project.value,
-"associated_service_account: " + .modules[].outputs.service_account_email.value,
+#"associated_service_account: " + .modules[].outputs.service_account_email.value,
 "vms_security_group_id: " + .modules[].outputs.vms_security_group_id.value,
 "ops_manager_ssh_public_key_name: " + .modules[].outputs.ops_manager_ssh_public_key.value,
 "ops_manager_ssh_private_key: <1>" + .modules[].outputs.ops_manager_ssh_private_key.value + "<1>",
+"director_blobstore_service_account_key: <1>" + .modules[].outputs.director_blobstore_service_account_key.value + "<1>",
+
 "encrypted: false", 
 
 "zone-1: " + .modules[].outputs.azs.value[0],

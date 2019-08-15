@@ -1,11 +1,11 @@
-# GENETATED BY getPASSmallRuntime.sh (Mon Jun 10 10:51:37 CEST 2019)
-378195:2.5.4:Small Footprint PAS:srt-2.5.4-build.5.pivotal
-375579:2.5.3:Small Footprint PAS:srt-2.5.3-build.17.pivotal
-358342:2.5.2:Small Footprint PAS:srt-2.5.2-build.7.pivotal
-348844:2.5.1:Small Footprint PAS:srt-2.5.1-build.5.pivotal
-336546:2.5.0:Small Footprint PAS:srt-2.5.0-build.297.pivotal
-379108:2.4.8:Small Footprint PAS:srt-2.4.8-build.9.pivotal
-375604:2.4.7:Small Footprint PAS:srt-2.4.7-build.16.pivotal
-357903:2.4.6:Small Footprint PAS:srt-2.4.6-build.5.pivotal
-349704:2.4.5:Small Footprint PAS:srt-2.4.5-build.25.pivotal
-317727:2.4.4:Small Footprint PAS:srt-2.4.4-build.2.pivotal
+# GENETATED BY getPASSmallRuntime.sh (Thu Aug 15 18:56:04 CEST 2019)
+458662:2.8.0-build.39:Small Footprint PAS:srt-2.8.0-build.39.pivotal
+457865:2.8.0-build.38:Small Footprint PAS:srt-2.8.0-build.38.pivotal
+457708:2.8.0-build.37:Small Footprint PAS:srt-2.8.0-build.37.pivotal
+456850:2.8.0-build.33:Small Footprint PAS:srt-2.8.0-build.33.pivotal
+451605:2.8.0-build.17:Small Footprint PAS:srt-2.8.0-build.17.pivotal
+450932:2.8.0-build.16:Small Footprint PAS:srt-2.8.0-build.16.pivotal
+450690:2.8.0-build.13:Small Footprint PAS:srt-2.8.0-build.13.pivotal
+450484:2.8.0-build.12:Small Footprint PAS:srt-2.8.0-build.12.pivotal
+449361:2.8.0-build.11:Small Footprint PAS:srt-2.8.0-build.11.pivotal
+446491:2.8.0-build.1:Small Footprint PAS:srt-2.8.0-build.1.pivotal

@@ -711,7 +711,7 @@ cleanAWSenv() {
     for id in $(aws --region $AWS_LOCATION ec2 describe-route-tables --filter "Name=vpc-id,Values=$vpc" | \
                 jq -r ".RouteTables[].RouteTableId" 2>/dev/null); do
 
-      messagePrint " - 1Delete Routing Table:" "$id"
+      messagePrint " - Delete Routing Table:" "$id"
       aws --region $AWS_LOCATION ec2 delete-route-table --route-table-id $id> /dev/null 2>&1
       #if [ $? -ne 0 ]; then
       #  echo "ERROR: failled to delete routing table: $id"
