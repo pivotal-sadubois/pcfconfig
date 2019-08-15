@@ -1592,6 +1592,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     touch $TMP_SCRIPT
+echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
     [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
     [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
 
@@ -2319,6 +2320,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   touch $TMP_SCRIPT
+echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
   [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
   [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
 
