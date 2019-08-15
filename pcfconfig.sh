@@ -6,6 +6,8 @@ COMMAND=/tmp/tttt
 COMMAND=$HOME/pcfconfig/pcfconfig
 ARGS="$*"
 
+echo "2222222222222222222222222222222: $*"
+
 eof=0
 
 if [ -f $LOGFILE ]; then
