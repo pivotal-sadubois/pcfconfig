@@ -267,7 +267,7 @@ echo "########### JUMP SERVER ############"
   exit 1
 fi 
 
-
+echo gagagaga1
 
 # --- CHECK PRODUCT SELECTION ---
 if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
