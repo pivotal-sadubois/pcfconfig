@@ -366,8 +366,11 @@ fi
 if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
+echo "GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
     cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
+echo hallo0
     if [ $cnt -eq 0 ]; then
+echo hallo1
       messagePrint "Creating Servivce-Account" "pcfconfig"
   
       gcloud iam service-accounts create pcfconfig --display-name="pcfconfig" 2>/dev/null
@@ -383,15 +386,20 @@ if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
         --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
       gcloud projects add-iam-policy-binding $GCP_PROJECT \
         --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
+echo hallo2
     fi
   
+echo hallo4
     # DELETE OLD KEYS
     svc=$(gcloud iam service-accounts list --filter "name:pcfconfig" | grep -v "EMAIL" | awk '{ print $(NF-1) }')
+echo "hallo5 svc:$svc"
     for n in $(gcloud iam service-accounts keys list --iam-account=$svc | awk '{ print $1 }' | grep -v KEY_ID); do
       gcloud iam service-accounts keys delete --iam-account=$svc $n -q > /dev/null 2>&1
     done
   
+echo hallo6
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
+echo hallo8
   fi
 fi
 exit 1
