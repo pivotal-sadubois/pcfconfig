@@ -100,6 +100,8 @@ fi
 
 CMDLINE_ARGS=$(echo "$*" | sed -e 's/--jump-server//g' -e 's/ - / "-" /g' -e 's/ -$/ "-" /g') 
 echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "1:$1"
+echo "*:$*"
 
 while [ "$1" != "" ]; do
   case $1 in
