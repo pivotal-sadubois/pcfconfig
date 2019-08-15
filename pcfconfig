@@ -6,13 +6,6 @@
 # Description ..: PCF Installation and Configuration Utility
 # ############################################################################################
 
-if [ "$1" != "--jump-server" ]; then
-  echo "`hostname`  YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY: $1"
-  exit
-else
-  echo "`hostname`  YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY: $1"
-fi
-
 export PATH=~/workspace/pcfconfig:~/pcfconfig:$PATH
 
 PCFCONFIG_PATH=$(dirname $0)
