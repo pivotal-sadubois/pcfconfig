@@ -176,7 +176,6 @@ if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
   fi
 fi
 
-# gaga
 if [ ${JUMP_SERVER} -eq 1 ]; then
 echo "########### JUMP SERVER ############"
   echo ""
@@ -185,14 +184,10 @@ echo "########### JUMP SERVER ############"
   echo "-----------------------------------------------------------------------------------------------------------"
   TF_DEPLOYMENT=$CLOUD_PROVIDER
   JUMP_HOST="jump-${ENV_NAME}.${DNS_DOMAIN}"
-echo gagagaga000
 
   checkCloudCLI
-echo gagagaga001
   checkOpsMantools
-echo gagagaga002
   installJumpHost
-echo gagagaga003
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
@@ -264,8 +259,6 @@ echo gagagaga003
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
-echo "gagagagagaga00 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
-echo "gagagagagaga00 GCPSVC:$GCPSVC"
     gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
 
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
@@ -274,7 +267,6 @@ echo "gagagagagaga00 GCPSVC:$GCPSVC"
   exit 1
 fi 
 
-echo gagagaga0
 
 # --- CHECK PRODUCT SELECTION ---
 if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
@@ -297,8 +289,6 @@ else
   PCF_VERSION=$PAS_VERSION
   TF_TILE_OPTION="--pas-tfvars"
 fi
-
-echo gagagaga2
 
 if [ $DEBUG -gt 0 ]; then 
   echo "PIVNET_TOKEN:$PIVNET_TOKEN"
@@ -329,7 +319,6 @@ TF_DEPLOYMENT=$CLOUD_PROVIDER
 checkCloudCLI
 checkOpsMantools
 
-echo gagagaga3
 # --- VERIFY PRODUCT VERSION ---
 if [ "$PRODUCT_TILE" == "pks" ]; then 
   PCF_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
