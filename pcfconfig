@@ -143,6 +143,9 @@ while [ "$1" != "" ]; do
   shift
 done
 
+echo "AZURE_SUBSCRIPTION_ID:$AZURE_SUBSCRIPTION_ID"
+echo "AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
 
 # --- CHECK CLOUD CREDENTIALS ---
 if [ "${AZURE_SUBSCRIPTION_ID}" == "" -a "${AWS_ACCESS_KEY}" == "" -a "${GCP_SERVICE_ACCOUNT}" == "" ]; then
