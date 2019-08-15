@@ -12,9 +12,9 @@ PCFCONFIG_PATH=$(dirname $0)
 PCFCONFIG_BASE=$(basename $0)
 
 if [ "$1" != "--jump-server" ]; then
-  echo "QQQQQQ: `hostname`$*"
+  echo "QQQQQQ: `hostname` $*"
 else
-  echo "QQQQQQ: `hostname`$*"
+  echo "QQQQQQ: `hostname` $*"
 fi
 
 # --- SOURCE FUNCTIONS---
@@ -149,11 +149,9 @@ while [ "$1" != "" ]; do
   shift
 done
 
-if [ "$1" != "--jump-server" ]; then
-  echo "QQQQQQ: `hostname`$*"
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "QQQQQQ: `hostname` $*"
   exit
-else
-  echo "QQQQQQ: `hostname`$*"
 fi
 
 # --- CHECK CLOUD CREDENTIALS ---
