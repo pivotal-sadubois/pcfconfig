@@ -391,9 +391,10 @@ echo hallo2
   
 echo hallo4
     # DELETE OLD KEYS
-    svc=$(gcloud iam service-accounts list --filter "name:pcfconfig" | grep -v "EMAIL" | awk '{ print $(NF-1) }')
+    svc=$(gcloud iam service-accounts list --filter "name:pcfconfig@" | grep -v "EMAIL" | head -1 | awk '{ print $(NF-1) }')
 echo "hallo5 svc:$svc"
     for n in $(gcloud iam service-accounts keys list --iam-account=$svc | awk '{ print $1 }' | grep -v KEY_ID); do
+echo "N:$n"
       gcloud iam service-accounts keys delete --iam-account=$svc $n -q > /dev/null 2>&1
     done
   
