@@ -13,6 +13,7 @@ PCFCONFIG_BASE=$(basename $0)
 
 if [ "$1" != "--jump-server" ]; then
   echo "QQQQQQ: `hostname` $*"
+exit
 else
   echo "QQQQQQ: `hostname` $*"
 fi
