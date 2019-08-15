@@ -241,6 +241,9 @@ echo gagagaga003
       [ $ret -ne 0 ] && sleep 10
     done
 
+    GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
+    GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
+
     echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ ! -d ~/pcfconfig ] && git clone $GITPCF" 2>/dev/null
     gcloud compute ssh --zone=$ZONE pcfjump -- "[ -d ~/pcfconfig ] && cd $PCFHOME; git pull" 2>/dev/null
@@ -254,8 +257,6 @@ echo gagagaga003
       gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
 
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
-      GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }') 
-      GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT) 
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
@@ -263,7 +264,8 @@ echo gagagaga003
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
-echo gagagagagaga00
+echo "gagagagagaga00 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
+echo "gagagagagaga00 GCPSVC:$GCPSVC"
     gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
 
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
@@ -398,7 +400,9 @@ echo "N:$n"
       gcloud iam service-accounts keys delete --iam-account=$svc $n -q > /dev/null 2>&1
     done
   
+read x
 echo hallo6
+echo "gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc}"
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
 echo hallo8
   fi
