@@ -5,6 +5,7 @@ PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND=$HOME/pcfconfig/pcfconfig
 ARGS="$*"
+ARGS=$(echo "$*" | sed -e 's/--jump-server//g')
 
 eof=0
 
