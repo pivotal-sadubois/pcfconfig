@@ -291,6 +291,7 @@ else
   TF_TILE_OPTION="--pas-tfvars"
 fi
 
+echo gagagaga2
 
 if [ $DEBUG -gt 0 ]; then 
   echo "PIVNET_TOKEN:$PIVNET_TOKEN"
@@ -321,6 +322,8 @@ TF_DEPLOYMENT=$CLOUD_PROVIDER
 checkCloudCLI
 checkOpsMantools
 
+echo gagagaga3
+exit 1
 # --- VERIFY PRODUCT VERSION ---
 if [ "$PRODUCT_TILE" == "pks" ]; then 
   PCF_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
