@@ -21,7 +21,7 @@ installJumpHost() {
     IMAGE_FAMILY="ubuntu-1804-lts"
     INSTANCE_NAME="pcfjump"
     INSTANCE_TYPE="n1-standard-8"
-    INSTANCE_TYPE="n2-standard-2"
+    INSTANCE_TYPE="n1-standard-1"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
     cnt=$(gcloud compute instances list --filter="name=( 'pcfjump' )" 2>/dev/null | egrep -c "^pcfjump")

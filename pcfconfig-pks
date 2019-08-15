@@ -1445,6 +1445,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
 
   echo "-----------------------------------------------------------------------------------------------------------"
+echo "$OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS"
   $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
   if [ $ret -ne 0 ]; then 
     echo "ERROR: OpsManager configure-authentication failled, please try again"; exit 1
