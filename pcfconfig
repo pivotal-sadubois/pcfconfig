@@ -99,11 +99,12 @@ if [ "${1}" == "" ]; then
 fi
 
 CMDLINE_ARGS=$(echo "$*" | sed -e 's/--jump-server//g' -e 's/ - / "-" /g' -e 's/ -$/ "-" /g') 
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "1:$1"
-echo "*:$*"
+echo "`hostnamea` CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "`hostnamea` 1:$1"
+echo "`hostnamea` *:$*"
 
 while [ "$1" != "" ]; do
+echo "- `hostnamea` $1"
   case $1 in
     --debug) DEBUG=1;; 
     --usage) USAGE=1;;
