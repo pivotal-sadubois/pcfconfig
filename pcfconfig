@@ -188,6 +188,12 @@ if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
   fi
 fi
 
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "PKS_VERSION:$PKS_VERSION"
+fi
+
 if [ ${JUMP_SERVER} -eq 1 ]; then
 echo "########### JUMP SERVER ############"
   echo ""
@@ -279,6 +285,12 @@ echo "########### JUMP SERVER ############"
 
   exit 1
 fi 
+
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "PKS_VERSION:$PKS_VERSION"
+fi
 
 
 # --- CHECK PRODUCT SELECTION ---
