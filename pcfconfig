@@ -376,6 +376,13 @@ else
   echo "ERROR: can not find ${PCF_RELEASE_NOTES} file"; exit 1
 fi
 
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "PKS_VERSION:$PKS_VERSION"
+fi
+
+
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
@@ -415,6 +422,12 @@ fi
 ##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
 ##############################################################################################
+
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "PKS_VERSION:$PKS_VERSION"
+fi
 
 # --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
 OPSMAN_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-release-notes.txt
@@ -539,6 +552,13 @@ PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraform
 
 # --- INITIALIZE STATE FILES ---
 #touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
+
+if [ "`hostname`" == "ip-10-0-3-142" ]; then
+  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
+echo "PKS_VERSION:$PKS_VERSION"
+fi
+exit 1
 
 # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
 if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then 
