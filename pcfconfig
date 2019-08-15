@@ -358,7 +358,6 @@ if [ -f ${PCF_RELEASE_NOTES} ]; then
 else
   echo "ERROR: can not find ${PCF_RELEASE_NOTES} file"; exit 1
 fi
-exit 1
 
 ##############################################################################################
 ######################################### PREPERATION ########################################
@@ -395,6 +394,7 @@ if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
   fi
 fi
+exit 1
 
 ##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
