@@ -5,7 +5,6 @@ PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND=$HOME/pcfconfig/pcfconfig
 ARGS="$*"
-echo "COMMAND:$COMMAND"
 
 eof=0
 
