@@ -263,6 +263,7 @@ echo gagagaga003
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
+echo gagagagagaga00
     gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
 
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
@@ -327,7 +328,6 @@ checkCloudCLI
 checkOpsMantools
 
 echo gagagaga3
-exit 1
 # --- VERIFY PRODUCT VERSION ---
 if [ "$PRODUCT_TILE" == "pks" ]; then 
   PCF_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-pks-release-notes.txt
@@ -358,6 +358,7 @@ if [ -f ${PCF_RELEASE_NOTES} ]; then
 else
   echo "ERROR: can not find ${PCF_RELEASE_NOTES} file"; exit 1
 fi
+exit 1
 
 ##############################################################################################
 ######################################### PREPERATION ########################################
