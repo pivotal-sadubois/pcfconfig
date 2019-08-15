@@ -1,20 +1,17 @@
 #!/bin/bash
 
-echo "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO: $1"
-
 LOGFILE=/tmp/pcfconfig.log
 PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND=$HOME/pcfconfig/pcfconfig
 ARGS="$*"
-ARGS=$(echo "$*" | sed -e 's/--jump-server//g')
 
 eof=0
 
 if [ -f $LOGFILE ]; then
   eof=$(egrep -c "################################ EOF ################################" $LOGFILE)
   if [ $eof -gt 0 ]; then 
-    #cat $LOGFILE
+    cat $LOGFILE
     exit
   fi
 fi 

@@ -235,9 +235,9 @@ echo "########### JUMP SERVER ############"
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
-    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
-    #ssh ${SSHPAR} -n "nohup /home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
-    #ssh ${SSHPAR} -n "/home/ubuntu/pcfconfig/pcfconfig $CMDLINE_ARGS"
+    ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+
+    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
   fi
 
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
@@ -274,9 +274,8 @@ echo "########### JUMP SERVER ############"
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-exit 1
-    gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS --gcp-service-account ~/$GCPSVC"
+    ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    gcloud compute ssh --zone=$ZONE pcfjump -- "~/pcfconfig/pcfconfig.sh $ARGS --gcp-service-account ~/$GCPSVC"
 
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
   fi
