@@ -4,6 +4,8 @@ LOGFILE=/tmp/pcfconfig.log
 PIDFILE=/tmp/pcfconfig.pid
 COMMAND=/tmp/tttt 
 COMMAND="$HOME/pcfconfig/pcfconfig $*"
+echo "COMMAND:$COMMAND"
+exit
 
 eof=0
 
