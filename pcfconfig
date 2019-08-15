@@ -106,6 +106,7 @@ if [ "${1}" == "" ]; then
 fi
 
 #CMDLINE_ARGS=$(echo "$*" | sed -e 's/--jump-server//g' -e 's/ - / "-" /g' -e 's/ -$/ "-" /g') 
+CMDLINE_ARGS="$*"
 
 while [ "$1" != "" ]; do
   case $1 in
@@ -152,6 +153,7 @@ done
 
 if [ "`hostname`" == "ip-10-0-3-142" ]; then
   echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
   exit
 fi
 
