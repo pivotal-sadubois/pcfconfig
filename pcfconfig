@@ -154,7 +154,6 @@ if [ "`hostname`" == "ip-10-0-3-142" ]; then
   echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
 echo "CMDLINE_ARGS:$CMDLINE_ARGS"
 echo "PKS_VERSION:$PKS_VERSION"
-  exit
 fi
 
 # --- CHECK CLOUD CREDENTIALS ---
