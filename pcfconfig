@@ -99,6 +99,7 @@ if [ "${1}" == "" ]; then
 fi
 
 CMDLINE_ARGS=$(echo "$*" | sed -e 's/--jump-server//g' -e 's/ - / "-" /g' -e 's/ -$/ "-" /g') 
+echo "CMDLINE_ARGS:$CMDLINE_ARGS"
 
 while [ "$1" != "" ]; do
   case $1 in
