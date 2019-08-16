@@ -550,6 +550,14 @@ PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-$
 PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
 PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-setup"
 
+echo "PCF_LATEST:$PCF_LATEST"
+if [ "${PCF_LATEST}" == "" ]; then 
+  echo "ERROR: $0 No entry found for $PCF_OPSMAN_TYPE in $TERRAFORM_RELEASE_NOTES"
+  exit 1
+fi
+
+exit 1
+
 # --- INITIALIZE STATE FILES ---
 #touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
 
