@@ -60,7 +60,6 @@ TF_PREFIX=pivotal-cf-terraforming
 TF_DIR_MODE=""
 
 echo "XXXXXXXX: $*"
-exit 1
 
 ##############################################################################################
 ############################### COMMAND-LINE ARGS PROCESSING  ################################
@@ -104,8 +103,6 @@ while [ "$1" != "" ]; do
   esac
   shift
 done
-
-echo "gaga PCF_VERSION:$PCF_VERSION"
 
 [ "$PKS_CLUSTER_1_NAME" == "-" ] && PKS_CLUSTER_1_NAME=""
 [ "$PKS_CLUSTER_1_PLAN" == "-" ] && PKS_CLUSTER_1_PLAN=""

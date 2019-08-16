@@ -597,6 +597,10 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_AUTH_STATE)" != "completed" ]; then 
     cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+    [ "${PKS_CLUSTER_1_PLAN}" == "" ] && PKS_CLUSTER_1_PLAN="-"$
+    [ "${PKS_CLUSTER_2_PLAN}" == "" ] && PKS_CLUSTER_2_PLAN="-"$
+    [ "${PKS_CLUSTER_3_PLAN}" == "" ] && PKS_CLUSTER_3_PLAN="-"$
   
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     pcfconfig-pks-setup --pks-admin-user $PKS_ADMIN_USER --pks-admin-pass $PKS_ADMIN_PASS \
