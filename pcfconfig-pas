@@ -1630,9 +1630,6 @@ echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
     echo "Looking for PKS Product Image ($PKS_VERSION)"
     PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | egrep -v "RC|beta" | head -1 | awk -F: '{ print $NF }')
-echo "PKS_VERSION:$PKS_VERSION"
-echo "PIVNET_GLOB:$PIVNET_GLOB"
-exit 1
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
     PIVNET_SLUG=pivotal-container-service
 
