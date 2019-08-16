@@ -11,12 +11,6 @@ export PATH=~/workspace/pcfconfig:~/pcfconfig:$PATH
 PCFCONFIG_PATH=$(dirname $0)
 PCFCONFIG_BASE=$(basename $0)
 
-if [ "$1" != "--jump-server" ]; then
-  echo "QQQQQQ: `hostname` $*"
-else
-  echo "QQQQQQ: `hostname` $*"
-fi
-
 # --- SOURCE FUNCTIONS---
 . ${PCFCONFIG_PATH}/functions
 
@@ -150,12 +144,6 @@ while [ "$1" != "" ]; do
   shift
 done
 
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-fi
-
 # --- CHECK CLOUD CREDENTIALS ---
 if [ "${AZURE_SUBSCRIPTION_ID}" == "" -a "${AWS_ACCESS_KEY}" == "" -a "${GCP_SERVICE_ACCOUNT}" == "" ]; then
   echo "ERROR: Either Azure, AWS or GCP credentials needs to be provided"; exit 1
@@ -186,13 +174,6 @@ if [ "${GCP_SERVICE_ACCOUNT}" != "" ]; then
   else 
     CLOUD_PROVIDER="gcp"
   fi
-fi
-
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-echo "JUMP_SERVER:$JUMP_SERVER"
 fi
 
 if [ ${JUMP_SERVER} -eq 1 ]; then
@@ -287,13 +268,6 @@ echo "########### JUMP SERVER ############"
   exit 1
 fi 
 
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-fi
-
-
 # --- CHECK PRODUCT SELECTION ---
 if [ "${PKS_VERSION}" == "" -a "${PAS_VERSION}" == "" ]; then
   echo "ERROR: Either PKS or PAS Version needs to be provided"; exit 1
@@ -376,13 +350,6 @@ else
   echo "ERROR: can not find ${PCF_RELEASE_NOTES} file"; exit 1
 fi
 
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-fi
-
-
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
@@ -422,12 +389,6 @@ fi
 ##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
 ##############################################################################################
-
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-fi
 
 # --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
 OPSMAN_RELEASE_NOTES=${PCFCONFIG_PATH}/files/opsman-release-notes.txt
@@ -550,26 +511,13 @@ PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-$
 PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
 PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-setup"
 
-echo "PCF_LATEST:$PCF_LATEST"
 if [ "${PCF_LATEST}" == "" ]; then 
   echo "ERROR: $0 No entry found for $PCF_OPSMAN_TYPE in $TERRAFORM_RELEASE_NOTES"
   exit 1
 fi
 
-exit 1
-
 # --- INITIALIZE STATE FILES ---
 #touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
-
-if [ "`hostname`" == "ip-10-0-3-142" ]; then
-  echo "AAAAAAA: `hostname` AWS_ACCESS_KEY:$AWS_ACCESS_KEY"
-echo "CMDLINE_ARGS:$CMDLINE_ARGS"
-echo "PKS_VERSION:$PKS_VERSION"
-echo "PCF_LATEST:$PCF_LATEST"
-echo "PCF_OPSMAN_TYPE:$PCF_OPSMAN_TYPE"
-echo "TERRAFORM_RELEASE_NOTES:$TERRAFORM_RELEASE_NOTES"
-fi
-exit 1
 
 # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
 if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then 
