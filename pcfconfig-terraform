@@ -2428,7 +2428,7 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
 echo "gaga N:$n ${GCP_DNS_PREFIX}-${n}"
 echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
-        gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE TARGET POOL ---
           echo "Creating Target Pool (${GCP_DNS_PREFIX}-$n)"
@@ -2440,12 +2440,16 @@ echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$
           fi
         fi
 
-        gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+echo "gagaga xx"
+
+echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
+        gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE LOAD BALANCER ---
           echo "Creating LoadBalancer (${GCP_DNS_PREFIX}-$n) for cluster: $n"
 	  gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 \
             --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+echo "gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating forwarding-rules (${GCP_DNS_PREFIX}-$n)"
             echo "gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
