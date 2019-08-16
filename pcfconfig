@@ -265,6 +265,7 @@ echo "########### JUMP SERVER ############"
     #ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $CMDLINE_ARGS"
   fi
 
+  # EXIT JUMPSTART
   exit 1
 fi 
 
