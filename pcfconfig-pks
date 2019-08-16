@@ -2653,6 +2653,8 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
 
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
+echo "xxxxxxxxxxxx director_ip: $director_ip"
+exit 1
     ##############################################################################################
     ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
     ##############################################################################################
