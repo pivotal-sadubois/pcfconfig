@@ -2426,6 +2426,8 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo "gaga N:$n ${GCP_DNS_PREFIX}-${n}"
+echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE TARGET POOL ---
@@ -2455,6 +2457,7 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
                 --type=A 2> /dev/null | wc -l | sed 's/ //g')
         if [ ${cnt} -eq 0 ]; then
           echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
+echo "gaga"
 echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
           ipa=$(gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION | \
               grep IPAddress | awk '{ print $NF }')
