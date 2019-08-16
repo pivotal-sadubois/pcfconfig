@@ -2459,6 +2459,8 @@ echo "gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443
 
         cnt=$(gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name "${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}." \
                 --type=A 2> /dev/null | wc -l | sed 's/ //g')
+echo "gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. --type=A 2> /dev/null | wc -l | sed 's/ //g'"
+echo "CNT:$cnt"
         if [ ${cnt} -eq 0 ]; then
           echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
 echo "gaga"
