@@ -2603,6 +2603,8 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
           fi
         fi
       fi
+echo "PKS_CLUSTER_2_NAME:$PKS_CLUSTER_2_NAME"
+echo "PKS_CLUSTER_2_PLAN:$PKS_CLUSTER_2_PLAN"
 
       if [ "${PKS_CLUSTER_2_NAME}" != "" ]; then
         pks cluster $PKS_CLUSTER_2_NAME > /dev/null 2>&1
