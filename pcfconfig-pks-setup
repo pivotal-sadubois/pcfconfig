@@ -59,6 +59,9 @@ TF_WORKDIR="~/workspace"
 TF_PREFIX=pivotal-cf-terraforming
 TF_DIR_MODE=""
 
+echo "XXXXXXXX: $*"
+exit 1
+
 ##############################################################################################
 ############################### COMMAND-LINE ARGS PROCESSING  ################################
 ##############################################################################################
@@ -2605,6 +2608,7 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
       fi
 echo "PKS_CLUSTER_2_NAME:$PKS_CLUSTER_2_NAME"
 echo "PKS_CLUSTER_2_PLAN:$PKS_CLUSTER_2_PLAN"
+exit 1
 
       if [ "${PKS_CLUSTER_2_NAME}" != "" ]; then
         pks cluster $PKS_CLUSTER_2_NAME > /dev/null 2>&1
