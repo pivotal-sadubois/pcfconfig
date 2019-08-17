@@ -2577,9 +2577,10 @@ EOF
       exit 1
     fi
 
-    echo "# --- DIRECTOR FOR DEBUGGING ---"
+    echo ""
+    echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
     echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-    echo "ubuntu@$OPS_MANAGER_DNS-ops-manager:~$ sh /tmp/debug.sh"
+    echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
     echo ""
     echo "# --- PKS LOGIN ---"
     echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
@@ -2625,7 +2626,7 @@ exit 1
           if [ "$stt" == "failed" ]; then
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) is in failed state, please delete cluster and restart"
             echo "       => pks delete-cluster $PKS_CLUSTER_1_NAME"
-            #exit 1
+            exit 1
           fi
         fi
       fi
@@ -2649,7 +2650,7 @@ exit 1
           stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
           messagePrint "PKS Cluster 2: $PKS_CLUSTER_2_NAME ($PKS_CLUSTER_2_PLAN)" "$stt"
           if [ "$stt" != "succeeded" ]; then
-            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) creation failed"; #exit 1
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) creation failed"; exit 1
           fi
         else
           stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
@@ -2658,12 +2659,13 @@ exit 1
           if [ "$stt" == "failed" ]; then
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) is in failed state, please delete cluster and restart"
             echo "       => pks delete-cluster $PKS_CLUSTER_2_NAME"
-            #exit 1
+            exit 1
           fi
         fi
       fi
     fi
 
+exit 1
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
     ##############################################################################################
