@@ -1447,11 +1447,15 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
 
   echo "-----------------------------------------------------------------------------------------------------------"
-echo "$OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS"
-  $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
-  if [ $ret -ne 0 ]; then 
-    echo "ERROR: OpsManager configure-authentication failled, please try again"; exit 1
-  fi
+  while [ 1 ]; do
+    $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
+    if [ $ret -ne 0 ]; then 
+      echo "ERROR: OpsManager configure-authentication failled, try again in 60sec"
+      sleep 60
+    else
+      break
+    fi
+  done
   echo "-----------------------------------------------------------------------------------------------------------"
 
   # --- CONFIGURE AUTHENTICFICATION ---
@@ -1609,7 +1613,9 @@ echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
     echo "apt-get -qq install om > /dev/null 2>&1"                                                                                     >> $TMP_SCRIPT
 
     # --- CLEANUP OLD ENTRIES FROM KNOWN_HOSTS FILE ---
-    sed -in "/$OPS_MANAGER_DNS/d" ~/.ssh/known_hosts 
+    if [ -f ~/.ssh/known_hosts ]; then 
+      sed -in "/$OPS_MANAGER_DNS/d" ~/.ssh/known_hosts 
+    fi
     scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
     if [ ${ret} -ne 0 ]; then 
       echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
