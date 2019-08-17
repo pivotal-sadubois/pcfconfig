@@ -2566,10 +2566,10 @@ EOF
     echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
     echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
     echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
-    echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms"                                                  >> $TMP_LBSCRIPT
-    echo "bosh -e $DNS_PREFIX -d service-instance_$uid tasks"                                                >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
 
-    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
       echo "       Please try manually:"
@@ -2585,7 +2585,6 @@ EOF
     echo "# --- PKS LOGIN ---"
     echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
     echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
-exit 1
 
     ##############################################################################################
     #################################### CREATE PKS CLUSTERS #####################################
