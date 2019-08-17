@@ -2358,8 +2358,6 @@ echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
     let i=i+1
   done
 
-#xxxx
-
   nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -eq 0 ]; then 
     ##############################################################################################
@@ -2398,7 +2396,6 @@ echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
       cp $TMP_OPSMAN ~/opsman.pem
       echo "ssh -qi ~/opsman.pem ubuntu@${OPS_MANAGER_DNS}" > ~/ssh-opsman.sh
   
-echo gaga1
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
         echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -2407,7 +2404,6 @@ echo gaga1
         exit 1
       fi
 
-echo gaga2
       echo "-----------------------------------------------------------------------------------------------------------"
       (ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
       echo "-----------------------------------------------------------------------------------------------------------"
@@ -2431,8 +2427,6 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "gaga N:$n ${GCP_DNS_PREFIX}-${n}"
-echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
         gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE TARGET POOL ---
@@ -2445,16 +2439,12 @@ echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$
           fi
         fi
 
-echo "gagaga xx"
-
-echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE LOAD BALANCER ---
           echo "Creating LoadBalancer (${GCP_DNS_PREFIX}-$n) for cluster: $n"
 	  gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 \
             --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
-echo "gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating forwarding-rules (${GCP_DNS_PREFIX}-$n)"
             echo "gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
@@ -2464,21 +2454,13 @@ echo "gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443
 
         cnt=$(gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name "${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}." \
                 --type=A 2> /dev/null | wc -l | sed 's/ //g')
-echo "gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. --type=A 2> /dev/null | wc -l | sed 's/ //g'"
-echo "CNT:$cnt"
         if [ ${cnt} -eq 0 ]; then
           echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
-echo "gaga"
-echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
           ipa=$(gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION | \
               grep IPAddress | awk '{ print $NF }')
-echo "IPA:$ipa"
-echo "gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone"
           gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone
-echo "gcloud dns record-sets transaction add $ipa --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. --type A -z ${GCP_DNS_PREFIX}-zone --ttl=300"
           gcloud dns record-sets transaction add "$ipa" --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. \
              --type A -z ${GCP_DNS_PREFIX}-zone --ttl=300
-echo "gcloud dns record-sets transaction execute -z ${GCP_DNS_PREFIX}-zone"
           gcloud dns record-sets transaction execute -z ${GCP_DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating DNS record-sets for zone (${GCP_DNS_PREFIX}-zone)"
@@ -2575,13 +2557,39 @@ EOF
       done
     fi
 
+#jjjjjjj
+
+    ##############################################################################################
+    ######################################## DEBUG INFOS #########################################
+    ##############################################################################################
+    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+    echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+    echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+    echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms"                                                  >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX -d service-instance_$uid tasks"                                                >> $TMP_LBSCRIPT
+
+    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+      echo "       Please try manually:"
+      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
+      exit 1
+    fi
+
+    echo "# --- DIRECTOR FOR DEBUGGING ---"
+    echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+    echo "ubuntu@$OPS_MANAGER_DNS-ops-manager:~$ sh /tmp/debug.sh"
+    echo ""
+    echo "# --- PKS LOGIN ---"
+    echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+    echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+exit 1
+
     ##############################################################################################
     #################################### CREATE PKS CLUSTERS #####################################
     ##############################################################################################
 
-echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
-echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
 
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
@@ -2658,7 +2666,6 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
 
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
-echo "xxxxxxxxxxxx director_ip: $director_ip"
     ##############################################################################################
     ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
     ##############################################################################################
