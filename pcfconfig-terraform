@@ -2617,7 +2617,7 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
           if [ "$stt" == "failed" ]; then
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) is in failed state, please delete cluster and restart"
             echo "       => pks delete-cluster $PKS_CLUSTER_1_NAME"
-            exit 1
+            #exit 1
           fi
         fi
       fi
