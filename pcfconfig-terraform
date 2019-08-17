@@ -1719,7 +1719,6 @@ echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
       if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
-echo holdrio
       messagePrint " - Verify download and caching options" "ops-manager"
       echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                                  >  $TMP_SCRIPT
       echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                       >> $TMP_SCRIPT
@@ -2636,13 +2635,13 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
           if [ $? -ne 0 ]; then
             echo "ERROR: Creating PKS Cluster $PKS_CLUSTER_2_NAME failed"
             echo "       => pks create-cluster $PKS_CLUSTER_2_NAME --external-hostname ${lbdns} --plan $PKS_CLUSTER_2_PLAN  --wait"
-            exit 1
+            #exit 1
           fi
 
           stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
           messagePrint "PKS Cluster 2: $PKS_CLUSTER_2_NAME ($PKS_CLUSTER_2_PLAN)" "$stt"
           if [ "$stt" != "succeeded" ]; then
-            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) creation failed"; exit 1
+            echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) creation failed"; #exit 1
           fi
         else
           stt=$(pks cluster $PKS_CLUSTER_2_NAME | egrep "Last Action State:" | awk '{ print $NF }')
@@ -2651,7 +2650,7 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
           if [ "$stt" == "failed" ]; then
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_2_NAME) is in failed state, please delete cluster and restart"
             echo "       => pks delete-cluster $PKS_CLUSTER_2_NAME"
-            exit 1
+            #exit 1
           fi
         fi
       fi
@@ -2660,10 +2659,45 @@ echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validati
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
 echo "xxxxxxxxxxxx director_ip: $director_ip"
-exit 1
     ##############################################################################################
     ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
     ##############################################################################################
+
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+
+        ##############################################################################################
+        ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
+        ##############################################################################################
+
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
+
+        scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh"
+          exit 1
+        fi
+
+        ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" >/dev/null 2>&1; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: executing remote-script: /tmp/masters.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+          exit 1
+        else
+          mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
+        fi
+
+
+
+    fi
+exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
