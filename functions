@@ -15,6 +15,11 @@ getPCFconfigState() {
 }
 
 installJumpHost() {
+  if [ "${CLOUD_PROVIDER}" == "azure" ]; then
+    messagePrint "Creating Azure Jump-Server" "pcfjump"
+  fi
+
+exit 1
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
     messagePrint "Creating GCP Jump-Server" "pcfjump"
 
