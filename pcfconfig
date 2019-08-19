@@ -189,9 +189,24 @@ echo "########### JUMP SERVER ############"
   checkOpsMantools
   installJumpHost
 
+  if [ "${CLOUD_PROVIDER}" == "azure" ]; then
+    GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
+    PCFHOME="~/pcfconfig"
+
+    JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+
+    echo ""
+    echo "# --- JUMP HOST ACCESS ---"
+    sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+    echo "ssh -qo StrictHostKeyChecking=no ubuntu@$JUMP_HOST"
+  fi
+
+exit 1
+
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/pcfjump.awspas.pcfsdu.com.pem ec2-user@$JUMP_HOST"
+    echo ""
+    echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
     # --- INSTALL SOFTWARE ---

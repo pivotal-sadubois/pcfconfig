@@ -17,9 +17,130 @@ getPCFconfigState() {
 installJumpHost() {
   if [ "${CLOUD_PROVIDER}" == "azure" ]; then
     messagePrint "Creating Azure Jump-Server" "pcfjump"
+
+    stt=$(az group exists --name Admin)
+    if [ "$stt" == "false" ]; then
+      messagePrint " - Creating Azure Ressource Group" "Admin"
+      az group create --name Admin --location $AZURE_LOCATION > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Ressource Group Admin"
+        echo "       => az group create --name Admin --location $AZURE_LOCATION"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify Resource Group" "Admin"
+    fi
+
+    nam=$(az network vnet list -g Admin --query "[?contains(name, 'admin-vnet')]" | jq -r '.[].name') 
+    if [ "$nam" != "admin-vnet" ]; then
+      messagePrint " - Creating Vnet" "admin-vnet"
+
+      az network vnet create \
+          --resource-group Admin \
+          --name admin-vnet \
+          --address-prefix 192.168.0.0/16 \
+          --subnet-name AdminSubnet \
+          --subnet-prefix 192.168.1.0/24 > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Vnet admin-vnet"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify Vnet" "admin-vnet"
+    fi
+
+    nam=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].name') 
+    if [ "$nam" != "AdminPublicIP" ]; then
+      messagePrint " - Creating PublicIP" "AdminPublicIP"
+
+      az network public-ip create \
+          --resource-group Admin \
+          --name AdminPublicIP  > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating PublicIP AdminPublicIP"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify PublicIP" "AdminPublicIP"
+    fi
+
+    nam=$(az network nsg list --query "[?contains(name, 'AdminSG')]" | jq -r '.[].name')
+    if [ "$nam" != "AdminSG" ]; then
+      messagePrint " - Creating Security Group" "AdminSG"
+
+      az network nsg create \
+          --resource-group Admin \
+          --name AdminSG > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Security Group AdminSG"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify Security Group" "AdminSG"
+    fi
+
+    nam=$(az network nsg rule list -g Admin --nsg-name AdminSG --query "[?contains(name, 'AdminSG-RuleSSH')]" | \
+          jq -r '.[].name')
+    if [ "$nam" != "AdminSG-RuleSSH" ]; then
+      messagePrint " - Creating Security Group Rule" "AdminSG-RuleSSH"
+
+      az network nsg rule create \
+          --resource-group Admin \
+          --nsg-name AdminSG \
+          --name AdminSG-RuleSSH \
+          --protocol tcp \
+          --priority 1000 \
+          --destination-port-range 22 \
+          --access allow > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Security Group Rule AdminSG-RuleSSH"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify Security Group Rule" "AdminSG-RuleSSH"
+    fi
+
+    nam=$(az network nic list -g Admin --query "[?contains(name, 'AdminNic')]" | \
+          jq -r '.[].name')
+    if [ "$nam" != "AdminNic" ]; then
+      messagePrint " - Creating Nic" "AdminNic"
+
+      az network nic create \
+          --resource-group Admin \
+          --name AdminNic \
+          --vnet-name admin-vnet \
+          --subnet AdminSubnet \
+          --public-ip-address AdminPublicIP \
+          --network-security-group AdminSG > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating NIC AdminNic"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify NIC" "AdminNic"
+    fi
+
+    nam=$(az vm list --query "[?contains(name, 'jump')]" | jq -r '.[].name')
+    if [ "$nam" != "jump" ]; then
+      messagePrint " - Creating VM" "jump"
+
+      az vm create \
+          --resource-group Admin \
+          --name jump \
+          --location $AZURE_LOCATION \
+          --nics AdminNic \
+          --image UbuntuLTS \
+          --admin-username ubuntu \
+          --generate-ssh-keys > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating NIC AdminNic"
+        exit 1
+      fi
+    else
+      messagePrint " - Verify NIC" "AdminNic"
+    fi
   fi
 
-exit 1
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
     messagePrint "Creating GCP Jump-Server" "pcfjump"
 
