@@ -61,7 +61,9 @@ installJumpHost() {
         exit 1
       fi
     else
-      messagePrint " - Verify PublicIP" "AdminPublicIP"
+      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+
+      messagePrint " - Verify PublicIP (AdminPublicIP)" "$pip"
     fi
 
     nam=$(az network nsg list --query "[?contains(name, 'AdminSG')]" | jq -r '.[].name')

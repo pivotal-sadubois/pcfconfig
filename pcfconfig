@@ -192,13 +192,36 @@ echo "########### JUMP SERVER ############"
   if [ "${CLOUD_PROVIDER}" == "azure" ]; then
     GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
     PCFHOME="~/pcfconfig"
-
     JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@$JUMP_HOST"
 
     echo ""
     echo "# --- JUMP HOST ACCESS ---"
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
     echo "ssh -qo StrictHostKeyChecking=no ubuntu@$JUMP_HOST"
+
+    # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
+    ret=1
+    while [ $ret -ne 0 ]; do
+      ssh ${SSHPAR} -n id > /dev/null 2>&1; ret=$?
+      [ $ret -ne 0 ] && sleep 10
+    done
+
+    echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
+    ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+    ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+
+    # --- TEST FOR RUNNING REMOTE SCRIPT ---
+    stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
+    stt=$(ssh ${SSHPAR} -n "[ -f /jump_software_installed ] && echo true")
+    if [ "${stt}" == "" ]; then
+      echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
+      ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+          nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN"
+      echo "-----------------------------------------------------------------------------------------------------------"
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+    fi
+
   fi
 
 exit 1
