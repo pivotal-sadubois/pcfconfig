@@ -219,9 +219,14 @@ echo "########### JUMP SERVER ############"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
           nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN"
       echo "-----------------------------------------------------------------------------------------------------------"
-      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+      scp -rqo StrictHostKeyChecking=no ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
+      scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
+
+    ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+
+    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
   fi
 
 exit 1
