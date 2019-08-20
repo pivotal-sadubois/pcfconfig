@@ -229,8 +229,6 @@ echo "########### JUMP SERVER ############"
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
   fi
 
-exit 1
-
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
     echo ""
