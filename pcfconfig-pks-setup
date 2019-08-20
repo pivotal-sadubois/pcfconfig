@@ -59,8 +59,6 @@ TF_WORKDIR="~/workspace"
 TF_PREFIX=pivotal-cf-terraforming
 TF_DIR_MODE=""
 
-echo "XXXXXXXX: $*"
-
 ##############################################################################################
 ############################### COMMAND-LINE ARGS PROCESSING  ################################
 ##############################################################################################
@@ -862,11 +860,11 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
 
         echo "Updating AWS Route53 DNS records:"
         messagePrint " - Validating AWS Route53 ZoneID" "$ROUTE53_TOKEN"
-        messagePrint " - Validating AWS Route53 Zone: (${AWS_DNS_SUFFIX})" "$ROUTE53_STAT"
-        messagePrint " - Define DNS Record for (${AWS_DNS_SUBDOMAIN})" ""
-        sublen=$(echo $AWS_DNS_SUBDOMAIN | wc -c | sed 's/ *//g')
+        messagePrint " - Validating AWS Route53 Zone: (${DNS_SUFFIX})" "$ROUTE53_STAT"
+        messagePrint " - Define DNS Record for (${AZURE_DNS_SUBDOMAIN})" ""
+        sublen=$(echo $AZURE_DNS_SUBDOMAIN | wc -c | sed 's/ *//g')
 
-        printf "      %${sublen}s    NS     $DNS1\n" "$AWS_DNS_SUBDOMAIN"
+        printf "      %${sublen}s    NS     $DNS1\n" "$AZURE_DNS_SUBDOMAIN"
         printf "      %${sublen}s           $DNS2\n" ""
         printf "      %${sublen}s           $DNS3\n" ""
         printf "      %${sublen}s           $DNS4\n" ""
@@ -1275,6 +1273,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   fi
 
   checkEnvironment
+
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
     dn=$(dirname $OPSMAN_TEMPLATE)
     bn=$(basename $OPSMAN_TEMPLATE)
@@ -1300,14 +1299,49 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       echo "       and an entry in the VERSION_OPSMAN to be created for the metadata"; exit 1
     fi
   else
+    opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+    region=$(egrep "^(region|location)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+
+    if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
+      bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+      ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
+      bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+      ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
+      bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
+      ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
+    fi
+
+    cnt=$(egrep -c ":${PCF_CLOUD_NAME}:default:${ver}:" $PCFCONFIG_PATH/files/opsman-${OPSMAN_MODE}-release-notes.txt)
+    if [ $cnt -eq 0 ]; then
+      vermin=$(echo "${ver}" | awk -F'.' '{ printf("%d.%d\n",$1,$2) }') 
+      cfg=$(egrep ":${PCF_CLOUD_NAME}:default:${vermin}:" $PCFCONFIG_PATH/files/opsman-${OPSMAN_MODE}-release-notes.txt | \
+          head -1 | awk -F: '{ print $(NF-1) }')
+    else
+      cfg=$(egrep ":${PCF_CLOUD_NAME}:default:${ver}:" $PCFCONFIG_PATH/files/opsman-${OPSMAN_MODE}-release-notes.txt | \
+          head -1 | awk -F: '{ print $(NF-1) }')
+    fi
+
+#jjjjjjjjjjjjjjj
     # --- DEFAULT TEMPLATE ---
-    OPSMAN_TEMPLATE="opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml"
-    OPSMAN_CONFIG=$PCFCONFIG_PATH/templates/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml
-    bn=$(basename $OPSMAN_TEMPLATE)
+    if [ "${cfg}" == "" ]; then 
+      OPSMAN_TEMPLATE="opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml"
+      OPSMAN_CONFIG=$PCFCONFIG_PATH/templates/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml
+      bn=$(basename $OPSMAN_TEMPLATE)
+    else
+      OPSMAN_CONFIG="$PCFCONFIG_PATH/templates/${cfg}"
+      bn="${cfg}"
+    fi
   fi
 
   # --- VALIDATE OPSMAN-TEMPLATE ---
   cnt=$(egrep -c "director_configuration:" $OPSMAN_CONFIG)
+
   if [ ${cnt} -eq 0 ]; then
     echo "ERROR: $OPSMAN_CONFIG is not a valid OpsManager configuration file"; exit 1
   fi
@@ -1319,6 +1353,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     exit 1
   fi
 
+echo "BN:$bn"
   cld=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $2 }') 
   ver=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $3 }') 
   st1=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $4 }') 
@@ -1598,7 +1633,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     touch $TMP_SCRIPT
-echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
+echo "1-XXXX TMP_OPSMAN:$TMP_OPSMAN"
+echo "1-XXXX TMP_OPSMAN:$TMP_OPSMAN"
     [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
     [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
 
@@ -1990,13 +2026,27 @@ EOF
   else
     VARFILE=./pks_vars.yml; rm -rf $VARFILE; touch $VARFILE
 
-    # --- COPY JQ FILES FROM THE TEMPLATES ---
-    PKS_MINOR_VERSION=$(echo $PKS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
-    if [ -f $PCFCONFIG_PATH/templates/pks${PKS_VERSION}.jq ]; then
-      PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_VERSION}.yml
+    cnt=$(egrep -c "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt)
+    if [ $cnt -eq 0 ]; then
+      vermin=$(echo "${ver}" | awk -F'.' '{ printf("%d.%d\n",$1,$2) }')
+      cfg=$(egrep "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt | \
+          head -1 | awk -F: '{ print $NF }')
     else
-      PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
+      cfg=$(egrep "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt | \
+          head -1 | awk -F: '{ print $NF }')
     fi
+
+    # --- COPY JQ FILES FROM THE TEMPLATES ---
+    PKS_TEMPLATE=$cfg
+
+    #PKS_MINOR_VERSION=$(echo $PKS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
+    #if [ -f $PCFCONFIG_PATH/templates/pks${PKS_VERSION}.jq ]; then
+    #  PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_VERSION}.yml
+    #else
+    #  PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
+    #fi
+
+echo jjjjjjjjjjjjj
 
     echo "Configuring PKS Tile (${PKS_VERSION})"
     messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
@@ -2118,6 +2168,7 @@ EOF
       fi
     fi
   
+#jjjjjjjjjjj
     OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
@@ -2279,7 +2330,6 @@ fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   checkEnvironment
-
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
 
@@ -2328,9 +2378,68 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   touch $TMP_SCRIPT
-echo "XXXX TMP_OPSMAN:$TMP_OPSMAN"
   [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
   [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
+
+  ##############################################################################################
+  ######################################## DEBUG INFOS #########################################
+  ##############################################################################################
+  TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+  echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+  echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+  echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+  echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
+  echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
+
+  scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: Copying script /tmp/debug.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+    echo "       Please try manually:"
+    echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
+    exit 1
+  fi
+
+  #echo ""
+  #echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
+  #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+  #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
+  #echo ""
+
+  # --- SET PKS-API LB DNS ENTRY ---
+  if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+    ipa=$(az network public-ip show -g ${DNS_PREFIX} --name ${DNS_PREFIX}-pks-lb-ip 2>/dev/null | jq -r '.ipAddress')
+    if [ "$ipa" == "" ]; then 
+      echo "ERROR: Can not optaion PKS-API LB IP-Address"
+      echo "       => az network public-ip show -g ${DNS_PREFIX} --name ${DNS_PREFIX}-pks-lb-ip"; exit 1
+    fi
+
+    # --- CHECK IF ENTRY EXISTS --- 
+    rec=$(az network dns record-set list -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \
+       --query "[?fqdn=='api.pks.${DNS_PREFIX}.${DNS_SUFFIX}.']" | jq -r '.[].fqdn')
+    if [ "${rec}" == "" ]; then 
+      messagePrint " - Creating DNS Record for (api.pks.${DNS_PREFIX}.${DNS_SUFFIX})" "$ipa"
+      az network dns record-set a add-record -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \
+         --record-set-name api.pks --ipv4-address $ipa > /dev/null 2>&1
+      if [ "$?" -ne 0 ]; then 
+        echo "ERROR: Can not create DNS record for  PKS-API (api.pks.${DNS_PREFIX}.${DNS_SUFFIX})"
+        echo "       => az network dns record-set a add-record -g ${DNS_PREFIX} \\"
+          echo "             --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} --record-set-name api.pks \\"
+        echo "             --ipv4-address $ipa"; exit 1
+      fi
+    else
+      messagePrint " - Updating DNS Record for (api.pks.${DNS_PREFIX}.${DNS_SUFFIX})" "$ipa"
+      #az network dns record-set a delete -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} --name "api.pks" -y > /dev/null 2>&1
+      az network dns record-set a update -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \
+         --name api.pks --set arecords[0].ipv4Address=$ipa > /dev/null 2>&1
+      if [ "$?" -ne 0 ]; then 
+        echo "ERROR: Can not update DNS record for  PKS-API (api.pks.${DNS_PREFIX}.${DNS_SUFFIX})"
+        echo "       => az network dns record-set a update -g ${DNS_PREFIX} \\"
+        echo "          --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \\"
+        echo "          --name api.pks --set arecords[0].ipv4Address=$ipa \\"; exit 1
+      fi
+    fi
+  fi
+
 
   # --- CHEKING DNS ---
   echo "Validating API GATEWAY DNS record ($TLS_HOST_NAME)"
@@ -2562,20 +2671,20 @@ EOF
     ##############################################################################################
     ######################################## DEBUG INFOS #########################################
     ##############################################################################################
-    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
-    echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
-    echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
-    echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
-    echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
-    echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
-
-    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
-    if [ ${ret} -ne 0 ]; then
-      echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
-      echo "       Please try manually:"
-      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
-      exit 1
-    fi
+#    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+#    echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+#    echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+#    echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+#    echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
+#    echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
+#
+#    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
+#    if [ ${ret} -ne 0 ]; then
+#      echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+#      echo "       Please try manually:"
+#      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
+#      exit 1
+#    fi
 
     echo ""
     echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"

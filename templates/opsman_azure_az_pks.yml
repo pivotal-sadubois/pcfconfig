@@ -12,7 +12,7 @@ properties-configuration:
     ssh_public_key: ((ops_manager_ssh_public_key))
     default_security_group: ((vms_security_group_name))
     environment: AzureCloud
-    availability_mode: availability_sets
+    availability_mode: availability_zones
     cloud_storage_type: managed_disks
     storage_account_type: Premium_LRS
     deployed_cloud_storage_type: 
