@@ -10,9 +10,9 @@ properties-configuration:
     ssh_private_key: ((ops_manager_ssh_private_key))
     resource_group_name: ((pcf_resource_group_name))
     ssh_public_key: ((ops_manager_ssh_public_key))
-    default_security_group:
+    default_security_group: ((vms_security_group_name))
     environment: AzureCloud
-    availability_mode: availability_zones
+    availability_mode: availability_sets
     cloud_storage_type: managed_disks
     storage_account_type: Premium_LRS
     deployed_cloud_storage_type: 
@@ -26,36 +26,29 @@ networks-configuration:
     subnets:
     - iaas_identifier: ((network_name))/((infrastructure_subnet_name))
       cidr: ((infrastructure_subnet_cid))
-      #dns: 168.63.129.16
       dns: ((infrastructure_subnet_dns))
       gateway: ((infrastructure_subnet_gateway))
       reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
-      - zone-1
-      - zone-2
-      - zone-3
+      - "null"
   - name: pks
     subnets:
-    - iaas_identifier: az-virtual-network/az-pks-subnet
-      cidr: 10.0.12.0/26
-      dns: 168.63.129.16
-      gateway: 10.0.12.1
-      reserved_ip_ranges: 10.0.12.1-10.0.12.9
+    - iaas_identifier: ((network_name))/((pks_subnet_name))
+      cidr: ((pks_subnet_cidr))
+      dns: ((pks_subnet_dns))
+      gateway: ((pks_subnet_gateway))
+      reserved_ip_ranges: ((pks_subnet_range))
       availability_zone_names:
-      - zone-1
-      - zone-2
-      - zone-3
+      - "null"
   - name: services
     subnets:
-    - iaas_identifier: az-virtual-network/az-pks-services-subnet
-      cidr: 10.0.16.0/22
-      dns: 168.63.129.16
-      gateway: 10.0.16.1
-      reserved_ip_ranges: 10.0.16.1-10.0.16.9
+    - iaas_identifier: ((network_name))/((services_subnet_name))
+      cidr: ((services_subnet_cidr))
+      dns: ((services_subnet_dns))
+      gateway: ((services_subnet_gateway))
+      reserved_ip_ranges: ((services_subnet_range))
       availability_zone_names:
-      - zone-1
-      - zone-2
-      - zone-3
+      - "null"
 properties-configuration:
   director_configuration:
     blobstore_type: local
@@ -84,6 +77,4 @@ network-assignment:
   network:
     name: infrastructure
   other_availability_zones: []
-  singleton_availability_zone:
-    name: zone-1
 
