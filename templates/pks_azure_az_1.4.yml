@@ -5,6 +5,9 @@ product-properties:
     value:
       cert_pem: ((container_service_pks_tls_cert_pem))
       private_key_pem: ((container_service_pks_tls_private_key_pem))
+  .properties.vm_extensions:
+    value:
+    - public_ip
   .properties.cloud_provider:
     selected_option: azure
     value: Azure
@@ -15,21 +18,21 @@ product-properties:
   .properties.cloud_provider.azure.azure_worker_managed_identity:
     value: pks-worker
   .properties.cloud_provider.azure.default_security_group:
-    value: az-bosh-deployed-vms-security-group
+    value: ((vms_security_group))
   .properties.cloud_provider.azure.location:
-    value: westeurope
+    value: ((location))
   .properties.cloud_provider.azure.primary_availability_set:
-    value: az-pks-as
+    value: ((primary_availability_set))
   .properties.cloud_provider.azure.resource_group_name:
-    value: az
+    value: ((resource_group_name))
   .properties.cloud_provider.azure.subscription_id:
-    value: 1fc6fab2-068c-4d73-953d-d9c3f4a21f17
+    value: ((subscription_id))
   .properties.cloud_provider.azure.tenant_id:
-    value: 29248f74-371f-4db2-9a50-c62a6877a0c1
+    value: ((tenant_id))
   .properties.cloud_provider.azure.vnet_name:
-    value: az-virtual-network
+    value: ((network_name))
   .properties.cloud_provider.azure.vnet_resource_group_name:
-    value: az
+    value: ((resource_group_name))
   .properties.log_sink_resources_deploy:
     value: true
   .properties.metric_sink_resources_deploy:
@@ -48,7 +51,8 @@ product-properties:
     selected_option: disabled
     value: disabled
   .properties.pks_api_hostname:
-    value: api.pks.az.pcfsdu.com
+#gaga
+    value: ((pks_api_hostname))
   .properties.plan1_selector:
     selected_option: active
     value: Plan Active
@@ -128,11 +132,11 @@ product-properties:
     value: 1
 network-properties:
   network:
-    name: infrastructure
+    name: pks
   other_availability_zones:
   - name: zone-1
   service_network:
-    name: pks
+    name: services
   singleton_availability_zone:
     name: zone-1
 resource-config:
@@ -142,9 +146,9 @@ resource-config:
       size_mb: automatic
     instance_type:
       id: automatic
-    internet_connected: true
+    internet_connected: false
     elb_names:
-    - az-pks-lb
+    - ((pks_api_lb))
 errand-config:
   delete-all-clusters:
     pre-delete-state: true

@@ -33,7 +33,8 @@ if [ $? -ne 0 ]; then
 fi
 
 LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
-       egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
+       egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }') 
+echo $LIST
 echo "# GENETATED BY getTerraformReleases.sh (`date`)" > $RELEASE_FILE
 for rel in $LIST; do
   echo "Colecting information for $PRODUCT_SLUG release: $rel"
