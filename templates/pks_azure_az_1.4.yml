@@ -51,16 +51,15 @@ product-properties:
     selected_option: disabled
     value: disabled
   .properties.pks_api_hostname:
-#gaga
     value: ((pks_api_hostname))
   .properties.plan1_selector:
     selected_option: active
     value: Plan Active
   .properties.plan1_selector.active.admission_plugins:
     value:
-    - pod_security_policy
-    - deny_escalating_exec
-    - security_context_deny
+ #   - pod_security_policy
+ #   - deny_escalating_exec
+#   - security_context_deny
   .properties.plan1_selector.active.allow_privileged_containers:
     value: true
   .properties.plan1_selector.active.description:

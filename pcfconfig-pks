@@ -328,7 +328,7 @@ checkEnvironment() {
     ver=`$JQ -r '.terraform_version' $TERRAFORM_TFSTATE 2>/dev/null`
     if [ "${ver}" == "" ]; then
       echo ""
-      echo "ERROR: $0 $TERRAFORM_TFSTATES is not a terraform state file"; exit 1
+      echo "ERROR: $0 $TERRAFORM_TFSTATE is not a terraform state file"; exit 1
     fi
 
     if [ "${cloud}" == "GCP" -a "${GCP_CLI_ENABLED}" -eq 1 ]; then
@@ -429,8 +429,6 @@ checkEnvironment() {
       nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
       if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then
         # --- CHECK IF ZONE RECORDS ARE AVAILABLE ---
-echo "aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN"
-echo gaga1
         aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
         if [ $? -eq 0 ]; then
           ROUTE53_STAT="zone managed by route53"
@@ -485,13 +483,10 @@ echo gaga1
           echo "         please try manually"
         fi
 
-echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
-
         wait_loop 60 "Waiting for DNS records to be pushed"
-      fi
 
-      # --- CHEKING DNS ---
-      echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
+      # --- GCP CHEKING DNS ---
+      echo "Validating GCP OPS Manager DNS records ($OPS_MANAGER_DNS)"
       nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
       if [ $ret -ne 0 ]; then 
         i=1; ret="failed"; dns_google_stat="failed"
@@ -546,6 +541,7 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
         exit 1
       else
         OPS_MANAGER=OPS_MANAGER_DNS
+      fi
       fi
     fi
 
@@ -695,9 +691,8 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
         fi
 
         wait_loop 60 "Waiting for DNS records to be pushed"
-      fi
 
-      # --- CHEKING DNS ---
+      # --- AWS CHEKING DNS ---
       echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
       i=1; ret="failed"; dns_google_stat="failed"
        while [ $i -lt 10 -a ${ret} == "failed" ]; do
@@ -757,6 +752,7 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
         fi
       else
         OPS_MANAGER=OPS_MANAGER_DNS
+      fi
       fi
 
 #NOT WORKING WITH TWO VM's NOE 'running' and one 'rerminated'
@@ -906,9 +902,8 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
         fi
 
         wait_loop 60 "Waiting for DNS records to be pushed"
-      fi
 
-      # --- CHEKING DNS ---
+      # --- AZURE CHEKING DNS ---
       echo "Validating OPS Manager DNS records ($OPS_MANAGER_DNS)"
       i=1; ret="failed"
        while [ $i -lt 10 -a ${ret} == "failed" ]; do
@@ -958,6 +953,7 @@ echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --
         fi
       else
         OPS_MANAGER=OPS_MANAGER_DNS
+      fi
       fi
     fi
   else
@@ -1016,10 +1012,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
   fi
 fi
 
-checkOpsMantools
-checkPKStools
+JQ=$(which jq)
+OM=$(which om)
+TF=$(which terraform)
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
+  checkOpsMantools
+  checkPKStools
   checkCloudCLI
 
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
@@ -1273,6 +1272,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   fi
 
   checkEnvironment
+kkkkkkkkkkkkk
 
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
     dn=$(dirname $OPSMAN_TEMPLATE)
@@ -1327,7 +1327,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
           head -1 | awk -F: '{ print $(NF-1) }')
     fi
 
-#jjjjjjjjjjjjjjj
     # --- DEFAULT TEMPLATE ---
     if [ "${cfg}" == "" ]; then 
       OPSMAN_TEMPLATE="opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.yml"
@@ -1633,8 +1632,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     touch $TMP_SCRIPT
-echo "1-XXXX TMP_OPSMAN:$TMP_OPSMAN"
-echo "1-XXXX TMP_OPSMAN:$TMP_OPSMAN"
     [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
     [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
 
@@ -2046,8 +2043,6 @@ EOF
     #  PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
     #fi
 
-echo jjjjjjjjjjjjj
-
     echo "Configuring PKS Tile (${PKS_VERSION})"
     messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
 
@@ -2168,7 +2163,6 @@ echo jjjjjjjjjjjjj
       fi
     fi
   
-#jjjjjjjjjjj
     OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
@@ -2374,7 +2368,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   fi
 
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
-  TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   touch $TMP_SCRIPT
@@ -2442,7 +2436,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
 
 
   # --- CHEKING DNS ---
-  echo "Validating API GATEWAY DNS record ($TLS_HOST_NAME)"
+  echo "Validating PKS API gateway ($TLS_HOST_NAME)"
   nslookup -timeout=10 $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -ne 0 ]; then
     i=1; ret="failed"; dns_google_stat="failed"
@@ -2469,6 +2463,55 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
 
   nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -eq 0 ]; then 
+    # --- HACK - OPEN FW PORT 8443/9021 ON PKS VM ---
+    if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+      port_8443=$(az network nsg rule list -g $DNS_PREFIX --nsg-name $DNS_PREFIX-bosh-deployed-vms-security-group \
+         --query "[?destinationPortRange=='8443']" | jq -r '.[].destinationPortRange') 
+      if [ "${port_8443}" == "" ]; then
+        messagePrint " - Configure PKS LB Security Group for API Rule" "port 8443 is open"
+        az network nsg rule create --name "Port 8443" --access Allow --source-port-ranges '*' \
+          --destination-port-ranges 8443 --destination-address-prefixes '*' --source-address-prefixes '*' \
+          -g $DNS_PREFIX --nsg-name "$DNS_PREFIX-bosh-deployed-vms-security-group" --priority 120 > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: failled to add port 8443 to security group $DNS_PREFIX-bosh-deployed-vms-security-group"
+          echo "       => az network nsg rule create --name "Port 8443" --access Allow --source-port-ranges '*' \\"
+          echo "          --destination-port-ranges 8443 --destination-address-prefixes '*' --source-address-prefixes '*' \\"
+          echo "-g $DNS_PREFIX --nsg-name "$DNS_PREFIX-bosh-deployed-vms-security-group" --priority 120"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify PKS LB Security Group for API Rule" "port 8443 is open"
+      fi
+
+      port_9021=$(az network nsg rule list -g $DNS_PREFIX --nsg-name $DNS_PREFIX-bosh-deployed-vms-security-group \
+         --query "[?destinationPortRange=='9021']" | jq -r '.[].destinationPortRange') 
+      if [ "${port_9021}" == "" ]; then
+        messagePrint " - Configure PKS LB Security Group for API Rule" "port 9021 is open"
+        az network nsg rule create --name "Port 9021" --access Allow --source-port-ranges '*' \
+          --destination-port-ranges 9021 --destination-address-prefixes '*' --source-address-prefixes '*' \
+          -g $DNS_PREFIX --nsg-name "$DNS_PREFIX-bosh-deployed-vms-security-group" --priority 121 > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: failled to add port 9021 to security group $DNS_PREFIX-bosh-deployed-vms-security-group"
+          echo "       => az network nsg rule create --name "Port 9021" --access Allow --source-port-ranges '*' \\"
+          echo "          --destination-port-ranges 9021 --destination-address-prefixes '*' --source-address-prefixes '*' \\"
+          echo "-g $DNS_PREFIX --nsg-name "$DNS_PREFIX-bosh-deployed-vms-security-group" --priority 121"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify PKS LB Security Group for API Rule" "port 9021 is open"
+      fi
+
+      #echo "Open Network Ports (8443/9021) for $TLS_HOST_NAME on PKS VM"
+      #pksvm=$(az vm list --query "[?starts_with(to_string(tags.deployment), 'pivotal-container')]|[?location == '$AZURE_REGION']" | \
+      #       jq -r '.[].name' | head -1)
+      #if [ "${pksvm}" != "" ]; then
+      #  az vm open-port -g $DNS_PREFIX -n $pksvm --priority 102 --port 8443 > /dev/null 2>&1
+      #  az vm open-port -g $DNS_PREFIX -n $pksvm --priority 101 --port 9021 > /dev/null 2>&1
+      #else
+      #  echo "ERROR: PKS VM can not be found"; exit 1
+      #fi
+    fi
+
     ##############################################################################################
     ############################### CONFIGURE PKS AUTHENTIFICATION ###############################
     ##############################################################################################
@@ -2523,7 +2566,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         exit 1
       fi
 
-echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
       if [ $ret -ne 0 ]; then
         echo "ERROR: Accessing API gateway $OPS_MANAGER_DNS failed"; exit 1
@@ -2533,6 +2575,93 @@ echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --
     ##############################################################################################
     ################################ CONFIGURE PKS LOADBALANCERS #################################
     ##############################################################################################
+
+    if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+      vmid=$(az vm list -g $DNS_PREFIX --query "[?tags.instance_group=='pivotal-container-service']" | jq -r '.[].name')
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        echo "Creating Workload LoadBalancer (${DNS_PREFIX}-$n)"
+
+        # --- CREATE PULIC IP FOR LOADBALANCER ---
+        ipa=$(az network public-ip list -g azpks --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
+        if [ "${ipa}" == "" ]; then
+          az network public-ip create -g $DNS_PREFIX -n ${DNS_PREFIX}-${n}-lb-ip --allocation-method Static --sku Standard > /dev/null 2>&1
+          if [ $? -ne 0 ]; then
+            echo "ERROR: failled to create publicip"
+            echo "       => az network public-ip create -g $DNS_PREFIX -n ${DNS_PREFIX}-${n} --allocation-method Static"
+            exit 1
+          fi
+
+          ipa=$(az network public-ip list -g azpks --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
+          messagePrint " - Create LB Public IP ($ipa)" "${DNS_PREFIX}-${n}-lb-ip"
+        else
+          messagePrint " - Verify LB Public IP ($ipa)" "${DNS_PREFIX}-${n}-lb-ip"
+        fi
+
+        # --- CHECK IF ENTRY EXISTS ---
+        rec=$(az network dns record-set list -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \
+           --query "[?fqdn=='${n}.${DNS_PREFIX}.${DNS_SUFFIX}.']" | jq -r '.[].fqdn')
+        if [ "${rec}" == "" ]; then
+          messagePrint " - Creating DNS entry (${n}.${DNS_PREFIX}.${DNS_SUFFIX})" "$ipa"
+          az network dns record-set a add-record -g ${DNS_PREFIX} --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} \
+             --record-set-name ${n} --ipv4-address $ipa > /dev/null 2>&1
+          if [ "$?" -ne 0 ]; then
+            echo "ERROR: Can not create DNS record for  PKS-API (${n}.${DNS_PREFIX}.${DNS_SUFFIX})"
+            echo "       => az network dns record-set a add-record -g ${DNS_PREFIX} \\"
+            echo "             --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} --record-set-name $n \\"
+            echo "             --ipv4-address $ipa"; exit 1
+          fi
+        else
+          messagePrint " - Verify DNS entry for (${n}.${DNS_PREFIX}.${DNS_SUFFIX})" "$ipa"
+        fi
+
+        # --- CHECK IF LB EXISTS ---
+        lbn=$(az network lb list -g ${DNS_PREFIX} --query "[?name == '${n}-lb']" | jq -r '.[].name')
+        if [ "${lbn}" == "" ]; then
+          messagePrint " - Creating loadbalancer" "${n}-lb"
+          az network lb create -g ${DNS_PREFIX}  -n ${n}-lb --sku Standard \
+             --public-ip-address "${DNS_PREFIX}-${n}-lb-ip" --location $AZURE_REGION --backend-pool-name ${n}-pool > /dev/null 2>&1
+          if [ "$?" -ne 0 ]; then
+            echo "ERROR: Can not create DNS record for  PKS-API (${n}.${DNS_PREFIX}.${DNS_SUFFIX})"
+            echo "       => az network lb create -g ${DNS_PREFIX} -n ${n}-lb --sku Standard \\"
+            echo "           --public-ip-address ${DNS_PREFIX}-${n}-lb-ip --location $AZURE_REGION i\\"
+            echo "           --backend-pool-name ${n}-pool"
+            exit 1
+          fi
+        else
+          messagePrint " - Verify loadbalancer" "${n}-lb"
+        fi
+
+        # --- CREATE LB HEALTH PROBE ---
+        prb=$(az network lb probe show -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-probe 2>/dev/null | jq -r '.name')
+        if [ "${prb}" == "" ]; then
+          messagePrint " - Creating LB Health Probe for port 8443" "${n}-probe"
+          az network lb probe create -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-probe --protocol tcp --port 8443 > /dev/null 2>&1
+          if [ "$?" -ne 0 ]; then
+            echo "ERROR: Can not create address-pool"
+            echo "       => az network lb probe create -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-probe --protocol tcp --port 8443"
+            exit 1
+          fi
+        else
+          messagePrint " - Verify LB Health Proble for port 8443" "${n}-probe"
+        fi
+
+        # --- CREATE LB RULE ---
+        rul=$(az network lb rule show -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-rule 2>/dev/null | jq -r '.name')
+        if [ "${rul}" == "" ]; then
+          messagePrint " - Creating LB Rule for port 8443" "${n}-rule"
+          az network lb rule create -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-rule --protocol tcp \
+             --frontend-port 8443 --backend-port 8443 --backend-pool-name ${n}-pool --probe-name ${n}-probe > /dev/null 2>&1
+          if [ "$?" -ne 0 ]; then
+            echo "ERROR: Can not create address-pool"
+            echo "       => az network lb rule create -g ${DNS_PREFIX} --lb-name ${n}-lb -n ${n}-rule --protocol tcp \\"
+            echo "          --frontend-port 8443 --backend-port 8443 --backend-pool-name ${n}-pool --probe-name ${n}-probe"
+            exit 1
+          fi
+        else
+          messagePrint " - Verify LB Rule for port 8443" "${n}-rule"
+        fi
+      done
+    fi
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
@@ -2671,29 +2800,29 @@ EOF
     ##############################################################################################
     ######################################## DEBUG INFOS #########################################
     ##############################################################################################
-#    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
-#    echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
-#    echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
-#    echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
-#    echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
-#    echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
-#
-#    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
-#    if [ ${ret} -ne 0 ]; then
-#      echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
-#      echo "       Please try manually:"
-#      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
-#      exit 1
-#    fi
+    TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+    echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+    echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+    echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
+    echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
 
-    echo ""
-    echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
-    echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-    echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
-    echo ""
-    echo "# --- PKS LOGIN ---"
-    echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
-    echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+    scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+      echo "       Please try manually:"
+      echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
+      exit 1
+    fi
+
+    #echo ""
+    #echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
+    #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+    #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
+    #echo ""
+    #echo "# --- PKS LOGIN ---"
+    #echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+    #echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
 
     ##############################################################################################
     #################################### CREATE PKS CLUSTERS #####################################
@@ -2773,12 +2902,82 @@ EOF
       fi
     fi
 
-exit 1
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
     ##############################################################################################
     ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
     ##############################################################################################
+
+    if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
+
+        ##############################################################################################
+        ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
+        ##############################################################################################
+
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                     >  $TMP_LBSCRIPT
+        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                  >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "bosh -e $DNS_PREFIX -d service-instance_$uid --column='Instance' --column='VM CID' vms | \\"  >> $TMP_LBSCRIPT
+        echo "egrep \"^master/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"              >> $TMP_LBSCRIPT
+
+        scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh"
+          exit 1
+        fi
+
+        ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" >/dev/null 2>&1; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: executing remote-script: /tmp/masters.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+          echo "       Please try manually:"
+          echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+          exit 1
+        else
+          mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
+          if [ "${mst}" == "" ]; then 
+            echo "ERROR: failed to retrieve the hostname and ip adresses of the master nodes"
+            echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+          fi
+        fi
+
+        messagePrint "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
+        for master in $mst; do
+          messagePrint " - Add/update Master Node" "${master}"
+          nid=$(az vm get-instance-view -n $master -g ${DNS_PREFIX} 2>/dev/null | jq -r '.networkProfile.networkInterfaces[].id')
+          if [ "${nid}" == "" ]; then
+            echo "ERROR: failed to get Network id of Instance $master"
+            echo "       => az vm get-instance-view -n $master -g ${DNS_PREFIX}"; exit 1
+          fi
+
+          nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
+          if [ "${nnm}" == "" ]; then
+            echo "ERROR: failed to get Network Name of Instance $master"
+            echo "       => az network nic show --ids $nid"; exit 1
+          fi
+
+          ipc=$(az network nic ip-config list -g ${DNS_PREFIX} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
+          if [ "${ipc}" == "" ]; then
+            echo "ERROR: failed to get IP Config of Instance $master"
+            echo "       => az network nic ip-config list -g ${DNS_PREFIX} --nic-name $nnm"
+          fi
+
+          az network nic ip-config address-pool add -g ${DNS_PREFIX} --nic-name $nnm --lb-name "${n}-lb" \
+             --address-pool "${n}-pool" --ip-config-name $ipc > /dev/null 2>&1
+          if [ $? -ne 0 ]; then 
+            echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
+            echo "       => az network nic ip-config address-pool add -g ${DNS_PREFIX} --nic-name $nnm --lb-name ${n}-lb \\"
+            echo "          --address-pool "${n}-pool" --ip-config-name $ipc"; exit 1
+          fi
+
+        done
+      done
+    fi
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
 
@@ -2811,10 +3010,7 @@ exit 1
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
 
-
-
     fi
-exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
@@ -2879,20 +3075,59 @@ exit 1
       done
     fi
 
-    echo ""
-    echo "Configuration of the PKS Swtup Completed is completed. Please login to PKS:"
-    echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
-    echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation" 
-    echo "pks get-credentials $PKS_CLUSTER_1_NAME"
-    echo ""
-    echo "Setup Kubernetes:"
-    echo "kubectl config use-context $PKS_CLUSTER_1_NAME"
-    echo "kubectl cluster-info"
-
+    echo "################################ EOF ################################"
+    udate +%s 
   else
     echo ""
     echo "ERROR: API Host: $TLS_HOST_NAME can not be resolved by DNS"; exit 1
   fi
+
+  exit 0
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
+  checkEnvironment
+  ERRAFORM_VARS=terraform.tfvars
+  TERRAFORM_TFSTATE=terraform.tfstate
+
+  ##############################################################################################
+  ######################################## DEBUG INFOS #########################################
+  ##############################################################################################
+  TMP_OPSMAN="$(pwd)/opsman.pem"
+  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+
+  echo "-----------------------------------------------------------------------------------------------------------"
+  echo "# OPSMANAGER ACCESS WITH DEBUG  ENVIRONMENT"
+  echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+  echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
+  echo ""
+  echo "# PKS ACCESS CREDENTIALS"
+  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+  echo ""
+
+  for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+    userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+    token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+
+    echo "--------------------------------------------------"
+    echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
+    echo "--------------------------------------------------"
+    echo "pks get-credentials pks-cluster-1"
+    echo "kubectl config use-context $cluster"
+    echo "kubectl cluster-info                  #Kubernetes Cluster Infos"
+    echo "kubectl proxy                         #To start Kubernetes Dashboard"
+    echo "  => WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+    echo "  => Token..: $token"
+  echo ""
+
+  done
+
+ # echo "pks get-credentials $PKS_CLUSTER_1_NAME"
+  echo ""
+  echo "Setup Kubernetes:"
+  echo "-----------------------------------------------------------------------------------------------------------"
+
+  exit 0
 fi
 
 # pks cluster pks-cluster-1 --json
@@ -2905,7 +3140,5 @@ fi
 	#aws kms delete-alias --alias-name alias/ppp --region eu-central-1
         #aws elbv2 describe-target-groups --region eu-central-1
 
-echo "################################ EOF ################################"
-date +%s 
 
 exit

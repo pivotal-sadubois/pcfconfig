@@ -154,6 +154,7 @@ installJumpHost() {
 
     cnt=$(gcloud compute instances list --filter="name=( 'pcfjump' )" 2>/dev/null | egrep -c "^pcfjump")
     if [ $cnt -eq 0 ]; then
+echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family=$IMAGE_FAMILY --image-project=ubuntu-os-cloud --maintenance-policy=TERMINATE --machine-type=$INSTANCE_TYPE"
       gcloud compute instances create $INSTANCE_NAME \
         --zone=$ZONE \
         --image-family=$IMAGE_FAMILY \
