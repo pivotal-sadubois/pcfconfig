@@ -1645,6 +1645,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "apt-get -qq update > /dev/null 2>&1"                                                                                         >> $TMP_SCRIPT
     echo "apt-get -qq install om > /dev/null 2>&1"                                                                                     >> $TMP_SCRIPT
 
+#if [ ! -x /usr/bin/kubectl ]; then
+#  echo "- Install Kubectl"
+#  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+#  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+#  apt-get install kubectl -y --allow-unauthenticated > /dev/null 2>&1
+#fi
+#sacha
+
     # --- CLEANUP OLD ENTRIES FROM KNOWN_HOSTS FILE ---
     if [ -f ~/.ssh/known_hosts ]; then 
       sed -in "/$OPS_MANAGER_DNS/d" ~/.ssh/known_hosts 
@@ -3115,7 +3123,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     echo "pks get-credentials pks-cluster-1"
     echo "kubectl config use-context $cluster"
     echo "kubectl cluster-info                  #Kubernetes Cluster Infos"
-    echo "kubectl proxy                         #To start Kubernetes Dashboard"
+    echo "1kubectl proxy                         #To start Kubernetes Dashboard"
 hostname
     echo "  => WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
     echo "  => Token..: $token"

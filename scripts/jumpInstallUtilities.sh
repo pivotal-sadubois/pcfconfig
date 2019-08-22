@@ -43,9 +43,11 @@ while  [ ! -x /usr/bin/om ]; do
   apt-get install om -y  > /dev/null 2>&1
 done
 
-if [ ! -x /usr/bin/jq ]; then 
+if [ ! -x /usr/bin/kubectl ]; then 
   echo "- Install Kubectl"
-  apt-get install -y kubectl > /dev/null 2>&1
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+  apt-get install kubectl -y --allow-unauthenticated > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/jq ]; then 
