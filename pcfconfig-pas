@@ -3119,6 +3119,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+echo "userid:$userid"
+echo "token:$token"
 
     echo "--------------------------------------------------"
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
