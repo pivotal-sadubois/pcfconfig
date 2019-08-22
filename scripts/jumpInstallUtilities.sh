@@ -44,6 +44,11 @@ while  [ ! -x /usr/bin/om ]; do
 done
 
 if [ ! -x /usr/bin/jq ]; then 
+  echo "- Install Kubectl"
+  apt-get install -y kubectl > /dev/null 2>&1
+fi
+
+if [ ! -x /usr/bin/jq ]; then 
   echo "- Install JQ"
   apt-get install jq -y  > /dev/null 2>&1
 fi
