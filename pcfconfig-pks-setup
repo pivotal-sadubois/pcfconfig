@@ -3116,6 +3116,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     echo "kubectl config use-context $cluster"
     echo "kubectl cluster-info                  #Kubernetes Cluster Infos"
     echo "kubectl proxy                         #To start Kubernetes Dashboard"
+hostname
     echo "  => WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
     echo "  => Token..: $token"
   echo ""
