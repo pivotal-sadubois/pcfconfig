@@ -292,18 +292,12 @@ echo "########### JUMP SERVER ############"
       # --- COPY AWS CREDENTIALS FOR ROUTE53 ---
       gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
 
-echo "GCP_PROJECT:$GCP_PROJECT"
-exit 1
-
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
-      #gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
-      gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
+      gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth login --no-launch-browser --brief
-      gcloud compute ssh --zone=$ZONE pcfjump -- gcloud config set project pa-sadubois-4ecf9e2c
+      gcloud compute ssh --zone=$ZONE pcfjump -- gcloud config set project $GCP_PROJECT
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
             --key-file=/tmp/$GCPSVC 2>/dev/null
-      #gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
-      #      --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
