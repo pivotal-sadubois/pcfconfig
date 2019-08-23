@@ -4,6 +4,7 @@
 2.6.6:gcp:default:2.6:default:ubuntu-xenial-stemcell:315.72:opsman_gcp_pas.yml
 2.5.4:gcp:default:2.5:default:ubuntu-xenial-stemcell:315.36:opsman_gcp_pas.yml
 2.5.3:azure:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_azure_pas.yml
+2.6.6:aws:default:2.6:default:ubuntu-xenial-stemcell:315.72:opsman_aws_pas.yml
 2.5.3:aws:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_aws_pas.yml
 2.5.2:aws:default:2.5:default:ubuntu-xenial-stemcell:250.29:opsman_aws_pas.yml
 2.5.1:aws:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_aws_pas.yml

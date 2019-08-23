@@ -471,64 +471,96 @@ cleanAWSenv() {
     let i=i+1
   done
  
-  # --- CLEANUP ---
-  rm -f $TMPAWS
+  # --- DELETE KMS ALIASES ---
+  aws --region eu-central-1 kms list-aliases --query "Aliases[?contains(to_string(AliasName),'awspas')]" > $TMPAWS
+  tot=$(grep -c "PolicyName" $TMPAWS); i=0
+  while [ $i -lt $tot ]; do
+    tid=$(jq -r ".[$i].TargetKeyId" 2>/dev/null $TMPAWS)
+    arn=$(jq -r ".[$i].AliasArn" 2>/dev/null $TMPAWS)
+    nam=$(jq -r ".[$i].AliasName" 2>/dev/null $TMPAWS)
+
+    messagePrint " - Delete KMS Alias:" "$nam"
+  done
+
+
+  # --- IAM DELETE POLICIES ---
+  aws --region $AWS_LOCATION iam list-roles --query "Roles[?starts_with(to_string(RoleName), 'awspas')]" > $TMPAWS
+  tot=$(grep -c "PolicyName" $TMPAWS); i=0
+  while [ $i -lt $tot ]; do
+    rid=$(jq -r ".[$i].PolicyId" 2>/dev/null $TMPAWS)
+    arn=$(jq -r ".[$i].Arn" 2>/dev/null $TMPAWS)
+    nam=$(jq -r ".[$i].PolicyName" 2>/dev/null $TMPAWS)
+
+    messagePrint " - Delete IAM Policy:" "$nam"
+    aws --region $AWS_LOCATION kms delete-alias --alias-name "$nam" 
+  done
 
   # --- IAM DELETE ROLES ---
   TMPAWS=/tmp/$$_aws.json
-  aws --region $AWS_LOCATION iam list-roles > $TMPAWS
-  tot=$(grep -c "RoleName" $TMPAWS); i=0; let tot=tot-1
-  while [ $i -le $tot ]; do
-    rid=$(jq -r ".Roles[$i].RoleId" 2>/dev/null $TMPAWS)
-    arn=$(jq -r ".Roles[$i].Arn" 2>/dev/null $TMPAWS)
-    nam=$(jq -r ".Roles[$i].RoleName" 2>/dev/null $TMPAWS)
+  aws --region $AWS_LOCATION iam list-roles --query "Roles[?starts_with(to_string(RoleName), 'awspas')]" > $TMPAWS
 
-    cnt=$(echo $nam | egrep -c "^${ENV_NAME}_")
-    if [ $cnt -gt 0 ]; then
-      messagePrint " - Delete IAM Role:" "$nam"
+  tot=$(grep -c "RoleName" $TMPAWS); i=0
+  while [ $i -lt $tot ]; do
+    rid=$(jq -r ".[$i].RoleId" 2>/dev/null $TMPAWS)
+    arn=$(jq -r ".[$i].Arn" 2>/dev/null $TMPAWS)
+    nam=$(jq -r ".[$i].RoleName" 2>/dev/null $TMPAWS)
 
-      for tmp in $(aws --region $AWS_LOCATION  iam list-policies | jq -r '.Policies[].Arn' | grep awspas); do 
-        usr=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyUsers[].UserName')
-        grp=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyGroups[].GroupName')
-        rol=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyRoles[].RoleName')
-        if [ "${usr}" != "" ]; then
-          aws --region $AWS_LOCATION iam detach-user-policy --policy-arn $tmp --user-name $usr
-        fi
+    messagePrint " - Delete IAM Role:" "$nam"
 
-        if [ "${rol}" != "" ]; then
-          aws --region $AWS_LOCATION iam detach-role-policy --policy-arn $tmp --group-name $rol
-        fi
-
-        if [ "${grp}" != "" ]; then
-          aws --region $AWS_LOCATION iam detach-user-policy --policy-arn $tmp --group-name $usr
-        fi
-
-        aws iam delete-policy --policy-arn $tmp
-      done
-
-      for pol in $(aws --region $AWS_LOCATION iam list-role-policies --role-name $nam | \
-                   jq -r '.PolicyNames[]'); do
-
-         a=1
-         #aws --region $AWS_LOCATION iam get-role-policy --role-name awspas_pas_bucket_access --policy-name awspas_pas_bucket_access
-      done
-
-      for pol in $(aws --region $AWS_LOCATION iam list-attached-role-policies --role-name $nam | \
-          jq -r ".AttachedPolicies[].PolicyArn"); do
-
-        aws --region $AWS_LOCATION iam detach-role-policy --role-name $nam --policy-arn $pol
-      done
-
-      aws --region $AWS_LOCATION iam delete-role --role-name $nam > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: failled to delete IAM Role: $nam"
-        echo "aws --region $AWS_LOCATION iam delete-role --role-name $nam"
-        exit 1
+echo gaga10
+    for tmp in $(aws --region $AWS_LOCATION  iam list-policies | jq -r '.Policies[].Arn' | grep awspas); do 
+echo gaga11
+      usr=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyUsers[].UserName')
+      grp=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyGroups[].GroupName')
+      rol=$(aws --region $AWS_LOCATION iam list-entities-for-policy --policy-arn $tmp | jq -r '.PolicyRoles[].RoleName')
+      if [ "${usr}" != "" ]; then
+        aws --region $AWS_LOCATION iam detach-user-policy --policy-arn $tmp --user-name $usr
       fi
+
+echo gaga12
+      if [ "${rol}" != "" ]; then
+        aws --region $AWS_LOCATION iam detach-role-policy --policy-arn $tmp --group-name $rol
+      fi
+
+      if [ "${grp}" != "" ]; then
+        aws --region $AWS_LOCATION iam detach-user-policy --policy-arn $tmp --group-name $usr
+      fi
+echo gaga13
+
+      aws iam delete-policy --policy-arn $tmp
+echo gaga14
+    done
+
+    for pol in $(aws --region $AWS_LOCATION iam list-attached-role-policies --role-name $nam | \
+        jq -r ".AttachedPolicies[].PolicyArn"); do
+
+echo "1-POL:$pol"
+      aws --region $AWS_LOCATION iam detach-role-policy --role-name $nam --policy-arn $pol
+echo "2-POL:$pol"
+      aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
+echo "3-POL:$pol"
+    done
+
+    # --- DELETE ROLE POLICY ---
+    for pol in $(aws --region $AWS_LOCATION iam list-role-policies --role-name $nam | \
+                 jq -r '.PolicyNames[]'); do
+
+echo "4-POL:$pol"
+      aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
+echo "5-POL:$pol"
+    done
+
+
+    aws --region $AWS_LOCATION iam delete-role --role-name $nam > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failled to delete IAM Role: $nam"
+      echo "       aws --region $AWS_LOCATION iam delete-role --role-name $nam"
+      exit 1
     fi
+echo gaga5
     let i=i+1
   done
-  
+
   # --- CLEANUP ---
   rm -f $TMPAWS
 
@@ -588,7 +620,6 @@ cleanAWSenv() {
 #      fi
 #    fi
 #  done
-
 
   # --- DELETE LOAD BALANCERS ---
   TMPAWS=/tmp/$$_aws.json

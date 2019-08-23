@@ -292,11 +292,18 @@ echo "########### JUMP SERVER ############"
       # --- COPY AWS CREDENTIALS FOR ROUTE53 ---
       gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
 
+echo "GCP_PROJECT:$GCP_PROJECT"
+exit 1
+
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
-      gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
+      #gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:~/$GCPSVC > /dev/null 2>&1
+      gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth login --no-launch-browser --brief
+      gcloud compute ssh --zone=$ZONE pcfjump -- gcloud config set project pa-sadubois-4ecf9e2c
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
-            --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
+            --key-file=/tmp/$GCPSVC 2>/dev/null
+      #gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth activate-service-account --quiet \
+      #      --key-file=/tmp/toolsmith-pa-sadubois-4ecf9e2c-448c4c2bb547.json 2>/dev/null
       echo "-----------------------------------------------------------------------------------------------------------"
     fi
 
@@ -480,6 +487,12 @@ if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
   GCP_AZ2=$(echo $list | awk '{ print $2 }')
   GCP_AZ3=$(echo $list | awk '{ print $3 }')
 
+echo "$GCLOUD compute zones list"
+echo "GCP_REGION:$GCP_REGION"
+echo "GCP_AZ1:$GCP_AZ1"
+
+exit
+
   echo "env_name           = \"${ENV_NAME}\""                                  >> $TF_VARFILE
   echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
   echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
@@ -510,6 +523,7 @@ if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
 
 fi
 
+
 if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   # --- GET AVAILABILITY ZONE FOR LOCATION ---
   AWS_AZ1=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[0].ZoneName')
@@ -530,6 +544,7 @@ if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 fi
+
 
 if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
   echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
