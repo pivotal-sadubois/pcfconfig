@@ -481,12 +481,6 @@ if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
   GCP_AZ2=$(echo $list | awk '{ print $2 }')
   GCP_AZ3=$(echo $list | awk '{ print $3 }')
 
-echo "$GCLOUD compute zones list"
-echo "GCP_REGION:$GCP_REGION"
-echo "GCP_AZ1:$GCP_AZ1"
-
-exit
-
   echo "env_name           = \"${ENV_NAME}\""                                  >> $TF_VARFILE
   echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
   echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
