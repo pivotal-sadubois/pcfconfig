@@ -291,7 +291,11 @@ echo "########### JUMP SERVER ############"
 
       # --- COPY AWS CREDENTIALS FOR ROUTE53 ---
       gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
+    fi
 
+    stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- gcloud compute instances list > /dev/null 2>&1; echo $?)
+echo "STT:$stt"
+    if [ "${stt}" == "" ]; then
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       gcloud compute ssh --zone=$ZONE pcfjump -- gcloud auth login --no-launch-browser --brief
