@@ -1110,6 +1110,132 @@ cleanGCPenv() {
     fi
   done
 
+  # --- DELETE FRONTEND ---
+  for n in $(gcloud compute forwarding-rules list 2>/dev/null | \
+        grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
+
+    nam=$(echo $n | awk -F: '{ print $1 }')
+    zon=$(echo $n | awk -F: '{ print $2 }')
+    messagePrint " - Cleaning up forwarding-rule:" "$nam"
+
+    gcloud compute forwarding-rules delete $nam --region=$zon -q >/dev/null 2>&1
+  done
+
+  # --- DELETE BACKEND SERVICE ---
+  for n in $(gcloud compute addresses list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up adresses:" "$n"
+    gcloud compute addresses delete $n --region=$GCP_REGION -q > /dev/null 2>&1
+    gcloud compute addresses delete $n --global -q > /dev/null 2>&1
+  done
+
+  # --- DELETE PROXY ---
+  for n in $(gcloud compute target-http-proxies list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up target-http-proxies:" "$n"
+    gcloud compute target-http-proxies delete $n -q > /dev/null 2>&1
+  done
+
+  for n in $(gcloud compute target-https-proxies list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up target-https-proxies:" "$n"
+    gcloud compute target-https-proxies delete $n -q > /dev/null 2>&1
+  done
+
+  for n in $(gcloud compute target-ssl-proxies list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up target-ssl-proxies:" "$n"
+    gcloud compute target-ssl-proxies delete $n -q > /dev/null 2>&1
+  done
+
+  for n in $(gcloud compute target-tcp-proxies list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up target-tcp-proxies:" "$n"
+    gcloud compute target-tcp-proxies delete $n -q > /dev/null 2>&1
+  done
+
+  # --- HEALTH CHECKS ---
+  for n in $(gcloud compute health-checks list 2>/dev/null | \
+        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up health-checks:" "$n"
+    gcloud compute health-checks delete $n -q > /dev/null 2>&1
+  done
+
+  for n in $(gcloud compute http-health-checks list 2>/dev/null | \
+        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up http-health-checks:" "$n"
+    gcloud compute http-health-checks delete $n -q > /dev/null 2>&1
+  done
+
+  for n in $(gcloud compute https-health-checks list 2>/dev/null | \
+        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up https-health-checks:" "$n"
+    gcloud compute https-health-checks delete $n -q > /dev/null 2>&1
+  done
+
+  # --- DELETE URL-MAPS CHECK ---
+  for n in $(gcloud compute url-maps list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up url-maps:" "$n"
+    gcloud compute url-maps delete $n -q > /dev/null 2>&1
+  done
+
+  # --- DELETE BACKEND SERVICE ---
+  for n in $(gcloud compute backend-services list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    gcloud compute backend-services delete $n --global -q > /dev/null 2>&1
+  done
+
+  # --- DELETE INSTANCES ---
+  for n in $(gcloud compute instance-groups list --filter="zone:($GCP_REGION)" 2>/dev/null | \
+        grep -v "NAME" | awk '{ printf("%s:%s:%s\n",$1,$2,$(NF-1))}'); do
+
+    # --- DONT DELETE PCFJUMP VM ---
+    cnt=$(echo "$n" | egrep -c "^pcfjump")
+    if [ $cnt -eq 0 ]; then
+      nam=$(echo $n | awk -F: '{ print $1 }')
+      zon=$(echo $n | awk -F: '{ print $2 }')
+      man=$(echo $n | awk -F: '{ print $3 }')
+      messagePrint " - Cleaning up GCP Instance Groups:" "$nam"
+      if [ "${man}" == "No" ]; then 
+        gcloud compute instance-groups unmanaged delete ${nam} --zone ${zon} -q > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          gcloud compute instance-groups unmanaged delete ${nam} --zone ${zon} -q
+          exit 1
+        fi
+      else
+        gcloud compute instance-groups managed delete ${nam} --zone ${zon} -q > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          gcloud compute instance-groups managed delete ${nam} --zone ${zon} -q
+          exit 1
+        fi
+      fi
+    fi
+  done
+
+
+  # --- DELETE STORAGE BUCKETS§ ---
+  for n in $(gsutil list 2>/dev/null | \
+        egrep "\-${ENV_NAME}-" | awk '{ print $1 }' | sed 's+$/++g'); do
+
+    messagePrint " - Cleaning up Storage Bucket:" "$n"
+    gsutil -m rm -r $n > /dev/null 2>&1
+  done
+
+exit
+exit 1
+
+
   # --- DELETE MANAGED ZONES ---
   for zone in $(gcloud dns managed-zones list 2>/dev/null | \
       egrep "^$ENV_NAME" | awk '{ print $1 }'); do
