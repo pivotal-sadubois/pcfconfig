@@ -295,6 +295,7 @@ echo "########### JUMP SERVER ############"
 
     stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- gcloud compute instances list > /dev/null 2>&1; echo $?)
 echo "STT:$stt"
+exit
     if [ "${stt}" == "" ]; then
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
