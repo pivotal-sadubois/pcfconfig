@@ -12,7 +12,7 @@
 1.3.4:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure_pks.yml:pks_azure_1.3.yml
 1.3.3:azure:default:2.3.9:default:ubuntu-xenial-stemcell:170.15:opsman_azure_pks.yml:pks_azure_1.3.yml
 # AWS RELEASE
-1.5.0:aws:default:2.5:default:ubuntu-xenial-stemcell:250.48:opsman_aws_pks.yml:pks_aws_1.4.yml
+1.5.0:aws:default:2.5:default:ubuntu-xenial-stemcell:250.48:opsman_aws_pks.yml:pks_aws_1.5.yml
 1.4.1:aws:default:2.6:default:ubuntu-xenial-stemcell:250.25:opsman_aws_pks.yml:pks_aws_1.4.yml
 1.4.0:aws:default:2.6:default:ubuntu-xenial-stemcell:250.25:opsman_aws_pks.yml:pks_aws_1.4.yml
 1.3.6:aws:default:2.5:default:ubuntu-xenial-stemcell:250.25:opsman_aws_pks.yml:pks_aws_1.3.yml

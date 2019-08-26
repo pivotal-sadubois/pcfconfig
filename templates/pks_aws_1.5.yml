@@ -9,7 +9,9 @@ network-properties:
   service_network:
     name: services-subnet
 product-properties:
-
+ .properties.oidc_selector:
+   selected_option: disabled
+   value: disabled
 # PKS API Service
  .pivotal-container-service.pks_tls:
    value:
@@ -107,6 +109,9 @@ product-properties:
    value: disabled
 
 # Usage Data
+ .properties.telemetry_installation_purpose_selector:
+   selected_option: demo_or_poc
+   value: demo_or_poc
  .properties.telemetry_selector:
    selected_option: enabled
    value: enabled
