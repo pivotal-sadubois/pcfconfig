@@ -2177,6 +2177,7 @@ EOF
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
+echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
       echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
