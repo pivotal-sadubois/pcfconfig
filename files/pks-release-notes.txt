@@ -1,10 +1,10 @@
-# GENETATED BY getPKSReleases.sh (Thu Aug 15 19:01:05 CEST 2019)
-457619:1.5.0-RC1:Pivotal Container Service:pivotal-container-service-1.5.0-build.30.pivotal
+# GENETATED BY getPKSReleases.sh (Mon Aug 26 12:59:16 CEST 2019)
+461931:1.5.0:Pivotal Container Service:pivotal-container-service-1.5.0-build.32.pivotal
+457619:1.5.0-rc.1:Pivotal Container Service:pivotal-container-service-1.5.0-build.30.pivotal
 451888:1.5.0-beta-2:Pivotal Container Service:pivotal-container-service-1.5.0-build.25.pivotal
+450860:1.4.2:Pivotal Container Service:pivotal-container-service-1.4.2-build.5.pivotal
+447915:1.3.8:Pivotal Container Service:pivotal-container-service-1.3.8-build.9.pivotal
 441999:1.5.0-beta-1:Pivotal Container Service:pivotal-container-service-1.5.0-build.23.pivotal
 400596:1.4.1:Pivotal Container Service:pivotal-container-service-1.4.1-build.4.pivotal
 398262:1.3.7:Pivotal Container Service:pivotal-container-service-1.3.7-build.5.pivotal
 366115:1.4.0:Pivotal Container Service:pivotal-container-service-1.4.0-build.31.pivotal
-363797:1.4.0-RC2:Pivotal Container Service:pivotal-container-service-1.4.0-build.30.pivotal
-358367:1.4.0-RC1:Pivotal Container Service:pivotal-container-service-1.4.0-build.28.pivotal
-349473:1.3.6:Pivotal Container Service:pivotal-container-service-1.3.6-build.4.pivotal

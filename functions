@@ -1092,6 +1092,27 @@ cleanGCPenv() {
     fi
   done
 
+  # --- DELETE DNS ZONES ---
+  for n in $(gcloud dns managed-zones list 2>/dev/null | \
+        egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
+
+    gcloud dns record-sets import -z $n --delete-all-existing /dev/null
+    #for zone in $(gcloud dns record-sets list --zone=$n | grep -v "NAME" | \
+    #              awk '{ print $1 }'); do
+#
+#      messagePrint " - Deleting DNS Zone Records of zone $n:" "$zone"
+#      gcloud dns record-sets transaction remove -z $n ${zone} -q > /dev/null 2>&1
+#    done
+
+    # --- DONT DELETE PCFJUMP VM ---
+    messagePrint " - Deleting DNS Zone:" "$n"
+    gcloud dns managed-zones delete ${n} -q > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      gcloud dns managed-zones delete ${n} -q
+      exit 1
+    fi
+  done
+
   # --- DELETE INSTANCES ---
   for n in $(gcloud compute instances list --filter="zone:($GCP_REGION)" 2>/dev/null | \
         grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
@@ -1104,7 +1125,8 @@ cleanGCPenv() {
       messagePrint " - Cleaning up GCP Instance:" "$n"
       gcloud compute instances delete ${nam} --zone ${zon} -q > /dev/null 2>&1
       if [ $? -ne 0 ]; then 
-        gcloud compute instances delete ${nam} --zone ${zon} -q
+        echo "ERROR deleting instance $n"
+        echo "      => gcloud compute instances delete ${nam} --zone ${zon} -q"
         exit 1
       fi
     fi
@@ -1119,6 +1141,21 @@ cleanGCPenv() {
     messagePrint " - Cleaning up forwarding-rule:" "$nam"
 
     gcloud compute forwarding-rules delete $nam --region=$zon -q >/dev/null 2>&1
+  done
+
+  # --- DELETE BACKEND SERVICE ---
+  for n in $(gcloud compute backend-services list 2>/dev/null | \
+        grep -v "NAME" | awk '{ print $1 }'); do
+
+    gcloud compute backend-services delete --global $n -q > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      gcloud compute backend-services delete --region=$GCP_REGION $n -q > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failed to delete backend-services $n"
+        echo "       => gcloud compute backend-services delete --region=$GCP_REGION $n -q"
+        exit 1
+      fi
+    fi
   done
 
   # --- DELETE BACKEND SERVICE ---
@@ -1159,6 +1196,36 @@ cleanGCPenv() {
     gcloud compute target-tcp-proxies delete $n -q > /dev/null 2>&1
   done
 
+  for n in $(gcloud compute url-maps list 2>/dev/null | \
+      egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up GCP url-maps:" "$n"
+    #gcloud compute url-maps delete $n -q --region $GCP_REGION 2>/dev/null
+    gcloud compute url-maps delete $n -q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR deleting url-maps $n"
+      echo "      => gcloud compute url-maps delete $n -q"
+      exit 1
+    fi
+  done
+
+  # --- TARGET POOLS ---
+  for n in $(gcloud compute target-pools list 2>/dev/null | \
+        egrep "^${ENV_NAME}-" | awk '{ printf("%s:%s\n",$1,$2)}'); do
+
+    nam=$(echo $n | awk -F: '{ print $1 }')
+    zon=$(echo $n | awk -F: '{ print $2 }')
+
+    messagePrint " - Cleaning up target-pools:" "$nam"
+    gcloud compute target-pools delete --region=$zon $nam -q > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to delete target-pools"
+      echo "       => gcloud compute target-pools delete --region=$zon $nam -q"
+      exit 1
+    fi
+  done
+
+
   # --- HEALTH CHECKS ---
   for n in $(gcloud compute health-checks list 2>/dev/null | \
         egrep "^$ENV_NAME" | awk '{ print $1 }'); do
@@ -1172,6 +1239,11 @@ cleanGCPenv() {
 
     messagePrint " - Cleaning up http-health-checks:" "$n"
     gcloud compute http-health-checks delete $n -q > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to delete http-health-checks"
+      echo "       => gcloud compute http-health-checks delete $n -q"
+      exit 1
+    fi
   done
 
   for n in $(gcloud compute https-health-checks list 2>/dev/null | \
@@ -1179,6 +1251,11 @@ cleanGCPenv() {
 
     messagePrint " - Cleaning up https-health-checks:" "$n"
     gcloud compute https-health-checks delete $n -q > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to delete https-health-checks"
+      echo "       => gcloud compute https-health-checks delete $n -q"
+      exit 1
+    fi
   done
 
   # --- DELETE URL-MAPS CHECK ---
@@ -1187,13 +1264,6 @@ cleanGCPenv() {
 
     messagePrint " - Cleaning up url-maps:" "$n"
     gcloud compute url-maps delete $n -q > /dev/null 2>&1
-  done
-
-  # --- DELETE BACKEND SERVICE ---
-  for n in $(gcloud compute backend-services list 2>/dev/null | \
-        grep -v "NAME" | awk '{ print $1 }'); do
-
-    gcloud compute backend-services delete $n --global -q > /dev/null 2>&1
   done
 
   # --- DELETE INSTANCES ---
@@ -1231,10 +1301,6 @@ cleanGCPenv() {
     messagePrint " - Cleaning up Storage Bucket:" "$n"
     gsutil -m rm -r $n > /dev/null 2>&1
   done
-
-exit
-exit 1
-
 
   # --- DELETE MANAGED ZONES ---
   for zone in $(gcloud dns managed-zones list 2>/dev/null | \
@@ -1313,13 +1379,6 @@ exit 1
 
     messagePrint " - Cleaning up GCP health-checks:" "$n"
     gcloud compute health-checks delete $n -q --region $GCP_REGION 2>/dev/null
-  done
-
-  for n in $(gcloud compute url-maps list --filter="region:($GCP_REGION)" 2>/dev/null | \
-      egrep "^$ENV_NAME" | awk '{ print $1 }'); do
-
-    messagePrint " - Cleaning up GCP url-maps:" "$n"
-    gcloud compute url-maps delete $n -q --region $GCP_REGION 2>/dev/null
   done
 
   for n in $(gcloud compute target-pools list --filter="region:($GCP_REGION)" 2>/dev/null | \
