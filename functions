@@ -491,7 +491,7 @@ cleanAWSenv() {
     arn=$(jq -r ".[$i].Arn" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".[$i].PolicyName" 2>/dev/null $TMPAWS)
 
-    messagePrint " - Delete IAM Policy:" "$nam"
+    messagePrint " - 1Delete IAM Policy:" "$nam"
     aws --region $AWS_LOCATION kms delete-alias --alias-name "$nam" 
   done
 
@@ -1060,6 +1060,10 @@ echo gaga5
     cnt=$(echo $nam | egrep -c "^${ENV_NAME}_")
     if [ $cnt -gt 0 ]; then
       messagePrint " - Delete IAM Policy:" "$nam"
+      rol=$(aws iam list-entities-for-policy --policy-arn $arn | jq -r '.PolicyRoles[].RoleName')
+      if [ "$rol" != "" ]; then 
+        aws --region $AWS_LOCATION iam detach-role-policy --role-name $rol --policy-arn $arn > /dev/null 2>&1
+      fi
 
       aws --region $AWS_LOCATION iam delete-policy --policy-arn $arn > /dev/null 2>&1
       if [ $? -ne 0 ]; then
