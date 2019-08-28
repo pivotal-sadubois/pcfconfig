@@ -263,7 +263,6 @@ echo "########### JUMP SERVER ############"
 
     ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
 
-exit 1
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
   fi
 
