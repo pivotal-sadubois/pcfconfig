@@ -10,8 +10,9 @@ eof=0
 
 if [ -f $LOGFILE ]; then
   eof=$(egrep -c "################################ EOF ################################" $LOGFILE)
+eof=0
   if [ $eof -gt 0 ]; then 
-    #cat $LOGFILE
+    cat $LOGFILE
     exit
   fi
 fi 

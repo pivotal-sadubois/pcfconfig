@@ -3084,8 +3084,8 @@ EOF
       done
     fi
 
-    #echo "################################ EOF ################################"
-    #date +%s 
+    echo "################################ EOF ################################"
+    date +%s 
   else
     echo ""
     echo "ERROR: API Host: $TLS_HOST_NAME can not be resolved by DNS"; exit 1
