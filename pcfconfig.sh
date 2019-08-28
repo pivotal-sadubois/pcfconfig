@@ -10,7 +10,6 @@ eof=0
 
 if [ -f $LOGFILE ]; then
   eof=$(egrep -c "################################ EOF ################################" $LOGFILE)
-echo "pcfconfig.sh EOF:$eof"
   if [ $eof -gt 0 ]; then 
     #cat $LOGFILE
     exit
