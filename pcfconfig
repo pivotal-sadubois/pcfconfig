@@ -249,10 +249,12 @@ echo "########### JUMP SERVER ############"
     echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
     ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
     ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+echo gaga1
 
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
     stt=$(ssh ${SSHPAR} -n "[ -f /jump_software_installed ] && echo true")
+echo "gaga1 STT:$stt"
     if [ "${stt}" == "" ]; then 
       echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
@@ -263,7 +265,9 @@ echo "########### JUMP SERVER ############"
 
     ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
 
+echo "gaga2 STT:$stt"
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
+echo "gaga3 STT:$stt"
   fi
 
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
