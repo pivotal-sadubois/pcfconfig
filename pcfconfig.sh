@@ -11,7 +11,7 @@ eof=0
 if [ -f $LOGFILE ]; then
   eof=$(egrep -c "################################ EOF ################################" $LOGFILE)
   if [ $eof -gt 0 ]; then 
-    cat $LOGFILE
+#    cat $LOGFILE
     exit
   fi
 fi 

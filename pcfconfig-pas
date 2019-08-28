@@ -3106,6 +3106,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
+echo xxxxx
 echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
   echo "# OPSMANAGER ACCESS WITH DEBUG  ENVIRONMENT"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
@@ -3137,8 +3138,6 @@ echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_H
 
  # echo "pks get-credentials $PKS_CLUSTER_1_NAME"
   echo ""
-  echo "Setup Kubernetes:"
-  echo "-----------------------------------------------------------------------------------------------------------"
 
   exit 0
 fi
