@@ -425,7 +425,6 @@ checkEnvironment() {
       messagePrint " - DNS Servers" "$DNS_SERVERS"
       messagePrint " - Ops Manager DNS Name" "$OPS_MANAGER_DNS"
 
-echo gaga1
       # --- DNS PRECHECK ---
       nslookup -timeout=10 $OPS_MANAGER_DNS 8.8.8.8 > /dev/null 2>&1; ret=$?
       if [ "${ROUTE53_TOKEN}" != "" -a $ret -ne 0 ]; then
@@ -545,7 +544,6 @@ echo gaga1
       fi
       fi
     fi
-echo gaga10
 
     if [ "${cloud}" == "AWS" -a "${AWS_CLI_ENABLED}" -eq 1 ]; then
       OPSMAN_CONFIG="opsmen_aws.yml"
@@ -1275,9 +1273,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 
   checkEnvironment
 
-echo "gaga OPSMAN_TEMPLATE:$OPSMAN_TEMPLATE"
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
-echo gaga11
     dn=$(dirname $OPSMAN_TEMPLATE)
     bn=$(basename $OPSMAN_TEMPLATE)
     cc=$(echo "$OPSMAN_TEMPLATE" | grep -c "/")
@@ -1301,12 +1297,9 @@ echo gaga11
       echo "ERROR: $OPSMAN_TEMPLATE needs to be placed in the $PCFCONFIG_PATH/templates directory"
       echo "       and an entry in the VERSION_OPSMAN to be created for the metadata"; exit 1
     fi
-echo gaga12
   else
-echo gaga13
     opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
     region=$(egrep "^(region|location)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-echo gaga131
 
     if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
       bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
@@ -1322,8 +1315,6 @@ echo gaga131
       bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
       ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
     fi
-echo "gaga132 BLD:$bld"
-echo "gaga132 VER:$ver"
 
     cnt=$(egrep -c ":${PCF_CLOUD_NAME}:default:${ver}:" $PCFCONFIG_PATH/files/opsman-${OPSMAN_MODE}-release-notes.txt)
     if [ $cnt -eq 0 ]; then
@@ -1334,7 +1325,6 @@ echo "gaga132 VER:$ver"
       cfg=$(egrep ":${PCF_CLOUD_NAME}:default:${ver}:" $PCFCONFIG_PATH/files/opsman-${OPSMAN_MODE}-release-notes.txt | \
           head -1 | awk -F: '{ print $(NF-1) }')
     fi
-echo "gaga133 CFG:$cfg"
 
     # --- DEFAULT TEMPLATE ---
     if [ "${cfg}" == "" ]; then 
@@ -1346,7 +1336,6 @@ echo "gaga133 CFG:$cfg"
       bn="${cfg}"
     fi
   fi
-echo "gaga14 BN:$bn OPSMAN_CONFIG:$OPSMAN_CONFIG OPSMAN_TEMPLATE:$OPSMAN_TEMPLATE"
 
   # --- VALIDATE OPSMAN-TEMPLATE ---
   cnt=$(egrep -c "director_configuration:" $OPSMAN_CONFIG)
@@ -1362,7 +1351,6 @@ echo "gaga14 BN:$bn OPSMAN_CONFIG:$OPSMAN_CONFIG OPSMAN_TEMPLATE:$OPSMAN_TEMPLAT
     exit 1
   fi
 
-echo "gaga BN:$bn"
   cld=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $2 }') 
   ver=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $3 }') 
   st1=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $4 }') 

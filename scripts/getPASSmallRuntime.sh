@@ -34,7 +34,7 @@ fi
 
 echo "# GENETATED BY getPASSmallRuntime.sh (`date`)" > $RELEASE_FILE
 LIST=$(pivnet --format=table releases --product-slug $PRODUCT_SLUG | \
-     egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }' | head -10) 
+     egrep " [0-9][0-9][0-9][0-9][0-9][0-9] " | awk '{ print $4 }') 
 for rel in $LIST; do
   echo "Download Release: $rel"
   pivnet --format=json product-files --product-slug $PRODUCT_SLUG -r $rel | jq > /tmp/$0_$$
