@@ -1713,13 +1713,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
 
-    PIVNET_GLOB=$(egrep ":${PAS_VERSION}" $PAS_RELEASE_NOTES | awk -F: '{ print $NF }')
+    PIVNET_GLOB=$(egrep ":${PAS_VERSION}" $PAS_RELEASE_NOTES | awk -F: '{ print $NF }' | head -1)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
     messagePrint " - PAS Product Version requested" "$PAS_VERSION"
     messagePrint " - PIVNET Product Name" "$PIVNET_SLUG_NAME"
-    messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
     cnt=$(egrep -c ":${PAS_VERSION}:" $PAS_RELEASE_NOTES)
