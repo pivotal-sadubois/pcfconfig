@@ -516,7 +516,7 @@ cleanAWSenv() {
       fi
 
       if [ "${rol}" != "" ]; then
-        aws --region $AWS_LOCATION iam detach-role-policy --policy-arn $tmp --group-name $rol
+        aws --region $AWS_LOCATION iam detach-role-policy --policy-arn $tmp --role-name $rol
       fi
 
       if [ "${grp}" != "" ]; then
@@ -650,7 +650,7 @@ echo "5-POL:$pol"
 
     cnt=$(echo "$snm" | egrep -c "^${ENV_NAME}-")
     if [ $cnt -gt 0 ]; then
-      messagePrint " - Delete Target Group:" "$sid"
+      messagePrint " - Delete Target Group:" "$snm"
       aws --region $AWS_LOCATION elbv2 delete-target-group --target-group-arn $sid > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to delete Target group"
@@ -1071,6 +1071,14 @@ echo "5-POL:$pol"
 
   # --- CLEANUP ---
   rm -f $SECGRP
+
+  for alias in $(aws --region $AWS_LOCATION kms list-aliases | jq -r '.Aliases[].AliasName'); do
+    cnt=$(echo $alias | egrep -c "alias/${ENV_NAME}") 
+    if [ $cnt -gt 0 ]; then 
+      messagePrint " - Delete KMS Alias:" "$alias"
+      aws --region $AWS_LOCATION kms delete-alias --alias-name $alias
+    fi
+  done
 }
 
 cleanGCPenv() {
@@ -1081,7 +1089,7 @@ cleanGCPenv() {
     # --- DONT DELETE PCFJUMP VM ---
     cnt=$(echo "$n" | egrep -c "^pcfjump")
     if [ $cnt -eq 0 ]; then
-      messagePrint " - Cleaning up GCP1 Image:" "$n"
+      messagePrint " - Cleaning up GCP Image:" "$n"
       gcloud compute images delete ${n} -q > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         gcloud compute images delete ${n} -q
@@ -1132,7 +1140,7 @@ cleanGCPenv() {
 
   # --- DELETE FRONTEND ---
   for n in $(gcloud compute forwarding-rules list 2>/dev/null | \
-        grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
+        egrep "^${ENV_NAME}-" | awk '{ printf("%s:%s\n",$1,$2)}'); do
 
     nam=$(echo $n | awk -F: '{ print $1 }')
     zon=$(echo $n | awk -F: '{ print $2 }')
@@ -1142,8 +1150,9 @@ cleanGCPenv() {
   done
 
   # --- DELETE BACKEND SERVICE ---
+  # --filter="region:($GCP_REGION)
   for n in $(gcloud compute backend-services list 2>/dev/null | \
-        grep -v "NAME" | awk '{ print $1 }'); do
+        egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
     gcloud compute backend-services delete --global $n -q > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -1194,6 +1203,7 @@ cleanGCPenv() {
     gcloud compute target-tcp-proxies delete $n -q > /dev/null 2>&1
   done
 
+  # --filter="region:($GCP_REGION)"  NOT-WORKING
   for n in $(gcloud compute url-maps list 2>/dev/null | \
       egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
@@ -1208,7 +1218,7 @@ cleanGCPenv() {
   done
 
   # --- TARGET POOLS ---
-  for n in $(gcloud compute target-pools list 2>/dev/null | \
+  for n in $(gcloud compute target-pools list --filter="region:($GCP_REGION)" 2>/dev/null | \
         egrep "^${ENV_NAME}-" | awk '{ printf("%s:%s\n",$1,$2)}'); do
 
     nam=$(echo $n | awk -F: '{ print $1 }')
@@ -1223,17 +1233,17 @@ cleanGCPenv() {
     fi
   done
 
-
   # --- HEALTH CHECKS ---
-  for n in $(gcloud compute health-checks list 2>/dev/null | \
+  for n in $(gcloud compute health-checks list --filter="region:($GCP_REGION)" 2>/dev/null | \
         egrep "^$ENV_NAME" | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up health-checks:" "$n"
     gcloud compute health-checks delete $n -q > /dev/null 2>&1
   done
 
+  # --filter="region:($GCP_REGION)" NOT-WORKING
   for n in $(gcloud compute http-health-checks list 2>/dev/null | \
-        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+        egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up http-health-checks:" "$n"
     gcloud compute http-health-checks delete $n -q > /dev/null 2>&1
@@ -1244,8 +1254,9 @@ cleanGCPenv() {
     fi
   done
 
+  # --filter="region:($GCP_REGION)" NOT-WORKING
   for n in $(gcloud compute https-health-checks list 2>/dev/null | \
-        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+        egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up https-health-checks:" "$n"
     gcloud compute https-health-checks delete $n -q > /dev/null 2>&1
@@ -1257,8 +1268,9 @@ cleanGCPenv() {
   done
 
   # --- DELETE URL-MAPS CHECK ---
+  # --filter="region:($GCP_REGION)" NOT-WORKING
   for n in $(gcloud compute url-maps list 2>/dev/null | \
-        grep -v "NAME" | awk '{ print $1 }'); do
+        grep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up url-maps:" "$n"
     gcloud compute url-maps delete $n -q > /dev/null 2>&1
@@ -1266,7 +1278,7 @@ cleanGCPenv() {
 
   # --- DELETE INSTANCES ---
   for n in $(gcloud compute instance-groups list --filter="zone:($GCP_REGION)" 2>/dev/null | \
-        grep -v "NAME" | awk '{ printf("%s:%s:%s\n",$1,$2,$(NF-1))}'); do
+        grep "^${ENV_NAME}-" | awk '{ printf("%s:%s:%s\n",$1,$2,$(NF-1))}'); do
 
     # --- DONT DELETE PCFJUMP VM ---
     cnt=$(echo "$n" | egrep -c "^pcfjump")
@@ -1315,36 +1327,55 @@ cleanGCPenv() {
     messagePrint " - Cleaning up GCP Subnet:" "$n"
     gcloud compute networks subnets delete $n --region=$GCP_REGION -q 2>/dev/null
     if [ $? -ne 0 ]; then 
-      gcloud compute networks subnets delete $n --region=$GCP_REGION -q
+      echo "ERROR: Deleting Subnet $n failed"
+      echo "       => gcloud compute networks subnets delete $n --region=$GCP_REGION -q"
       exit 1
     fi
   done
 
   # --- DELETE FIREWALL RULES ---
-  #for n in $(gcloud compute firewall-rules list --filter="region:($GCP_REGION)" 2>/dev/null | \
+  # --filter="region:($GCP_REGION)" DOES-NOT-WORK
   for n in $(gcloud compute firewall-rules list 2>/dev/null | \
-      egrep "^$ENV_NAME" 2>/dev/null | awk '{ print $1 }'); do
+      egrep "^${ENV_NAME}-" 2>/dev/null | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up GCP firewall-tules:" "$n"
     gcloud compute firewall-rules delete $n -q 2>/dev/null
     if [ $? -ne 0 ]; then 
-      gcloud compute firewall-rules delete $n -q
+      echo "ERROR: Deleting Firewall Rule $n"
+      echo "       => gcloud compute firewall-rules delete $n -q"
       exit 1
     fi
   done
 
+  for net in $(gcloud compute networks subnets list --regions=$GCP_REGION 2>/dev/null | \
+      egrep "^$ENV_NAME" 2>/dev/null | awk '{ printf("%s:%s\n",$1,$2)}'); do
+
+    nam=$(echo $net | awk -F: '{ print $1 }')
+    zon=$(echo $net | awk -F: '{ print $2 }')
+
+    messagePrint " - Cleaning up GCP Subnetwork:" "$nam"
+    gcloud compute networks subnets delete $nam --region=$GCP_REGION-q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Deleting Subnet $nam"
+      echo "       => gcloud compute networks subnets delete $nam --region=$GCP_REGION -q"
+      exit 1
+    fi
+  done
+
+  # --filter="region:($GCP_REGION)"
   for net in $(gcloud compute networks list 2>/dev/null | \
-      egrep "^$ENV_NAME" 2>/dev/null | awk '{ print $1 }'); do
+      egrep "^${ENV_NAME}-" 2>/dev/null | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up GCP Network:" "$net"
     gcloud compute networks delete $net -q 2>/dev/null
     if [ $? -ne 0 ]; then 
-      gcloud compute networks delete $net -q
+      echo "ERROR: Deleting GCP Network $net"
+      echo "       => gcloud compute networks delete $net -q"
       exit 1
     fi
   done
 
-  for n in $(gcloud iam service-accounts list 2>/dev/null | \
+  for n in $(gcloud iam service-accounts list --filter="region:($GCP_REGION)" 2>/dev/null | \
       grep -v "EMAIL" | egrep "^$ENV_NAME" | awk '{ print $(NF-1) }'); do
 
     messagePrint " - Cleaning up GCP Service Account:" "$n"

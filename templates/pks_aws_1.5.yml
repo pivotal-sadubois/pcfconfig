@@ -47,7 +47,7 @@ product-properties:
    value:
 #   - pod_security_policy
 #   - deny_escalating_exec
-   - security_context_deny
+#   - security_context_deny
 # Configuration for Plan 2
  .properties.plan2_selector:
    selected_option: inactive

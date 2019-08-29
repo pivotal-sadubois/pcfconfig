@@ -1272,7 +1272,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   fi
 
   checkEnvironment
-kkkkkkkkkkkkk
 
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
     dn=$(dirname $OPSMAN_TEMPLATE)
