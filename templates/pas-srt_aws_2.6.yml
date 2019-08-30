@@ -343,8 +343,8 @@ resource-config:
     internet_connected: false
     elb_names:
     - ((ssh_target_group))
-    additional_vm_extensions:
-    - ssh-lb-security-groups
+#    additional_vm_extensions:
+#    - ssh-lb-security-groups
   database:
     instances: automatic
     persistent_disk:
@@ -385,8 +385,8 @@ resource-config:
     elb_names:
     - ((web_target_group_80))
     - ((web_target_group_443))
-    additional_vm_extensions:
-    - web-lb-security-groups
+#    additional_vm_extensions:
+#    - web-lb-security-groups
   tcp_router:
     instances: 0
     persistent_disk:
@@ -405,8 +405,8 @@ resource-config:
     - alb:awspas-tg-1031
     - alb:awspas-tg-1032
     - alb:awspas-tg-1033
-    additional_vm_extensions:
-    - tcp-lb-security-groups
+#    additional_vm_extensions:
+#    - tcp-lb-security-groups
 errand-config:
   deploy-autoscaler:
     post-deploy-state: true
