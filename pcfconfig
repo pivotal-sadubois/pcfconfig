@@ -240,6 +240,7 @@ echo "########### JUMP SERVER ############"
 
     # --- INSTALL SOFTWARE ---
     SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+    SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
     GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
     PCFHOME="/home/ubuntu/pcfconfig"
 

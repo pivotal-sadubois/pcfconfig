@@ -1897,7 +1897,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "ERROR: Product cf could not be staged"; exit 0
     fi
 
-#echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
+echo "PASPASPASPASPASPAS"
+echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
@@ -2003,9 +2004,6 @@ EOF
     $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf}
     echo "-----------------------------------------------------------------------------------------------------------"
 
-
-echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-exit 1
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PAS"
