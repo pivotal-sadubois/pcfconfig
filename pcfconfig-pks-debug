@@ -2004,6 +2004,8 @@ EOF
     echo "-----------------------------------------------------------------------------------------------------------"
 
 
+echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+exit 1
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PAS"

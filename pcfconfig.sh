@@ -34,7 +34,7 @@ else
 fi
 
 sleep 2
-if [ -f $LOGFILE ]; then
-  read pid < $PIDFILE
-  tail -n 1000 -f $LOGFILE --pid $pid
-fi
+#if [ -f $LOGFILE ]; then
+#  read pid < $PIDFILE
+#  tail -n 1000 -f $LOGFILE --pid $pid
+#fi

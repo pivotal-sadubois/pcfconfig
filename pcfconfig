@@ -265,10 +265,12 @@ echo "########### JUMP SERVER ############"
     fi
 
     ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
-
-    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+
+    ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
+    ssh ${SSHPAR} -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+
   fi
 
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
