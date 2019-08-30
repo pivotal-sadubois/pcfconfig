@@ -1860,7 +1860,25 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+
+      #gaga
+      messagePrint "Configure Security Groups" ""
+      messagePrint "Security Group:" "web-lb-security-groups"
+
+      $OM $OM_LOGIN -k create-vm-extension --name "web-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["web_lb_security_group", "vms_security_group"], "target_groups":["web-lb-target-groups"] }'
+
+      messagePrint "Security Group:" "ssh-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "ssh-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["ssh_lb_security_group", "vms_security_group"], "target_groups":["ssh-lb-target-groups"] }'
+
+      messagePrint "Security Group:" "tcp-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }'
+
     fi
+
+exit 1
 
     messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
     messagePrint " - PAS Variable File" "$VARFILE"
@@ -1899,6 +1917,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
 echo "PASPASPASPASPASPAS"
 echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
+exit 1
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
