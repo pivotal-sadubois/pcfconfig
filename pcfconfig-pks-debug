@@ -1930,7 +1930,7 @@ echo 11111111111
     fi
 
 echo "PASPASPASPASPASPAS"
-echo "$OM $OM_LOGIN configure-product "
+echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
