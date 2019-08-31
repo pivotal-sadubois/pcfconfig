@@ -211,7 +211,6 @@ environmentCleanUp() {
 
     cleanRoute53
     cleanAWSenv
-echo "llllllllllllll 1"
   fi
 
   if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
@@ -1877,6 +1876,20 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+
+      messagePrint "Configure Security Groups" ""
+      messagePrint "Security Group:" "web-lb-security-groups"
+
+      $OM $OM_LOGIN -k create-vm-extension --name "web-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["web_lb_security_group", "vms_security_group"], "target_groups":["web-lb-target-groups"] }' > /dev/null 2>&1
+
+      messagePrint "Security Group:" "ssh-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "ssh-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["ssh_lb_security_group", "vms_security_group"], "target_groups":["ssh-lb-target-groups"] }' > /dev/null 2>&1
+
+      messagePrint "Security Group:" "tcp-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }' > /dev/null 2>&1
     fi
 
     messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
