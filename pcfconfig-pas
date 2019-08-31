@@ -211,6 +211,7 @@ environmentCleanUp() {
 
     cleanRoute53
     cleanAWSenv
+echo "llllllllllllll 1"
   fi
 
   if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then

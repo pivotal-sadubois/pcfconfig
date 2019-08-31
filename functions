@@ -529,22 +529,16 @@ cleanAWSenv() {
     for pol in $(aws --region $AWS_LOCATION iam list-attached-role-policies --role-name $nam | \
         jq -r ".AttachedPolicies[].PolicyArn"); do
 
-echo "1-POL:$pol"
       aws --region $AWS_LOCATION iam detach-role-policy --role-name $nam --policy-arn $pol
-echo "2-POL:$pol"
       aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
-echo "3-POL:$pol"
     done
 
     # --- DELETE ROLE POLICY ---
     for pol in $(aws --region $AWS_LOCATION iam list-role-policies --role-name $nam | \
                  jq -r '.PolicyNames[]'); do
 
-echo "4-POL:$pol"
       aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
-echo "5-POL:$pol"
     done
-
 
     aws --region $AWS_LOCATION iam delete-role --role-name $nam > /dev/null 2>&1
     if [ $? -ne 0 ]; then
