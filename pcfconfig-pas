@@ -1428,7 +1428,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "default_deployment_tag: $DNS_PREFIX"          >> $VARFILE
     echo "region: ${GCP_REGION}"                        >> $VARFILE
     
-    
     sed -n '/SERVICE_ACCOUNT_KEY/,/SERVICE_ACCOUNT_KEY/p' terraform.tfvars | sed -e '1d' -e '$d' | \
     jq 'tostring' | sed 's/^/pcfconfig_service_account: /g' >> $VARFILE
 
@@ -1441,6 +1440,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "access_key_id: $AWS_ACCESS_KEY"               >> $VARFILE
     echo "secret_access_key: $AWS_SECRET_KEY"           >> $VARFILE
     echo "aws-region: ${AWS_REGION}" >> $VARFILE
+
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
@@ -1542,6 +1542,22 @@ echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSM
 
     if [ $ret -ne 0 ]; then
       echo "ERROR: Updating OpsManager via API failed"; exit 1
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
+      messagePrint "Configure Security Groups" ""
+      messagePrint "Security Group:" "web-lb-security-groups"
+
+      $OM $OM_LOGIN -k create-vm-extension --name "web-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["web_lb_security_group", "vms_security_group"], "target_groups":["web-lb-target-groups"] }' > /dev/null 2>&1
+
+      messagePrint "Security Group:" "ssh-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "ssh-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["ssh_lb_security_group", "vms_security_group"], "target_groups":["ssh-lb-target-groups"] }' > /dev/null 2>&1
+
+      messagePrint "Security Group:" "tcp-lb-security-groups"
+      $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
+        --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }' > /dev/null 2>&1
     fi
   
 #XXX gcloud projects add-iam-policy-binding  pa-sadubois-4ecf9e2c --member=serviceAccount:pcfconfig@pa-sadubois-4ecf9e2c.iam.gserviceaccount.com --role=roles/browser
@@ -1860,21 +1876,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-
-      #gaga
-      messagePrint "Configure Security Groups" ""
-      messagePrint "Security Group:" "web-lb-security-groups"
-
-      $OM $OM_LOGIN -k create-vm-extension --name "web-lb-security-groups" \
-        --cloud-properties '{ "security_groups": ["web_lb_security_group", "vms_security_group"], "target_groups":["web-lb-target-groups"] }' > /dev/null 2>&1
-
-      messagePrint "Security Group:" "ssh-lb-security-groups"
-      $OM $OM_LOGIN -k create-vm-extension --name "ssh-lb-security-groups" \
-        --cloud-properties '{ "security_groups": ["ssh_lb_security_group", "vms_security_group"], "target_groups":["ssh-lb-target-groups"] }' > /dev/null 2>&1
-
-      messagePrint "Security Group:" "tcp-lb-security-groups"
-      $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
-        --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }' > /dev/null 2>&1
     fi
 
     messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
