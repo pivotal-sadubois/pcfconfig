@@ -215,6 +215,7 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
             echo "                  --cidr-block 10.0.$i.0/24 --availability-zone $zone"; exit 1
           fi
   
+#gagadu
           aws ec2 --region=$AWS_REGION create-tags --resources $sid --tags Key=type,Value=pcfjump > /dev/null 2>&1
           if [ $? -ne 0 ]; then
             echo "ERROR: Creating of Tags failed"
@@ -1073,6 +1074,50 @@ cleanAWSenv() {
       aws --region $AWS_LOCATION kms delete-alias --alias-name $alias
     fi
   done
+
+  # --- DELETE S3 BUCKETS ---
+  for bucket in $(aws s3api --region=$AWS_LOCATION list-buckets | jq -r '.Buckets[].Name' | \
+                egrep "^${ENV_NAME}-"); do
+    messagePrint " - Delete S3 Bucket:" "$bucket"
+    aws s3api --region=$AWS_LOCATION delete-bucket --bucket $bucket > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failled to delete S3 Bucket: $nam"
+      echo "aws --region $AWS_LOCATION iam delete-policy --policy-arn $arn"
+      exit 1
+    fi
+  done
+
+  # --- DELETE EBS VOLUMES
+  TMPAWS=/tmp/$$_aws.json
+  aws --region $AWS_LOCATION ec2 describe-volumes > $TMPAWS
+  i=0; tot=$(jq -r ".Volumes[$i].VolumeId" 2>/dev/null $TMPAWS | egrep -c "^vol-")
+
+  while [ $i -lt $tot ]; do
+    stt=$(jq -r ".Volumes[$i].State" 2>/dev/null $TMPAWS)
+    vid=$(jq -r ".Volumes[$i].VolumeId" 2>/dev/null $TMPAWS)
+    cnt=$(jq -r ".Volumes[0].Tags[].Value" $TMPAWS | egrep -c "p-bosh|bosh-init") 
+
+    if [ $cnt -gt 0 ]; then 
+      if [ "$stt" == "available" ]; then 
+        messagePrint " - Delete Volume:" "$vid"
+        aws --region $AWS_LOCATION ec2 delete-volume --volume-id $vid > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: failled to delete volume: $vid"
+          echo "aws --region $AWS_LOCATION ec2 delete-volume --volume-id $vid"
+          exit 1
+        fi
+      else
+#gagadu
+        messagePrint " - Detaching Volume:" "$vid"
+        #aws ec2 --region $AWS_LOCATION detach-volume --volume-id $vid > /dev/null 2>&1
+        #aws ec2 --region $AWS_LOCATION ec2 delete-volume --volume-id $vid > /dev/null 2>&1
+      fi
+    fi
+
+    let i=i+1
+  done
+  rm -f $SECGRP
+
 }
 
 cleanGCPenv() {
