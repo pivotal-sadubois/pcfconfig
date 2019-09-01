@@ -242,9 +242,6 @@ echo "########### JUMP SERVER ############"
 
   if [ "${CLOUD_PROVIDER}" == "aws" ]; then
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-    echo ""
-    echo "# --- JUMP HOST ACCESS ---"
-    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
     # --- INSTALL SOFTWARE ---
     SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
@@ -274,6 +271,10 @@ echo "########### JUMP SERVER ############"
     fi
 
     ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    echo "# --- JUMP HOST ACCESS ---"
+    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+
+    echo ""
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 

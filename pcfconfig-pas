@@ -2402,7 +2402,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
-  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
@@ -3218,6 +3217,41 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
 
+  checkEnvironment
+  OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+
+  # GET CREDENTIALS
+  TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
+  $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
+  if [ $ret -eq 0 ]; then
+    director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+                  jq -r '.instance_groups[].properties.director.address')
+    director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+                  jq -r '.credential.value.password')
+
+    prd="xxx"; i=0
+    while [ "${prd}" != "null" ]; do
+      prd=$(jq -r ".[$i].type" $TMP_JQ)
+      if [ "${prd}" == "cf" ]; then
+        inm=$(jq -r ".[$i].installation_name" $TMP_JQ)
+        str="/api/v0/deployed/products/${inm}/credentials/.uaa.admin_credentials"
+        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
+        if [ $ret -eq 0 ]; then
+          sec=$(jq -r '.credential.value.password' $TMP_SEC)
+        else
+          echo "ERROR: 1Can not connect to $OPS_MANAGER_URL"; exit 1
+        fi
+      fi
+
+      let i=i+1
+    done
+
+    rm -f $$TMP_JQ
+  else
+    echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
+  fi
+
   ##############################################################################################
   ######################################## DEBUG INFOS #########################################
   ##############################################################################################
@@ -3229,10 +3263,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
-  echo "# PKS ACCESS CREDENTIALS"
+  echo "# PAS ACCESS CREDENTIALS"
+  echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
   echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
   echo ""
 
+#kkkkkk
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
