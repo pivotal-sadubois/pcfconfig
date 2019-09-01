@@ -5,7 +5,6 @@
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: PCF OpsManager Configuration Utility
 # ############################################################################################
-#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
 
 NODE=""
 USER=""
@@ -268,14 +267,14 @@ checkEnvironment() {
       CF=$(which cf)
       if [ "${CF}" == "" ]; then
         echo ""
-        echo "ERROR: please install the cf utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 0
+        echo "ERROR: please install the cf utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 1
       else
         # --- TEST FOR WORKING OM UTILITY ---
         CF_VERSION=$($CF version | awk '{ print $NF }' 2>/dev/null); ret=$?
         if [ ${ret} -ne 0 -o "${CF_VERSION}" == "" ]; then
           echo ""
           echo "ERROR: The om utility $(which om) does not seam to be correct"
-          echo "       please install the om utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 0
+          echo "       please install the om utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 1
         else
           messagePrint "checking for the cf utility" "Installed - ${CF_VERSION}"
         fi
@@ -2368,7 +2367,6 @@ EOF
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
-echo xx1
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
@@ -2377,19 +2375,21 @@ echo xx1
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
   $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
   if [ $ret -eq 0 ]; then
-echo xx11
     director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
                   jq -r '.instance_groups[].properties.director.address')
     director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
                   jq -r '.credential.value.password')
 
-echo xx12
+#https://pcf.awspas.pcfsdu.com/api/v0/deployed/products/cf-69813347e188d54141b8/credentials/.uaa.admin_credentials
+#https://pcf.awspas.pcfsdu.com/api/v0/deployed/products/cf-69813347e188d54141b8/credentials/.uaa.admin_credentials
+
     prd="xxx"; i=0
     while [ "${prd}" != "null" ]; do
       prd=$(jq -r ".[$i].type" $TMP_JQ)
-      if [ "${prd}" == "pivotal-container-service" ]; then
+      if [ "${prd}" == "cf" ]; then
         inm=$(jq -r ".[$i].installation_name" $TMP_JQ)
         str="/api/v0/deployed/products/${inm}/credentials/.properties.pks_uaa_management_admin_client"
+echo "STR:$str"
         $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
         if [ $ret -eq 0 ]; then
           sec=$(jq -r '.credential.value.secret' $TMP_SEC)
@@ -2409,13 +2409,11 @@ echo xx12
 
       let i=i+1
     done
-echo xx13
 
     rm -f $$TMP_JQ
   else
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
-echo xx2
 
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
@@ -2434,7 +2432,6 @@ echo xx2
   echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
   echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
   echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
-echo xx3
 
   scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
   if [ ${ret} -ne 0 ]; then
@@ -2443,9 +2440,14 @@ echo xx3
     echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
     exit 1
   fi
-echo xx4
 
   # --- CREATE USERS ---
+  echo "$CF login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p "
+
+#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
+#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
+${DNS_PREFIX}.${DNS_SUFFIX}
+
   echo "PAS_ADMIN_USER:$PAS_ADMIN_USER"
   echo "PAS_ADMIN_PASS:$PAS_ADMIN_PASS"
   echo "PAS_ADMIN_MAIL:$PAS_ADMIN_MAIL"
