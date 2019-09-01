@@ -2377,11 +2377,13 @@ echo xx1
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
   $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
   if [ $ret -eq 0 ]; then
+echo xx11
     director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
                   jq -r '.instance_groups[].properties.director.address')
     director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
                   jq -r '.credential.value.password')
 
+echo xx12
     prd="xxx"; i=0
     while [ "${prd}" != "null" ]; do
       prd=$(jq -r ".[$i].type" $TMP_JQ)
@@ -2407,6 +2409,7 @@ echo xx1
 
       let i=i+1
     done
+echo xx13
 
     rm -f $$TMP_JQ
   else
