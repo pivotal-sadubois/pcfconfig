@@ -2368,6 +2368,7 @@ EOF
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
+echo xx1
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
