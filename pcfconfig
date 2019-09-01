@@ -284,13 +284,13 @@ echo "########### JUMP SERVER ############"
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_PRIVATE_KEY ubuntu@$JUMP_HOST:/tmp
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_ROOT_CERT ubuntu@$JUMP_HOST:/tmp
 
-echo gaga
       TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem --tls_root_cert /tmp/tls_root_cert.pem"
       ARGS=$(echo "$CMDLINE_ARGS $TLSSTR" | sed -e 's/--jump-server//g')
     else
       ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
     fi
 
+echo "ARGS:$ARGS"
 exit 1
 
     #--tls_cert) TLS_CERTIFICATE=$2; shift;;                     
