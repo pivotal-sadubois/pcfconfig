@@ -87,19 +87,20 @@ while [ "$1" != "" ]; do
     --pas-srt) PAS_SRT=1;;                          # PCFCONFIG-PAS
     --tls_cert) TLS_CERTIFICATE=$2; shift;;         # PCFCONFIG-PAS
     --tls_private_key) TLS_PRIVATE_KEY=$2; shift;;  # PCFCONFIG-PAS
+    --tls_root_cert) TLS_ROOT_CERT=$2; shift;;      # PCFCONFIG-PAS
     --pks-tfvars) TF_PKS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
-    --pas-admin-user) PAS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
-    --pas-admin-pass) PAS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
-    --pas-admin-mail) PAS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
-    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
-    --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
-    --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
+    --pas-admin-user) PAS_ADMIN_USER=$2; shift;;    # PCFCONFIG-PKS
+    --pas-admin-pass) PAS_ADMIN_PASS=$2; shift;;    # PCFCONFIG-PKS
+    --pas-admin-mail) PAS_ADMIN_MAIL=$2; shift;;    # PCFCONFIG-PKS
+    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;    # PCFCONFIG-PKS
+    --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;    # PCFCONFIG-PKS
+    --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;    # PCFCONFIG-PKS
     --pas-tfvars) TF_PAS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;        # TERRAFORM VARIABLE FILE
     --cf-version) PCF_VERSION=$2; shift;;           # PCF VERSION
     --deployment) TF_DEPLOYMENT=$2; shift;;         # TERRAFORM VARIABLE FILE
     --directory-prefix) TF_PREFIX=$2; shift;;       # DIRECTORY PREFIX
-    --install-mode) TF_DIR_MODE=$2; shift;;       # DIRECTORY MODE (clean, preserve, delete)
+    --install-mode) TF_DIR_MODE=$2; shift;;         # DIRECTORY MODE (clean, preserve, delete)
     --opsman-template) OPSMAN_TEMPLATE=$2; shift;;  # OPSMAN TEMPLATE 
   esac
   shift
@@ -1878,7 +1879,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
       TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
       TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+    else
+echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
+exit 1
+
     fi
+exit 1
 
     echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
     echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
@@ -1934,6 +1942,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       echo "ERROR: Product cf could not be staged"; exit 0
     fi
+
 
 echo "PASPASPASPASPASPAS"
 echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
@@ -2437,14 +2446,47 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
 
   # --- CREATE USER ---
   echo "Configuring PCF"
-  messagePrint " - Creating User:" "$PAS_ADMIN_USER"
 
-  cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS > /dev/null 2>&1
+  messagePrint " - Creating Organization:" "pivotal"
+  cf create-org pivotal > /dev/null 2>&1; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failled to create org"
+    echo "       => cf create-org pivotal"
+    exit 1
+  fi
+
+  messagePrint " - Creating Space:" "demo"
+  cf create-space -o pivotal demo > /dev/null 2>&1; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failled to create space"
+    echo "       => cf cf create-space -o pivotal demo"
+    exit 1
+  fi
+
+  messagePrint " - Creating User:" "$PAS_ADMIN_USER"
+  cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS > /dev/null 2>&1; ret=$?
   if [ ${ret} -ne 0 ]; then
     echo "ERROR: failled to add user"
     echo "       => cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS"
     exit 1
   fi
+
+  messagePrint " - Add User $PAS_ADMIN_USER to Orgs (pivotal) with role" "OrgManager"
+  cf set-org-role sadubois pivotal OrgManager > /dev/null 2>&1; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failed to add user $PAS_ADMIN_USER to org pivotal"
+    echo "       => cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS"
+    exit 1
+  fi
+
+  messagePrint " - Add User $PAS_ADMIN_USER to space (demo) with role:" "SpaceManager"
+  cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceManager > /dev/null 2>&1; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failed to add user $PAS_ADMIN_USER to space demo"
+    echo "       => cf cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceManager"
+    exit 1
+  fi
+
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then

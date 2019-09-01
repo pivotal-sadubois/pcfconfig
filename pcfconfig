@@ -72,13 +72,19 @@ usage() {
   echo "                       --pas-admin-pass <password>      - PAS Administration Password"
   echo "                       --pas-admin-mail <email>         - PAS Administration Email"
   echo "                       --pas-srt                        - PAS Small Footprint"
+  echo "                       --tls_cert <cert>                - PAS TLS Certificate"
+  echo "                       --tls_private_key <private_key>  - PAS TLS Private Key"
+  echo "                       --tls_root_cert <root_ca_cert>   - PAS TLS CA Root Certificate"
   echo ""
   echo "             PKS Settings"
   echo "                       --pks-version <version>          - PKS Version"
   echo "                       --pks-admin-user <user>          - PKS Administration User"
   echo "                       --pas-admin-pass <password>      - PKS Administration Password"
   echo "                       --pks-admin-mail <email>         - PKS Administration Email"
-  echo "                       --harbor-version <version>       - PAS Version"
+  echo "                       --tls_cert <cert>                - PKS TLS Certificate"
+  echo "                       --tls_private_key <private_key>  - PKS TLS Private Key"
+  echo "                       --tls_root_cert <root_ca_cert>   - PKS TLS CA Root Certificate"
+  echo "                       --harbor-version <version>       - Harbor Version"
   echo ""
   echo "             Google Cloud Platform (GCP)"
   echo "                       --gcp-service-account <file>     - GCP Access Key"
@@ -111,6 +117,9 @@ while [ "$1" != "" ]; do
     --debug) DEBUG=1;; 
     --usage) USAGE=1;;
     --jump-server) JUMP_SERVER=1;;
+    --tls_cert) TLS_CERTIFICATE=$2; shift;;      
+    --tls_private_key) TLS_PRIVATE_KEY=$2; shift;;
+    --tls_root_cert) TLS_ROOT_CERT=$2; shift;;     
     --pas-srt ) PAS_SRT="--pas-srt";;
     --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;      # GCP SERVICE_ACCOUNT
     --gcp-project) GCP_PROJECT=$2; shift;;       # GCP PROJECT
@@ -270,7 +279,24 @@ echo "########### JUMP SERVER ############"
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
-    ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then 
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_CERTIFICATE ubuntu@$JUMP_HOST:/tmp
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_PRIVATE_KEY ubuntu@$JUMP_HOST:/tmp
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_ROOT_CERT ubuntu@$JUMP_HOST:/tmp
+
+echo gaga
+      TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem --tls_root_cert /tmp/tls_root_cert.pem"
+      ARGS=$(echo "$CMDLINE_ARGS $TLSSTR" | sed -e 's/--jump-server//g')
+    else
+      ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    fi
+
+exit 1
+
+    #--tls_cert) TLS_CERTIFICATE=$2; shift;;                     
+    #--tls_private_key) TLS_PRIVATE_KEY=$2; shift;;              
+    #--tls_root_cert) TLS_ROOT_CERT=$2; shift;;   
+
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
