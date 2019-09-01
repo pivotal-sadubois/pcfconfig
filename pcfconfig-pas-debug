@@ -2388,22 +2388,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
       prd=$(jq -r ".[$i].type" $TMP_JQ)
       if [ "${prd}" == "cf" ]; then
         inm=$(jq -r ".[$i].installation_name" $TMP_JQ)
-        str="/api/v0/deployed/products/${inm}/credentials/.properties.pks_uaa_management_admin_client"
-echo "STR:$str"
+        str="/api/v0/deployed/products/${inm}/credentials/.uaa.admin_credentials"
         $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
         if [ $ret -eq 0 ]; then
-          sec=$(jq -r '.credential.value.secret' $TMP_SEC)
+          sec=$(jq -r '.credential.value.password' $TMP_SEC)
         else
           echo "ERROR: 1Can not connect to $OPS_MANAGER_URL"; exit 1
-        fi
-
-        # --- UAA-ADMIN-PASSWORD ---
-        str="/api/v0/deployed/products/${inm}/credentials/.properties.uaa_admin_password"
-        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
-        if [ $ret -eq 0 ]; then
-          admin_sec=$(jq -r '.credential.value.secret' $TMP_SEC)
-        else
-          echo "ERROR: 2Can not connect to $OPS_MANAGER_URL"; exit 1
         fi
       fi
 
@@ -2442,7 +2432,7 @@ echo "STR:$str"
   fi
 
   # --- CREATE USERS ---
-  echo "$CF login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p "
+  echo "$CF login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec"
 
 #cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
 #cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
