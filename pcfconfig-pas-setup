@@ -2437,6 +2437,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   fi
 
   # --- CREATE USER ---
+  messagePrint " - Creating User:" "$PAS_ADMIN_USER"
+
   cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS > /dev/null 2>&1
   if [ ${ret} -ne 0 ]; then
     echo "ERROR: failled to add user"
