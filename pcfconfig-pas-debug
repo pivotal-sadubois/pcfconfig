@@ -3212,7 +3212,7 @@ EOF
   exit 0
 fi
 
-if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   checkEnvironment
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
