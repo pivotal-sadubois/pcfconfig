@@ -21,6 +21,13 @@ if [ ! -x /usr/bin/aws ]; then
   apt-get install awscli -y > /dev/null 2>&1
 fi
 
+while  [ ! -x /usr/bin/gcloud ]; do
+  echo "- Install CF-CLI"
+  wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
+  echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+  apt-get update && apt-get install cf-cli -y > /dev/null 2>&1
+done
+
 while  [ ! -x /usr/bin/gcloud ]; do 
   echo "- Install GCP SDK"
   echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
