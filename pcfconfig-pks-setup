@@ -2427,7 +2427,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     exit 1
   fi
 
-#kkkkkkk
   # --- CREATE USERS ---
   cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system > /dev/null 2>&1
   if [ ${ret} -ne 0 ]; then
@@ -3213,11 +3212,7 @@ EOF
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
-  checkEnvironment
-  ERRAFORM_VARS=terraform.tfvars
-  TERRAFORM_TFSTATE=terraform.tfstate
-
-  checkEnvironment
+  checkEnvironment 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
 

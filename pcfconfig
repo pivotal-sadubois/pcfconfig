@@ -274,13 +274,11 @@ echo "########### JUMP SERVER ############"
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
-    echo ""
-    echo "# --- JUMP HOST ACCESS ---"
-    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
-
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
     ssh ${SSHPAR} -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
 
+    echo "# --- JUMP HOST ACCESS ---"
+    echo "ssh -qo StrictHostKeyChecking=no ubuntu@$JUMP_HOST"
   fi
 
   if [ "${CLOUD_PROVIDER}" == "gcp" ]; then 
