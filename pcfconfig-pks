@@ -2380,9 +2380,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
                   jq -r '.credential.value.password')
 
-#https://pcf.awspas.pcfsdu.com/api/v0/deployed/products/cf-69813347e188d54141b8/credentials/.uaa.admin_credentials
-#https://pcf.awspas.pcfsdu.com/api/v0/deployed/products/cf-69813347e188d54141b8/credentials/.uaa.admin_credentials
-
     prd="xxx"; i=0
     while [ "${prd}" != "null" ]; do
       prd=$(jq -r ".[$i].type" $TMP_JQ)
@@ -2432,15 +2429,20 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   fi
 
   # --- CREATE USERS ---
-  echo "$CF login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec"
+  cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system > /dev/null 2>&1
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failled to login to api.sys.${DNS_PREFIX}.${DNS_SUFFIX}"
+    echo "       => cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
+    exit 1
+  fi
 
-#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
-#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
-${DNS_PREFIX}.${DNS_SUFFIX}
-
-  echo "PAS_ADMIN_USER:$PAS_ADMIN_USER"
-  echo "PAS_ADMIN_PASS:$PAS_ADMIN_PASS"
-  echo "PAS_ADMIN_MAIL:$PAS_ADMIN_MAIL"
+  # --- CREATE USER ---
+  cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS > /dev/null 2>&1
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: failled to add user"
+    echo "       => cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS"
+    exit 1
+  fi
 
 #kkkkkkkkkkk
 
