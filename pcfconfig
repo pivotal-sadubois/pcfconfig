@@ -734,8 +734,15 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_STATE "started"
-    pcfconfig-pas -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
-      --pas-version $PAS_VERSION --aws-route53 $ROUTE53_TOKEN $PAS_SRT
+
+    if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then 
+      pcfconfig-pas -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+        --pas-version $PAS_VERSION --aws-route53 $ROUTE53_TOKEN $PAS_SRT \
+        --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
+    else
+      pcfconfig-pas -u $OPSMAN_USER  -p $OPSMAN_PASS --pivnet-token "$PIVNET_TOKEN" \
+        --pas-version $PAS_VERSION --aws-route53 $ROUTE53_TOKEN $PAS_SRT
+    fi
 
     if [ $? -ne 0 ]; then
       setPCFconfigState $PCFCONFIG_PAS_STATE "failed"
