@@ -5,6 +5,7 @@
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: PCF OpsManager Configuration Utility
 # ############################################################################################
+#cf login -a api.sys.awspas.pcfsdu.com -u admin -p "HuoBtnDbonwHYpMKtwCz4O2o8aH6_wq0" --skip-ssl-validation
 
 NODE=""
 USER=""
@@ -2344,6 +2345,10 @@ EOF
   fi
 fi
 
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
+exit 1
+fi
+
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
@@ -2389,6 +2394,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
+#sacha
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
@@ -3105,6 +3111,10 @@ EOF
   fi
 
   exit 0
+fi
+
+if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
+  echo "pcfconfig-pas-debug"
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then

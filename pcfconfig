@@ -66,13 +66,18 @@ usage() {
   echo "                       --dns-domain <vars>              - DNS Domain Name"
   echo "                       --aws-route53 <token>            - AWS Route53 Token"
   echo ""
-  echo "             Product Settings>"
+  echo "             PAS Settings"
+  echo "                       --pas-version <version>          - PAS Version"
+  echo "                       --pas-admin-user <user>          - PAS Administration User"
+  echo "                       --pas-admin-pass <password>      - PAS Administration Password"
+  echo "                       --pas-admin-mail <email>         - PAS Administration Email"
+  echo "                       --pas-srt                        - PAS Small Footprint"
+  echo ""
+  echo "             PKS Settings"
   echo "                       --pks-version <version>          - PKS Version"
   echo "                       --pks-admin-user <user>          - PKS Administration User"
   echo "                       --pas-admin-pass <password>      - PKS Administration Password"
-  echo "                       --pas-admin-mail <email>         - PKS Administration Email"
-  echo "                       --pas-version <version>          - PAS Version"
-  echo "                       --pas-srt                        - PAS Small Footprint"
+  echo "                       --pks-admin-mail <email>         - PKS Administration Email"
   echo "                       --harbor-version <version>       - PAS Version"
   echo ""
   echo "             Google Cloud Platform (GCP)"
@@ -107,12 +112,15 @@ while [ "$1" != "" ]; do
     --usage) USAGE=1;;
     --jump-server) JUMP_SERVER=1;;
     --pas-srt ) PAS_SRT="--pas-srt";;
-    --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;       # GCP SERVICE_ACCOUNT
+    --gcp-service-account) GCP_SERVICE_ACCOUNT=$2; shift;;      # GCP SERVICE_ACCOUNT
     --gcp-project) GCP_PROJECT=$2; shift;;       # GCP PROJECT
-    --pivnet-token) PIVNET_TOKEN=$2; shift;;                     # PCFCONFIG-PKS
-    --pks-version) PKS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
-    --pas-version) PAS_VERSION=$2; shift;;                       # TERRAFORM VARIABLE FILE
-    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
+    --pivnet-token) PIVNET_TOKEN=$2; shift;;                    # PCFCONFIG-PKS
+    --pks-version) PKS_VERSION=$2; shift;;                      # TERRAFORM VARIABLE FILE
+    --pas-version) PAS_VERSION=$2; shift;;                      # TERRAFORM VARIABLE FILE
+    --pas-admin-user) PAS_ADMIN_USER=$2; shift;;                # PCFCONFIG-PAS
+    --pas-admin-pass) PAS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PAS
+    --pas-admin-mail) PAS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PAS
+    --pks-admin-user) PKS_ADMIN_USER=$2; shift;;                # PCFCONFIG-PKS
     --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
     --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
     --pks-cluster-1-name) PKS_CLUSTER_1_NAME=$2; shift;;
@@ -566,7 +574,9 @@ PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraformin
 PCFCONFIG_PKS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks"
 PCFCONFIG_PAS_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas"
 PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-setup"
-PCFCONFIG_PKS_DEBUG="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-debug"
+PCFCONFIG_PAS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-setup"
+PCFCONFIG_PKS_DEBUG="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-debug"
+PCFCONFIG_PAS_DEBUG="${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-debug"
 
 if [ "${PCF_LATEST}" == "" ]; then 
   echo "ERROR: $0 No entry found for $PCF_OPSMAN_TYPE in $TERRAFORM_RELEASE_NOTES"
@@ -717,6 +727,24 @@ else
     fi
   else
     messagePrint "pcfconfig-pas already done" "skipping"
+  fi
+
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+  if [ "$(getPCFconfigState $PCFCONFIG_PAS_AUTH_STATE)" != "completed" ]; then
+    cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+    setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "started"
+    pcfconfig-pas-setup --pas-admin-user $PAS_ADMIN_USER --pas-admin-pass $PAS_ADMIN_PASS \
+         --pas-admin-mail $PAS_ADMIN_MAIL 
+
+    if [ $? -ne 0 ]; then
+      setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "failed"
+      echo "ERROR: Problem with pcfconfig-pas-setup occured"; exit 1
+    else
+      setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "completed"
+    fi
+  else
+    messagePrint "pcfconfig-pas-setup already done" "skipping"
   fi
 fi
 
