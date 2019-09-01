@@ -2412,6 +2412,7 @@ echo xx1
   else
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
+echo xx2
 
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
@@ -2430,6 +2431,7 @@ echo xx1
   echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
   echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
   echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
+echo xx3
 
   scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
   if [ ${ret} -ne 0 ]; then
@@ -2438,6 +2440,7 @@ echo xx1
     echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
     exit 1
   fi
+echo xx4
 
   # --- CREATE USERS ---
   echo "PAS_ADMIN_USER:$PAS_ADMIN_USER"
