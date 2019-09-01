@@ -89,6 +89,9 @@ while [ "$1" != "" ]; do
     --tls_cert) TLS_CERTIFICATE=$2; shift;;         # PCFCONFIG-PAS
     --tls_private_key) TLS_PRIVATE_KEY=$2; shift;;  # PCFCONFIG-PAS
     --pks-tfvars) TF_PKS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
+    --pas-admin-user) PAS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
+    --pas-admin-pass) PAS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
+    --pas-admin-mail) PAS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
     --pks-admin-user) PKS_ADMIN_USER=$2; shift;;              # PCFCONFIG-PKS
     --pks-admin-pass) PKS_ADMIN_PASS=$2; shift;;                # PCFCONFIG-PKS
     --pks-admin-mail) PKS_ADMIN_MAIL=$2; shift;;                # PCFCONFIG-PKS
@@ -258,6 +261,25 @@ checkEnvironment() {
     if [ ${pas} -gt 0 ]; then
       messagePrint "checking terraform product selection" "Pivotal Application Service (PAS)"
       product="Pivotal Cloud Foundry"; productid=PCF
+    fi
+
+    if [ "${productid}" == "PCF" ]; then 
+      # --- CHECK FOR CF UTILITY ---
+      CF=$(which cf)
+      if [ "${CF}" == "" ]; then
+        echo ""
+        echo "ERROR: please install the cf utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 0
+      else
+        # --- TEST FOR WORKING OM UTILITY ---
+        CF_VERSION=$($CF version | awk '{ print $NF }' 2>/dev/null); ret=$?
+        if [ ${ret} -ne 0 -o "${CF_VERSION}" == "" ]; then
+          echo ""
+          echo "ERROR: The om utility $(which om) does not seam to be correct"
+          echo "       please install the om utility from https://docs.cloudfoundry.org/cf-cli/install-go-cli.html"; exit 0
+        else
+          messagePrint "checking for the cf utility" "Installed - ${CF_VERSION}"
+        fi
+      fi
     fi
 
     # --- VERIFY PROVIDER ---
@@ -2416,14 +2438,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     exit 1
   fi
 
-  #echo ""
-  #echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
-  #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-  #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
-  #echo ""
+  # --- CREATE USERS ---
+  echo "PAS_ADMIN_USER:$PAS_ADMIN_USER"
+  echo "PAS_ADMIN_PASS:$PAS_ADMIN_PASS"
+  echo "PAS_ADMIN_MAIL:$PAS_ADMIN_MAIL"
 
-echo "director_ip:$director_ip"
-echo "director_cd:$director_cd"
+#kkkkkkkkkkk
+
 
 exit 1
 fi
