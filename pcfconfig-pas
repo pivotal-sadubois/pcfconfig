@@ -2428,6 +2428,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     exit 1
   fi
 
+#kkkkkkk
   # --- CREATE USERS ---
   cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system > /dev/null 2>&1
   if [ ${ret} -ne 0 ]; then
@@ -2943,7 +2944,7 @@ EOF
     fi
 
     #echo ""
-    #echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
+    #echo "# --- DIRECTOR LOGIN FOR DEBUGGING ---"
     #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
     #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
     #echo ""
@@ -3229,7 +3230,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PKS ACCESS CREDENTIALS"
-  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+  echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
   echo ""
 
 fi
@@ -3246,7 +3247,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
-  echo "# OPSMANAGER ACCESS WITH DEBUG  ENVIRONMENT"
+  echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
