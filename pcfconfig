@@ -746,6 +746,12 @@ else
   else
     messagePrint "pcfconfig-pas-setup already done" "skipping"
   fi
+
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---
+  cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
+
+  pcfconfig-pas-debug 
+
 fi
 
 

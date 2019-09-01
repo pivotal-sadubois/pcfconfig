@@ -2437,6 +2437,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   fi
 
   # --- CREATE USER ---
+  echo "Configuring PCF"
   messagePrint " - Creating User:" "$PAS_ADMIN_USER"
 
   cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS > /dev/null 2>&1
@@ -2445,11 +2446,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
     echo "       => cf create-user $PAS_ADMIN_USER $PAS_ADMIN_PASS"
     exit 1
   fi
-
-#kkkkkkkkkkk
-
-
-exit 1
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
@@ -3217,7 +3213,25 @@ EOF
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
-  echo "pcfconfig-pas-debug"
+  checkEnvironment
+  ERRAFORM_VARS=terraform.tfvars
+  TERRAFORM_TFSTATE=terraform.tfstate
+
+  ##############################################################################################
+  ######################################## DEBUG INFOS #########################################
+  ##############################################################################################
+  TMP_OPSMAN="$(pwd)/opsman.pem"
+  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+
+  echo "-----------------------------------------------------------------------------------------------------------"
+  echo "# OPSMANAGER ACCESS WITH DEBUG  ENVIRONMENT"
+  echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+  echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
+  echo ""
+  echo "# PKS ACCESS CREDENTIALS"
+  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+  echo ""
+
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
