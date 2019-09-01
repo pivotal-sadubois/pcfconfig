@@ -2358,8 +2358,70 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
                   jq -r '.instance_groups[].properties.director.address')
     director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
                   jq -r '.credential.value.password')
-echo gaga1
+
+    prd="xxx"; i=0
+    while [ "${prd}" != "null" ]; do
+      prd=$(jq -r ".[$i].type" $TMP_JQ)
+      if [ "${prd}" == "pivotal-container-service" ]; then
+        inm=$(jq -r ".[$i].installation_name" $TMP_JQ)
+        str="/api/v0/deployed/products/${inm}/credentials/.properties.pks_uaa_management_admin_client"
+        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
+        if [ $ret -eq 0 ]; then
+          sec=$(jq -r '.credential.value.secret' $TMP_SEC)
+        else
+          echo "ERROR: 1Can not connect to $OPS_MANAGER_URL"; exit 1
+        fi
+
+        # --- UAA-ADMIN-PASSWORD ---
+        str="/api/v0/deployed/products/${inm}/credentials/.properties.uaa_admin_password"
+        $OM $OM_LOGIN curl --path ${str} > $TMP_SEC 2>/dev/null; ret=$?
+        if [ $ret -eq 0 ]; then
+          admin_sec=$(jq -r '.credential.value.secret' $TMP_SEC)
+        else
+          echo "ERROR: 2Can not connect to $OPS_MANAGER_URL"; exit 1
+        fi
+      fi
+
+      let i=i+1
+    done
+
+    rm -f $$TMP_JQ
+  else
+    echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
+
+  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+  $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
+  $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
+  touch $TMP_SCRIPT
+  [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
+  [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
+
+  ##############################################################################################
+  ######################################## DEBUG INFOS #########################################
+  ##############################################################################################
+  TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+  echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+  echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+  echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+  echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
+  echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
+
+  scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
+  if [ ${ret} -ne 0 ]; then
+    echo "ERROR: Copying script /tmp/debug.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+    echo "       Please try manually:"
+    echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
+    exit 1
+  fi
+
+  #echo ""
+  #echo "# --- DIRECTOR LOGINFOR DEBUGGING ---"
+  #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+  #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
+  #echo ""
+
 echo "director_ip:$director_ip"
 echo "director_cd:$director_cd"
 
