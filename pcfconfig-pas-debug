@@ -2346,6 +2346,23 @@ EOF
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
+  checkEnvironment
+  OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+
+  # GET CREDENTIALS
+  TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
+  $OM $OM_LOGIN curl --path /api/v0/deployed/products > $TMP_JQ 2>/dev/null; ret=$?
+  if [ $ret -eq 0 ]; then
+    director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+                  jq -r '.instance_groups[].properties.director.address')
+    director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+                  jq -r '.credential.value.password')
+echo gaga1
+  fi
+echo "director_ip:$director_ip"
+echo "director_cd:$director_cd"
+
 exit 1
 fi
 
