@@ -290,13 +290,6 @@ echo "########### JUMP SERVER ############"
       ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
     fi
 
-echo "ARGS:$ARGS"
-exit 1
-
-    #--tls_cert) TLS_CERTIFICATE=$2; shift;;                     
-    #--tls_private_key) TLS_PRIVATE_KEY=$2; shift;;              
-    #--tls_root_cert) TLS_ROOT_CERT=$2; shift;;   
-
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
