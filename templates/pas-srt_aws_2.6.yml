@@ -165,6 +165,8 @@ product-properties:
       certificate:
         private_key_pem: ((container_service_pas_tls_private_key_pem))
         cert_pem: ((container_service_pas_tls_cert_pem))
+  .properties.routing_custom_ca_certificates:
+    value: ((routing_custom_ca_certificates))
   .properties.networkpolicyserver_database_max_open_connections:
     value: 200
   .properties.networkpolicyserverinternal_database_max_open_connections:
