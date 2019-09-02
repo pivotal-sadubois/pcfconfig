@@ -106,11 +106,6 @@ while [ "$1" != "" ]; do
   shift
 done
 
-echo "hallo TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "hallo TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "hallo TLS_ROOT_CERT:$TLS_ROOT_CERT"
-
-
 [ "$PKS_CLUSTER_1_NAME" == "-" ] && PKS_CLUSTER_1_NAME=""
 [ "$PKS_CLUSTER_1_PLAN" == "-" ] && PKS_CLUSTER_1_PLAN=""
 [ "$PKS_CLUSTER_2_NAME" == "-" ] && PKS_CLUSTER_2_NAME=""
@@ -1856,10 +1851,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas" ]; then
     VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
-echo "hallo1 TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "hallo1 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "hallo1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
-
 
     # --- COPY JQ FILES FROM THE TEMPLATES ---
     PAS_MINOR_VERSION=$(echo $PAS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
@@ -1894,28 +1885,15 @@ echo "hallo1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
       if [ "$dif" == "" ]; then dif=0; fi
       if [ $dif -ne 2 ]; then 
         echo "ERROR: Certificate modulus of $TLS_CERTIFICATE does not match with the private_key $TLS_PRIVATE_KEY"
-        echo "       => openssl rsa -in $TLS_CERTIFICATE -noout -modulus"
-        echo "       => openssl x509 -in $TLS_PRIVATE_KEY -noout -modulus"
+        echo "       => openssl x509 -in $TLS_CERTIFICATE -noout -modulus"
+        echo "       => openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus"
         exit 1
       fi
 
       TLS_CERTIFICATE=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
       TLS_PRIVATE_KEY=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
       TLS_ROOT_CERT=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
-
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
-exit 1
-
     fi
-
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
-
-#llllllllllllll
-exit 1
 
     echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
     echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
