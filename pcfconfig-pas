@@ -1980,6 +1980,7 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_T
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
+exit 1
 #gaga PAS
     if [ "${PCF_CLOUD_NAME}" == "aws1" ]; then
       # --- CREATE ELB LOADBALANCER ---
