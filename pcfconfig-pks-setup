@@ -1890,8 +1890,8 @@ echo "hallo1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
       TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
     else
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
-echo "(openssl rsa -in $TLS_CERTIFICATE -noout -modulus; openssl x509 -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }'"
-      dif=$((openssl rsa -in $TLS_CERTIFICATE -noout -modulus; openssl x509 -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
+echo "(openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }'"
+      dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
       if [ "$dif" == "" ]; then dif=0; fi
 
 echo "DIF:$dif"
