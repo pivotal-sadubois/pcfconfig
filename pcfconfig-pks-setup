@@ -106,6 +106,11 @@ while [ "$1" != "" ]; do
   shift
 done
 
+echo "hallo TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "hallo TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "hallo TLS_ROOT_CERT:$TLS_ROOT_CERT"
+
+
 [ "$PKS_CLUSTER_1_NAME" == "-" ] && PKS_CLUSTER_1_NAME=""
 [ "$PKS_CLUSTER_1_PLAN" == "-" ] && PKS_CLUSTER_1_PLAN=""
 [ "$PKS_CLUSTER_2_NAME" == "-" ] && PKS_CLUSTER_2_NAME=""
@@ -1851,6 +1856,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas" ]; then
     VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
+echo "hallo1 TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "hallo1 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "hallo1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
+
 
     # --- COPY JQ FILES FROM THE TEMPLATES ---
     PAS_MINOR_VERSION=$(echo $PAS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
