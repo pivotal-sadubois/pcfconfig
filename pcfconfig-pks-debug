@@ -1883,6 +1883,7 @@ TLS_CERTIFICATE=""; TLS_PRIVATE_KEY=""; TLS_ROOT_CERT=""
       TLS_ROOT_CERT=$($OM $OM_LOGIN curl --path /api/v0/certificate_authorities| jq '.certificate_authorities[].cert_pem')
 
       echo "skip_cert_verify: true" >> $VARFILE
+      echo "skip_cert_verify: false" >> $VARFILE
     else
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
       dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
