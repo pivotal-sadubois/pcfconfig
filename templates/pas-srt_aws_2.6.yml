@@ -30,7 +30,7 @@ product-properties:
     value: 200
 # ha_proxy.skip_cert_verify: true resolve mysql_monitor issue
   .ha_proxy.skip_cert_verify:
-    value: true
+    value: ((skip_cert_verify))
   .mysql.cli_history:
     value: true
   .mysql.max_connections:
