@@ -45,6 +45,7 @@ PKS_CLUSTER_1_PLAN=""
 PKS_CLUSTER_2_PLAN=""
 PKS_CLUSTER_3_PLAN=""
 
+TLS_CUSTOMER_CERT=0
 TLS_CERTIFICATE=""
 TLS_PRIVATE_KEY=""
 
@@ -1864,6 +1865,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
+      TLS_CUSTOMER_CERT=0
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX},*.apps.${DNS_PREFIX}.${DNS_SUFFIX},*.${DNS_SUFFIX},${DNS_SUFFIX},${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -1888,6 +1890,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "skip_cert_verify: true" >> $VARFILE
       echo "skip_cert_verify: false" >> $VARFILE
     else
+      TLS_CUSTOMER_CERT=1
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
       dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
       if [ "$dif" == "" ]; then dif=0; fi
@@ -3314,14 +3317,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PAS ACCESS CREDENTIALS"
-  if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
+  if [ "${TLS_CUSTOMER_CERT}" -eq 0 ]; then
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
   else
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
   fi
-echo gaga
   echo ""
 fi
 
