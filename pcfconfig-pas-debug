@@ -1882,6 +1882,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
       TLS_ROOT_CERT=$($OM $OM_LOGIN curl --path /api/v0/certificate_authorities| jq '.certificate_authorities[].cert_pem')
 
+      echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+      echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+      echo "routing_custom_ca_certificates: $TLS_ROOT_CERT" >> $VARFILE
+
       echo "skip_cert_verify: true" >> $VARFILE
       echo "skip_cert_verify: false" >> $VARFILE
     else
@@ -1899,6 +1903,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       TLS_PRIVATE_KEY=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
       TLS_ROOT_CERT=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
+      echo "container_service_pas_tls_cert_pem: \"$TLS_CERTIFICATE\"" >> $VARFILE
+      echo "container_service_pas_tls_private_key_pem: \"$TLS_PRIVATE_KEY\"" >> $VARFILE
+      echo "routing_custom_ca_certificates: \"$TLS_ROOT_CERT\"" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     fi
 
@@ -1915,9 +1922,6 @@ echo -e $TLS_CERTIFICATE
 echo -e $TLS_PRIVATE_KEY
 echo -e $TLS_ROOT_CERT
 
-    echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
-    echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
-    echo "routing_custom_ca_certificates: $TLS_ROOT_CERT" >> $VARFILE
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
