@@ -3309,17 +3309,17 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
-  echo "# OPSMANAGER WEB ACCESS
-  echo "http://${OPS_MANAGER_DNS}
+  echo "# OPSMANAGER WEB ACCESS"
+  echo "http://${OPS_MANAGER_DNS}"
   echo "# OPSMANAGER CONSOLE ACCESS WITH DEBUG ENVIRONMENT"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PAS WEB ACCESS CREDENTIALS - APPS MANAGER"
-  echo "https://apps.sys.awspas.pcfsdu.com"
+  echo "https://apps.sys.awspas.pcfsdu.com - ($PAS_ADMIN_USER/$PAS_ADMIN_PASS)"
   echo "# PAS CONSOLE ACCESS CREDENTIALS"
 
-  TLS_CUSTOMER_CERT=$(echo | openssl s_client -connect pcf.awspas.pcfsdu.com:443 2> /dev/null | \
+  TLS_CUSTOMER_CERT=$(echo | openssl s_client -connect api.sys.${DNS_PREFIX}.${DNS_SUFFIX}:443 2> /dev/null | \
      grep "Verify return code:" | grep -c "self signed")
 
   if [ "${TLS_CUSTOMER_CERT}" -eq 1 ]; then
