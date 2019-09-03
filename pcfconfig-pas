@@ -1863,7 +1863,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
 
-#TLS_CERTIFICATE=""; TLS_PRIVATE_KEY=""; TLS_ROOT_CERT=""
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -1908,20 +1907,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "routing_custom_ca_certificates: \"$TLS_ROOT_CERT\"" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     fi
-
-#xxxxxxx
-#    ".properties.routing_custom_ca_certificates": {
-#      "type": "text",
-#      "configurable": true,
-#      "credential": false,
-#      "value": 
-#      "optional": true
-
-
-echo -e $TLS_CERTIFICATE
-echo -e $TLS_PRIVATE_KEY
-echo -e $TLS_ROOT_CERT
-
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
@@ -1985,7 +1970,6 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_T
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
-exit 1
 #gaga PAS
     if [ "${PCF_CLOUD_NAME}" == "aws1" ]; then
       # --- CREATE ELB LOADBALANCER ---
