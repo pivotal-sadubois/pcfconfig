@@ -3324,6 +3324,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
   fi
+echo gaga1
   echo ""
 echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
 fi
