@@ -1960,9 +1960,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "ERROR: Product cf could not be staged"; exit 0
     fi
 
-
-echo "PASPASPASPASPASPAS"
-echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE"
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
@@ -1970,7 +1967,6 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_T
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
-#gaga PAS
     if [ "${PCF_CLOUD_NAME}" == "aws1" ]; then
       # --- CREATE ELB LOADBALANCER ---
       SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
@@ -3318,11 +3314,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PAS ACCESS CREDENTIALS"
-  echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
-  echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
+  if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
+    echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
+    echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
+  else
+    echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
+    echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
+  fi
   echo ""
-
-#kkkkkk
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
