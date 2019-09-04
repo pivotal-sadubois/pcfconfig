@@ -564,17 +564,21 @@ if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   echo "dns_suffix         = \"${DNS_DOMAIN}\""                                >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+
+  if [ "$TLS_CERTIFICATE" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then 
+    cat $TLS_CERTIFICATE >> $TF_VARFILE
+  fi
+
   echo "SSL_CERT"                                                              >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+
+  if [ "$TLS_CERTIFICATE" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then 
+    cat $TLS_PRIVATE_KEY >> $TF_VARFILE
+  fi
+
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 fi
-
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-
-echo uuuuuuuuuuuuuuuuuu
-exit 1
 
 if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
   echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
