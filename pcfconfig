@@ -570,6 +570,11 @@ if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 fi
 
+echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+
+echo uuuuuuuuuuuuuuuuuu
+exit 1
 
 if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
   echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE

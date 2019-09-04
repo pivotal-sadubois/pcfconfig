@@ -2472,7 +2472,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   cf create-space -o pivotal demo > /dev/null 2>&1; ret=$?
   if [ ${ret} -ne 0 ]; then
     echo "ERROR: failled to create space"
-    echo "       => cf cf create-space -o pivotal demo"
+    echo "       => cf create-space -o pivotal demo"
     exit 1
   fi
 
@@ -2493,10 +2493,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   fi
 
   messagePrint " - Add User $PAS_ADMIN_USER to space (demo) with role:" "SpaceManager"
-  cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceManager > /dev/null 2>&1; ret=$?
+  cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceDeveloper > /dev/null 2>&1; ret=$?
   if [ ${ret} -ne 0 ]; then
     echo "ERROR: failed to add user $PAS_ADMIN_USER to space demo"
-    echo "       => cf cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceManager"
+    echo "       => cf cf set-space-role $PAS_ADMIN_USER pivotal demo SpaceDeveloper"
     exit 1
   fi
 
@@ -3325,11 +3325,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   if [ "${TLS_CUSTOMER_CERT}" -eq 1 ]; then
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
+    echo "cf target -o pivotal -s demo"
     echo ""
   else
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
-    echo ""
+    echo "cf target -o pivotal -s demo"
   fi
 fi
 

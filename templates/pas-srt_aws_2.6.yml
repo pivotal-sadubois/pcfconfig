@@ -29,6 +29,7 @@ product-properties:
   .diego_brain.starting_container_count_maximum:
     value: 200
 # ha_proxy.skip_cert_verify: true resolve mysql_monitor issue
+# Disable SSL certificate verification for this environment
   .ha_proxy.skip_cert_verify:
     value: ((skip_cert_verify))
   .mysql.cli_history:
