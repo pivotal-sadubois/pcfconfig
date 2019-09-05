@@ -3365,6 +3365,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   cnt=$(kubectl get namespace | egrep -c "^ingress ")
   if [ $cnt -eq 0 ]; then
     HELM=$(which helm)
+echo "HELM:$HELM"
     if [ ! -x "$HELM" ]; then
       echo "ERROR: unable to find the helm utility"
       exit 1
