@@ -629,6 +629,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
     echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
     exit 1
   fi
+exit 1
 
   cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 

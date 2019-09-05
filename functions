@@ -1080,11 +1080,11 @@ cleanAWSenv() {
                 egrep "^${ENV_NAME}-"); do
     messagePrint " - Delete S3 Bucket:" "$bucket"
     aws s3api --region=$AWS_LOCATION delete-bucket --bucket $bucket > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      echo "ERROR: failled to delete S3 Bucket: $nam"
-      echo "aws s3api --region $AWS_LOCATION delete-bucket --bucket $bucket"
-      #exit 1
-    fi
+    #if [ $? -ne 0 ]; then
+    #  echo "ERROR: failled to delete S3 Bucket: $nam"
+    #  echo "aws s3api --region $AWS_LOCATION delete-bucket --bucket $bucket"
+    #  exit 1
+    #fi
   done
 
   # --- DELETE EBS VOLUMES
