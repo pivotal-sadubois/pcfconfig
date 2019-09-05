@@ -378,8 +378,6 @@ EOF
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
           jq -r ".Reservations[].Instances[].State.Name")
       messagePrint " - Verify Instance: $ins" "$stt"
-echo "aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins"
-echo "STT:$stt"
       if [ "${stt}" == "stopped" ]; then
         messagePrint " - Starting Instance: $ins" ""
         aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
