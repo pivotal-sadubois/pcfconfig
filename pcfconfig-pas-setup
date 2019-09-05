@@ -3363,6 +3363,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   pks get-credentials pks-cluster-1 > /dev/null 2>&1
   kubectl config use-context $cluster > /dev/null 2>&1
   cnt=$(kubectl get namespace | egrep -c "^ingress ")
+hostname
   if [ $cnt -eq 0 ]; then
     HELM=$(which helm)
 echo "HELM:$HELM"
