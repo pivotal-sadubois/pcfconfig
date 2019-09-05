@@ -3362,10 +3362,21 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
   pks get-credentials pks-cluster-1 > /dev/null 2>&1
   kubectl config use-context $cluster > /dev/null 2>&1
+  cnt=$(kubectl get namespace | egrep -c "^ingress ")
+  if [ $cnt -eq 0 ]; then
+    HELM=$(which helm)
+    if [ ! -x "$HELM" ]; then
+      echo "ERROR: unable to find the helm utility"
+      exit 1
+    fi
+
+echo gaga
+    #kubectl create namespace ingress
+
+  fi
 
   #kubectl delete service/kubernetes-dashboard -n kube-system
   #kubectl expose deployment.apps/kubernetes-dashboard --type=LoadBalancer --port=8080 -n kube-system
-
 
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
