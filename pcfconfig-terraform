@@ -3363,16 +3363,48 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   pks get-credentials pks-cluster-1 > /dev/null 2>&1
   kubectl config use-context $cluster > /dev/null 2>&1
   cnt=$(kubectl get namespace | egrep -c "^ingress ")
-hostname
+
   if [ $cnt -eq 0 ]; then
     HELM=$(which helm)
-echo "HELM:$HELM"
     if [ ! -x "$HELM" ]; then
       echo "ERROR: unable to find the helm utility"
       exit 1
     fi
 
-echo gaga
+#gggggg
+cat << EOF > /tmp/helm-auth.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: tiller
+ namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+ name: tiller
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: cluster-admin
+subjects:
+ - kind: ServiceAccount
+   name: tiller
+   namespace: kube-system
+EOF
+
+    # --- INSTALLING HELM ---
+    helm init --history-max 200 > /dev/null 2>&1
+    helm repo update > /dev/null 2>&1
+    kubectl apply -f /tmp/helm-auth.yml > /dev/null 2>&1
+    helm init --service-account tiller > /dev/null 2>&1
+    helm install stable/nginx-ingress \
+	--name nginx \
+	--set rbac.create=true \
+	--namespace ingress \
+	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+
     #kubectl create namespace ingress
 
   fi
