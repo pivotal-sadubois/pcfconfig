@@ -1528,6 +1528,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "WARNING: Your have pending changes '${pending}' for the OpsManager:"
     $OM $OM_LOGIN pending-changes
 
+#hallo
+exit 1
     echo ""
     echo "Applying Changes to OpsManager"
     if [ $DEBUG -gt 0 ]; then
@@ -1585,6 +1587,8 @@ echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSM
   
 #XXX gcloud projects add-iam-policy-binding  pa-sadubois-4ecf9e2c --member=serviceAccount:pcfconfig@pa-sadubois-4ecf9e2c.iam.gserviceaccount.com --role=roles/browser
 
+#hallo
+exit 1
     if [ $NO_APPLY -eq 0 ]; then
       echo "Applying Changes to OpsManager"
       i=1; ret=1; 
