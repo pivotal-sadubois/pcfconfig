@@ -172,23 +172,23 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
 
       # --- CREATE NEW KEY IF PEM FILE IS MISSING ---
       if [ ! -s ~/.ssh/${JUMP_HOST}.pem ]; then
-        messagePrint " - Missing pem file, deleting Key Pair" "pcfjump"
-        aws ec2 --region=$AWS_REGION delete-key-pair --key-name pcfjump
+        messagePrint " - Missing pem file, deleting Key Pair" "${JUMP_HOST}"
+        aws ec2 --region=$AWS_REGION delete-key-pair --key-name ${JUMP_HOST}
       fi
 
-      aws ec2 --region=$AWS_REGION describe-key-pairs --key-names pcfjump > /dev/null 2>&1
+      aws ec2 --region=$AWS_REGION describe-key-pairs --key-names ${JUMP_HOST} > /dev/null 2>&1
       if [ $? -ne 0 ]; then
-        messagePrint " - Creating Key Pair" "pcfjump"
-        aws ec2 --region=$AWS_REGION create-key-pair --key-name pcfjump \
+        messagePrint " - Creating Key Pair" "${JUMP_HOST}"
+        aws ec2 --region=$AWS_REGION create-key-pair --key-name ${JUMP_HOST} \
                 --query 'KeyMaterial' --output text > ~/.ssh/${JUMP_HOST}.pem 2>/dev/null
         chmod 600 ~/.ssh/${JUMP_HOST}.pem
         if [ $? -ne 0 ]; then
           echo "ERROR: Creating Key Pairs failed"
-          echo "       => aws ec2 --region=$AWS_REGION create-key-pair --key-name pcfjump  \\"
+          echo "       => aws ec2 --region=$AWS_REGION create-key-pair --key-name ${JUMP_HOST}  \\"
           echo "                  --query 'KeyMaterial' --output text > ~/.ssh/${JUMP_HOST}.pem"; exit 1
         fi
       else
-        messagePrint " - Verify Key Pair" "pcfjump"
+        messagePrint " - Verify Key Pair" "${JUMP_HOST}"
       fi
   
       # --- CREATE VPC ---
@@ -323,12 +323,12 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
 
       messagePrint " - Create Instance" "pcfjump"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
-             --instance-type t2.micro --key-name pcfjump --count 1 --subnet-id $sid --associate-public-ip-address \
-             --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'
+             --instance-type t2.micro --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
+             --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]' > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
-        echo "                  --instance-type t2.micro --key-name pcfjump --subnet-id $sid \\"
+        echo "                  --instance-type t2.micro --key-name ${JUMP_HOST} --subnet-id $sid \\"
         echo "                  --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'"
         exit 1
       else

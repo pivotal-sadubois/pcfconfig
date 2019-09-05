@@ -1584,11 +1584,8 @@ echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSM
       $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
         --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }' > /dev/null 2>&1
     fi
-  
-#XXX gcloud projects add-iam-policy-binding  pa-sadubois-4ecf9e2c --member=serviceAccount:pcfconfig@pa-sadubois-4ecf9e2c.iam.gserviceaccount.com --role=roles/browser
-
-#hallo
-exit 1
+echo "pcfconfig gaga" 
+exit
     if [ $NO_APPLY -eq 0 ]; then
       echo "Applying Changes to OpsManager"
       i=1; ret=1; 

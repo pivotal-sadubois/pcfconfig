@@ -204,10 +204,7 @@ echo "########### JUMP SERVER ############"
 
   checkCloudCLI
   checkOpsMantools
-echo gaga0
   installJumpHost
-echo gaga1
-echo "CLOUD_PROVIDER:$CLOUD_PROVIDER"
 
   if [ "${CLOUD_PROVIDER}" == "azure" ]; then
     GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
@@ -567,6 +564,7 @@ if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   echo "dns_suffix         = \"${DNS_DOMAIN}\""                                >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+echo "TLS_CERTIFICATE:$TLS_CERTIFICATE gaga"
 
   if [ "$TLS_CERTIFICATE" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then 
     cat $TLS_CERTIFICATE >> $TF_VARFILE
