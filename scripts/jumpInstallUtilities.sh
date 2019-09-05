@@ -91,5 +91,11 @@ if [ ! -x /usr/bin/bin/pks ]; then
   mv $FILE_NAME /usr/local/bin/pks
 fi
 
+if [ ! -x /snap/bin/helm ]; then 
+  echo "- Installing Helm Utility"
+  sudo snap install helm --classic >/dev/null 2>&1
+  sudo ln -s /snap/bin/helm /usr/bin/helm
+fi
+
 touch  /jump_software_installed
 
