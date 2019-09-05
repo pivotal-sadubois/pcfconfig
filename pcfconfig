@@ -204,7 +204,10 @@ echo "########### JUMP SERVER ############"
 
   checkCloudCLI
   checkOpsMantools
+echo gaga0
   installJumpHost
+echo gaga1
+echo "CLOUD_PROVIDER:$CLOUD_PROVIDER"
 
   if [ "${CLOUD_PROVIDER}" == "azure" ]; then
     GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
