@@ -3423,15 +3423,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     done
 
 #gggggggggggggggg
-echo xxxx1
     AWS_ID=$(echo $rtt | awk -F '-' '{ print $1 }')
 echo "AWS_ID:$AWS_ID"
-echo xxxx2
     AWS_LB="k8s-master-$cluster"
 echo "AWS_LB:$AWS_LB"
-echo xxxx3
-echo "aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB"
-exit 1
     AWS_SG=$(aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
              jq -r '.LoadBalancerDescriptions[].SecurityGroups[]') 
 echo xxxx4
@@ -3439,13 +3434,16 @@ echo xxxx4
              jq -r '.LoadBalancerDescriptions[].VPCId') 
 echo "aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB"
 echo xxxx5
+echo "aws ec2 --region $AWS_REGION describe-security-groups"
 
     for sg in $(aws ec2 --region $AWS_REGION describe-security-groups | jq -r '.SecurityGroups[].GroupId'); do
       aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
       des=$(jq -r '.SecurityGroups[].Description' /tmp/$$_sg)
       nam=$(jq -r '.SecurityGroups[].GroupName' /tmp/$$_sg)
+echo "aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg"
 
 echo "DES:$des NAM:$nam"
+exit 1
 
     done
 
