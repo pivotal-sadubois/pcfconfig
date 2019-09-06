@@ -2110,6 +2110,9 @@ EOF
     echo "Configuring PKS Tile (${PKS_VERSION})"
     messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
 
+#kkkkkkkkkk
+echo "XXXXXXXXXx => TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "XXXXXXXXXx => TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
