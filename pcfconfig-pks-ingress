@@ -3417,7 +3417,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     rtt="pending"
-    while [ "${rtt}" != "pending" ]; do
+    while [ "${rtt}" == "pending" ]; do
       sleep 10
       rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
