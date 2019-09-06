@@ -3391,77 +3391,56 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
-  pks get-credentials $cluster > /dev/null 2>&1
-  kubectl config use-context $cluster > /dev/null 2>&1
-  cnt=$(kubectl get namespace | egrep -c "^ingress ")
+    pks get-credentials $cluster > /dev/null 2>&1
+    kubectl config use-context $cluster > /dev/null 2>&1
+    kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
 
-  if [ $cnt -eq 0 ]; then
-    HELM=$(which helm)
-    if [ ! -x "$HELM" ]; then
-      echo "ERROR: unable to find the helm utility"
-      exit 1
-    fi
+    cnt=$(kubectl get namespace | egrep -c "^ingress ")
 
-#gggggg
-cat << EOF > /tmp/helm-auth.yaml
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
- name: tiller
- namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
- name: tiller
-roleRef:
- apiGroup: rbac.authorization.k8s.io
- kind: ClusterRole
- name: cluster-admin
-subjects:
- - kind: ServiceAccount
-   name: tiller
-   namespace: kube-system
-EOF
+    if [ $cnt -eq 0 ]; then
+      HELM=$(which helm)
+      if [ ! -x "$HELM" ]; then
+        echo "ERROR: unable to find the helm utility"
+        exit 1
+      fi
 
-    # --- INSTALLING HELM ---
-    helm init --history-max 200 > /dev/null 2>&1
-    helm repo update > /dev/null 2>&1
-    kubectl apply -f /tmp/helm-auth.yaml > /dev/null 2>&1
+      # --- INSTALLING HELM ---
+      helm init --history-max 200 > /dev/null 2>&1
+      helm repo update > /dev/null 2>&1
+      kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
 echo "gaga8 $?"
-    helm init --service-account tiller > /dev/null 2>&1
+      helm init --service-account tiller > /dev/null 2>&1
 echo "gaga9 $?"
-    helm install stable/nginx-ingress \
-	--name nginx \
-	--set rbac.create=true \
-	--namespace ingress \
-	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+      helm install stable/nginx-ingress \
+  	--name nginx \
+  	--set rbac.create=true \
+  	--namespace ingress \
+  	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
 echo "gaga10 $?"
 
-    rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+      rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
 echo "RTT:$rtt"
-    #kubectl create namespace ingress
+      #kubectl create namespace ingress
 
   fi
 
-  #kubectl delete service/kubernetes-dashboard -n kube-system
-  #kubectl expose deployment.apps/kubernetes-dashboard --type=LoadBalancer --port=8080 -n kube-system
-
-
+    #kubectl delete service/kubernetes-dashboard -n kube-system
+    #kubectl expose deployment.apps/kubernetes-dashboard --type=LoadBalancer --port=8080 -n kube-system
 
     echo "--------------------------------------------------"
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
     echo "--------------------------------------------------"
     echo "pks get-credentials $cluster"
-    echo "kubectl config use-context $cluster"
-    echo "kubectl cluster-info                  #Kubernetes Cluster Infos"
-    echo "kubectl proxy                         #To start Kubernetes Dashboard"
+    echo "kubectl config use-context $cluster                         # Set kubernetes context to $cluster"
+    echo "kubectl create clusterrolebinding add-on-cluster-admin \\   # Get ClusterAdmin Role"
+    echo "        --clusterrole=cluster-admin \\"
+    echo "        --serviceaccount=kube-system:default"               
+    echo "kubectl cluster-info                                        # Kubernetes Cluster Infos"
+    echo "kubectl proxy                                               # To start Kubernetes Dashboard"
     echo "  => WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
     echo "  => Token..: $token"
   done
 
- # echo "pks get-credentials $PKS_CLUSTER_1_NAME"
   echo ""
 
   exit 0
