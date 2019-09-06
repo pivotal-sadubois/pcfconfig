@@ -3408,18 +3408,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       helm init --history-max 200 > /dev/null 2>&1
       helm repo update > /dev/null 2>&1
       kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
-echo "gaga8 $?"
       helm init --service-account tiller > /dev/null 2>&1
-echo "gaga9 $?"
       helm install stable/nginx-ingress \
   	--name nginx \
   	--set rbac.create=true \
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
-echo "gaga10 $?"
 
       rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
-echo "RTT:$rtt"
       #kubectl create namespace ingress
 
   fi
@@ -3431,8 +3427,8 @@ echo "RTT:$rtt"
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
     echo "--------------------------------------------------"
     echo "pks get-credentials $cluster"
-    echo "kubectl config use-context $cluster                         # Set kubernetes context to $cluster"
-    echo "kubectl create clusterrolebinding add-on-cluster-admin \\   # Get ClusterAdmin Role"
+    echo "kubectl config use-context $cluster                   # Set kubernetes context to $cluster"
+    echo "kubectl create clusterrolebinding add-on-cluster-admin \\    # Get ClusterAdmin Role"
     echo "        --clusterrole=cluster-admin \\"
     echo "        --serviceaccount=kube-system:default"               
     echo "kubectl cluster-info                                        # Kubernetes Cluster Infos"
