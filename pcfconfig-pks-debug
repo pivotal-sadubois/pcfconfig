@@ -3461,13 +3461,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_LB" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
 
-echo "DNSLB_ZONEID:$DNSLB_ZONEID"
-echo "ZONE_ID:$ZONE_ID"
-echo "ZONE_ID_STR:$ZONE_ID_STR"
-echo "DNSLB:$DNSLB"
-#gffffffffffffff
-
-
       if [ "${ZONE_ID}" != "" ]; then
         ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
 
@@ -3488,11 +3481,15 @@ echo "DNSLB:$DNSLB"
 }
 EOF
 
-echo "aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record"
 
-exit 1
         echo "-----------------------------------------------------------------------------------------------------------"
-        aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record
+        aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
+        if [ $? -ne 0 ]; then 
+          echo "ERROR: failed to add DNS for $ZONE"
+          echo "       => aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} \\"
+          echo "          --change-batch file:///tmp/$$_zone_record"
+          exit 1
+        fi
         echo "-----------------------------------------------------------------------------------------------------------"
 
         cp /tmp/$$_zone_record /tmp/aws_zone_record
