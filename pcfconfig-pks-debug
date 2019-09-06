@@ -3387,9 +3387,15 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     let i=i+1; sleep 10
   done
 
+  for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+    userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+    token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+
 echo gaga1
-  pks get-credentials pks-cluster-1 > /dev/null 2>&1
+echo "pks get-credentials $cluster"
+  pks get-credentials $cluster > /dev/null 2>&1
 echo "gaga2 $?"
+echo "kubectl config use-context $cluster"
   kubectl config use-context $cluster > /dev/null 2>&1
 echo "kubectl config use-context $cluster "
 echo xxx
@@ -3454,14 +3460,12 @@ echo "RTT:$rtt"
   #kubectl delete service/kubernetes-dashboard -n kube-system
   #kubectl expose deployment.apps/kubernetes-dashboard --type=LoadBalancer --port=8080 -n kube-system
 
-  for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-    userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-    token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+
 
     echo "--------------------------------------------------"
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
     echo "--------------------------------------------------"
-    echo "pks get-credentials pks-cluster-1"
+    echo "pks get-credentials $cluster"
     echo "kubectl config use-context $cluster"
     echo "kubectl cluster-info                  #Kubernetes Cluster Infos"
     echo "kubectl proxy                         #To start Kubernetes Dashboard"
