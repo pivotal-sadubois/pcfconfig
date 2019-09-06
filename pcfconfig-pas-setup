@@ -1528,8 +1528,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "WARNING: Your have pending changes '${pending}' for the OpsManager:"
     $OM $OM_LOGIN pending-changes
 
-#hallo
-exit 1
     echo ""
     echo "Applying Changes to OpsManager"
     if [ $DEBUG -gt 0 ]; then
@@ -1863,6 +1861,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
 
+#aaaaaaaaaaaaaaaaaaaaa
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -2234,12 +2233,15 @@ EOF
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
+echo "kkkkkkkkkkkkk"
 echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
       echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
+
+exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
@@ -3405,6 +3407,8 @@ EOF
 	--namespace ingress \
 	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
 
+    rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+echo "RTT:$rtt"
     #kubectl create namespace ingress
 
   fi
