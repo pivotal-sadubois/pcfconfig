@@ -3391,6 +3391,9 @@ echo gaga1
   pks get-credentials pks-cluster-1 > /dev/null 2>&1
 echo "gaga2 $?"
   kubectl config use-context $cluster > /dev/null 2>&1
+echo "kubectl config use-context $cluster "
+echo xxx
+kubectl config use-context $cluster
 echo "gaga3 $?"
   cnt=$(kubectl get namespace | egrep -c "^ingress ")
 echo gaga4
@@ -3425,16 +3428,22 @@ subjects:
    namespace: kube-system
 EOF
 
+echo gaga5
     # --- INSTALLING HELM ---
     helm init --history-max 200 > /dev/null 2>&1
+echo "gaga6 $?"
     helm repo update > /dev/null 2>&1
+echo "gaga7 $?"
     kubectl apply -f /tmp/helm-auth.yml > /dev/null 2>&1
+echo "gaga8 $?"
     helm init --service-account tiller > /dev/null 2>&1
+echo "gaga9 $?"
     helm install stable/nginx-ingress \
 	--name nginx \
 	--set rbac.create=true \
 	--namespace ingress \
 	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+echo "gaga10 $?"
 
     rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
 echo "RTT:$rtt"
