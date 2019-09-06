@@ -3417,7 +3417,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     rtt="pending"
-    while [ "${rtt}" -ne "pending" ]; do
+    while [ "${rtt}" != "pending" ]; do
       sleep 10
       rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
@@ -3434,7 +3434,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
     echo "--------------------------------------------------"
     echo "pks get-credentials $cluster"
-    echo "kubectl config use-context $cluster                   # Set kubernetes context to $cluster"
+    echo "kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
     echo "kubectl create clusterrolebinding add-on-cluster-admin \\    # Get ClusterAdmin Role"
     echo "        --clusterrole=cluster-admin \\"
     echo "        --serviceaccount=kube-system:default"               
