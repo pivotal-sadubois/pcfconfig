@@ -3381,7 +3381,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   echo ""
 
   i=1
-  while [ $i -lt 10 ]; then
+  while [ $i -lt 10 ]; do
     pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
     if [ $? -eq 0 ]; break; fi
     let i=i+1; sleep 10
