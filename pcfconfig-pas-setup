@@ -2573,7 +2573,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
-#sacha
   TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
@@ -3458,6 +3457,53 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
       echo "RTT:$rtt"
     fi
+
+    if [ "${ROUTE53_TOKEN}" != "" ]; then
+      DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
+        jq -r '.LoadBalancerDescriptions[0].DNSName')
+      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
+        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+      ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+
+echo "ZONE_ID:$ZONE_ID"
+echo "ZONE_ID_STR:$ZONE_ID_STR"
+
+exit 1
+
+#cluster
+#ppppp
+      if [ "${ZONE_ID}" != "" ]; then
+        ZONE="${n}.${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}"
+
+    cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+{
+            "Comment": "CREATE/DELETE/UPSERT a record ",
+            "Changes": [{
+            "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                                    "Name": "FQHN.",
+                                    "Type": "A",
+                                    "AliasTarget": {
+                                                    "HostedZoneId": "ZZID",
+                                                    "DNSName": "dualstack.AAAA.",
+                                                    "EvaluateTargetHealth": true
+                                                }
+}}]
+}
+EOF
+
+
+        echo "-----------------------------------------------------------------------------------------------------------"
+        aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record
+        echo "-----------------------------------------------------------------------------------------------------------"
+
+        cp /tmp/$$_zone_record /tmp/aws_zone_record
+        rm -f /tmp/$$_zone_record
+      fi
+    fi
+
 
     #kubectl create namespace ingress
 
