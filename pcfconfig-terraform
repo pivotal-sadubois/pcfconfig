@@ -3422,6 +3422,28 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
 
+#gggggggggggggggg
+    AWS_ID=$(echo $rtt | awk -F '-' '{ print $1 }')
+    AWS_LB=$(k8s-master-$cluster)
+    AWS_SG=$(aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
+             jq -r '.LoadBalancerDescriptions[].SecurityGroups[]') 
+    AWS_VP=$(aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
+             jq -r '.LoadBalancerDescriptions[].VPCId') 
+
+    for sg in $(aws ec2 --region $AWS_REGION describe-security-groups | jq -r '.SecurityGroups[].GroupId'); do
+      aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
+      des=$(jq -r '.SecurityGroups[].Description' /tmp/$$_sg)
+      nam=$(jq -r '.SecurityGroups[].GroupName' /tmp/$$_sg)
+
+echo "DES:$des NAM:$nam"
+
+    done
+
+    echo "AWS_ID:$AWS_ID"
+    echo "AWS_LB:$AWS_LB"
+    echo "AWS_SG:$AWS_SG"
+    echo "AWS_VP:$AWS_VP"
+
     echo "RTT:$rtt"
 
     #kubectl create namespace ingress
