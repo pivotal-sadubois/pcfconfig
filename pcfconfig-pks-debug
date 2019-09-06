@@ -3387,9 +3387,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     let i=i+1; sleep 10
   done
 
+echo gaga1
   pks get-credentials pks-cluster-1 > /dev/null 2>&1
+echo "gaga2 $?"
   kubectl config use-context $cluster > /dev/null 2>&1
+echo "gaga3 $?"
   cnt=$(kubectl get namespace | egrep -c "^ingress ")
+echo gaga4
 
   if [ $cnt -eq 0 ]; then
     HELM=$(which helm)
