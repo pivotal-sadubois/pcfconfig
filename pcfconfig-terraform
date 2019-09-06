@@ -3001,8 +3001,6 @@ EOF
       done
     fi
 
-#jjjjjjj
-
     ##############################################################################################
     ######################################## DEBUG INFOS #########################################
     ##############################################################################################
@@ -3458,10 +3456,16 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     if [ "${ROUTE53_TOKEN}" != "" ]; then
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+      DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+          jq -r '.LoadBalancerDescriptions[0].DNSName')
+      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_LB" | \
+          jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
 
+echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 echo "ZONE_ID:$ZONE_ID"
 echo "ZONE_ID_STR:$ZONE_ID_STR"
 echo "DNSLB:$DNSLB"
+#gffffffffffffff
 
 
       if [ "${ZONE_ID}" != "" ]; then
