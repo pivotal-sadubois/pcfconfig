@@ -3424,6 +3424,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
 #gggggggggggggggg
     AWS_ID=$(echo $rtt | awk -F '-' '{ print $1 }')
+echo "AWS_ID:$AWS_ID"
     AWS_LB="k8s-master-$cluster"
     AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
              jq -r '.LoadBalancerDescriptions[].SecurityGroups[]') 
@@ -3434,10 +3435,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
       des=$(jq -r '.SecurityGroups[].Description' /tmp/$$_sg)
       nam=$(jq -r '.SecurityGroups[].GroupName' /tmp/$$_sg)
-echo "aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg"
 
 echo "DES:$des NAM:$nam"
-exit 1
 
     done
 
