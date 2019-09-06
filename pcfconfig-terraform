@@ -3463,6 +3463,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
       if [ "${ZONE_ID}" != "" ]; then
         ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+        ZONE="*.apps.${DNS_PREFIX}.${DNS_SUFFIX}"
 
     cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
@@ -3482,7 +3483,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 EOF
 
 
-        echo "-----------------------------------------------------------------------------------------------------------"
         aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
           echo "ERROR: failed to add DNS for $ZONE"
@@ -3490,7 +3490,6 @@ EOF
           echo "          --change-batch file:///tmp/$$_zone_record"
           exit 1
         fi
-        echo "-----------------------------------------------------------------------------------------------------------"
 
         cp /tmp/$$_zone_record /tmp/aws_zone_record
         rm -f /tmp/$$_zone_record
