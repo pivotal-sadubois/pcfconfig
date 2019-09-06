@@ -3440,10 +3440,13 @@ echo "AWS_ID:$AWS_ID"
         cnt=$(echo "${nam}" | egrep -c "\-$AWS_ID") 
         if [ "${cnt}" -gt 0 ]; then
           AWS_SG_NEW=$sg
+echo xxxxxxxxxxxxxxxxxxxxxxxx
         fi
       done
 echo "AWS_SG_NEW:$AWS_SG_NEW"
 echo "DES:$des NAM:$nam"
+
+#aws elb --region $AWS_REGION apply-security-groups-to-load-balancer --load-balancer-name k8s-master-pks-cluster-1 --security-groups sg-05b6c50f76cfa416f sg-0538eb82a9ea94578
 
       cnt=$(echo "${AWS_SG}" | egrep -c "$AWS_SG_NEW") 
       if [ $cnt -eq 0 ]; then 
