@@ -3415,10 +3415,17 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
 
-      rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+      rtt="pending"
+      while [ "${rtt}" -ne "pending" ]; do
+        sleep 10
+        rtt=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+      done
+
+      echo "RTT:$rtt"
+
       #kubectl create namespace ingress
 
-  fi
+    fi
 
     #kubectl delete service/kubernetes-dashboard -n kube-system
     #kubectl expose deployment.apps/kubernetes-dashboard --type=LoadBalancer --port=8080 -n kube-system
