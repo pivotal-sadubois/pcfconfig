@@ -2253,15 +2253,12 @@ echo "XXXXXXXXXx => TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
-echo "kkkkkkkkkkkkk"
 echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
       echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
-
-exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
