@@ -3439,14 +3439,21 @@ echo "AWS_ID:$AWS_ID"
         nam=$(jq -r '.SecurityGroups[].GroupName' /tmp/$$_sg)
         cnt=$(echo "${nam}" | egrep -c "\-$AWS_ID") 
         if [ "${cnt}" -gt 0 ]; then
-          AWS_SGID=$nam
+          AWS_SG_NEW=$sg
         fi
       done
+echo "AWS_SG_NEW:$AWS_SG_NEW"
+echo "DES:$des NAM:$nam"
+
+      cnt=$(echo "${AWS_SG}" | egrep -c "$AWS_SG_NEW") 
+      if [ $cnt -eq 0 ]; then 
+        a=1
+      fi
 
       echo "AWS_ID:$AWS_ID"
       echo "AWS_LB:$AWS_LB"
       echo "AWS_SG:$AWS_SG"
-      echo "AWS_SGID:$AWS_SGID"
+      echo "AWS_SG_NEW:$AWS_SG_NEW"
       echo "AWS_VP:$AWS_VP"
 
       echo "RTT:$rtt"
