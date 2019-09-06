@@ -3437,7 +3437,7 @@ echo "AWS_ID:$AWS_ID"
         aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
         des=$(jq -r '.SecurityGroups[].Description' /tmp/$$_sg)
         nam=$(jq -r '.SecurityGroups[].GroupName' /tmp/$$_sg)
-        cnt=$(echo "${nam}" | egrep -c "-$AWS_ID") 
+        cnt=$(echo "${nam}" | egrep -c "\-$AWS_ID") 
         if [ "${cnt}" -gt 0 ]; then
           AWS_SGID=$nam
         fi
