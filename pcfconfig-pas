@@ -3424,7 +3424,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
 #gggggggggggggggg
     AWS_ID=$(echo $rtt | awk -F '-' '{ print $1 }')
-    AWS_LB=$(k8s-master-$cluster)
+    AWS_LB="k8s-master-$cluster"
     AWS_SG=$(aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
              jq -r '.LoadBalancerDescriptions[].SecurityGroups[]') 
     AWS_VP=$(aws ec2 --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
