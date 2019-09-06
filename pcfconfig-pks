@@ -3439,8 +3439,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
         if [ "${cnt}" -gt 0 ]; then
           AWS_SG_NEW=$sg
           aws elb --region $AWS_REGION apply-security-groups-to-load-balancer --load-balancer-name $AWS_LB \
-                  --security-groups $AWS_SG $AWS_SG_NEW
-
+                  --security-groups $AWS_SG $AWS_SG_NEW > /dev/null 2>&1
+          if [ $? -ne 0 ]; then 
+            echo "ERROR: failed to set SecurityGroup"
+            echo "       => aws elb --region $AWS_REGION apply-security-groups-to-load-balancer \\"
+            echo "                  --load-balancer-name $AWS_LB --security-groups $AWS_SG $AWS_SG_NEW"
+            exit 1
+          fi
         fi
       done
 
@@ -3451,11 +3456,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     if [ "${ROUTE53_TOKEN}" != "" ]; then
-      #DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
-      #  jq -r '.LoadBalancerDescriptions[0].DNSName')
-      #DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "k8s-master-$n" | \
-      #  jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
-
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
 
@@ -3464,10 +3464,8 @@ echo "ZONE_ID_STR:$ZONE_ID_STR"
 echo "DNSLB:$DNSLB"
 
 
-#cluster
-#ppppp
       if [ "${ZONE_ID}" != "" ]; then
-        ZONE="${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+        ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
 
     cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
