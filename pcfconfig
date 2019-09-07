@@ -211,6 +211,11 @@ echo "########### JUMP SERVER ############"
     PCFHOME="~/pcfconfig"
     JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
     SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@$JUMP_HOST"
+    SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+echo "$SSHPAR"
+
+exit 1
+
 
     echo ""
     echo "# --- JUMP HOST ACCESS ---"
@@ -239,7 +244,6 @@ echo "########### JUMP SERVER ############"
       scp -rqo StrictHostKeyChecking=no ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
       scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
     fi
-
 
     ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
 
