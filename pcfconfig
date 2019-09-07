@@ -212,11 +212,11 @@ echo "########### JUMP SERVER ############"
     JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
     SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@$JUMP_HOST"
     SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
+    SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 ubuntu@$JUMP_HOST"
 
     echo ""
     echo "# --- JUMP HOST ACCESS ---"
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-    echo "ssh -qo StrictHostKeyChecking=no ubuntu@$JUMP_HOST"
 
     # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
     ret=1
