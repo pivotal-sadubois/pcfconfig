@@ -3385,22 +3385,31 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   done
 
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo gaga1
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+echo gaga2
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+echo gaga3
 
     pks get-credentials $cluster > /dev/null 2>&1
+echo gaga4
     kubectl config use-context $cluster > /dev/null 2>&1
+echo gaga5
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
+echo gaga6
 
     cnt=$(kubectl get namespace | egrep -c "^ingress ")
+echo gaga7
 
     if [ $cnt -eq 0 ]; then
+echo gaga8
       HELM=$(which helm)
       if [ ! -x "$HELM" ]; then
         echo "ERROR: unable to find the helm utility"
         exit 1
       fi
 
+echo gaga9
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
       helm repo update > /dev/null 2>&1
