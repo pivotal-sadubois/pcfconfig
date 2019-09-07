@@ -3442,6 +3442,7 @@ echo gaga14
       AWS_VP=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
                jq -r '.LoadBalancerDescriptions[].VPCId') 
 
+echo "DNSLB:$DNSLB"
 echo "AWS_ID:$AWS_ID"
 echo "AWS_SG:$AWS_SG"
 echo "AWS_VP:$AWS_VP"
@@ -3474,9 +3475,9 @@ echo "AWS_VP:$AWS_VP"
     if [ "${ROUTE53_TOKEN}" != "" ]; then
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-      DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" | \
+      DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].DNSName')
-      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_LB" | \
+      DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
 
       if [ "${ZONE_ID}" != "" ]; then
