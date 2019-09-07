@@ -3412,14 +3412,19 @@ echo gaga8
 echo gaga9
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
+echo gaga10
       helm repo update > /dev/null 2>&1
+echo gaga11
       kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
+echo gaga12
       helm init --service-account tiller > /dev/null 2>&1
+echo gaga13
       helm install stable/nginx-ingress \
   	--name nginx \
   	--set rbac.create=true \
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+echo gaga14
     fi
 
     DNSLB="pending"
@@ -3440,7 +3445,6 @@ echo gaga9
 echo "AWS_ID:$AWS_ID"
 echo "AWS_SG:$AWS_SG"
 echo "AWS_VP:$AWS_VP"
-exit 1
       AWS_SGID=""
       for sg in $(aws ec2 --region $AWS_REGION describe-security-groups | jq -r '.SecurityGroups[].GroupId'); do
         aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
