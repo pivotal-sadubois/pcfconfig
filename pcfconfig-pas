@@ -3423,11 +3423,15 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
       AWS_LB="k8s-master-$cluster"
-      AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
+      AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
                jq -r '.LoadBalancerDescriptions[].SecurityGroups[]') 
-      AWS_VP=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_LB | \
+      AWS_VP=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
                jq -r '.LoadBalancerDescriptions[].VPCId') 
 
+echo "AWS_ID:$AWS_ID"
+echo "AWS_SG:$AWS_SG"
+echo "AWS_VP:$AWS_VP"
+exit 1
       AWS_SGID=""
       for sg in $(aws ec2 --region $AWS_REGION describe-security-groups | jq -r '.SecurityGroups[].GroupId'); do
         aws ec2 --region $AWS_REGION describe-security-groups --group-ids $sg > /tmp/$$_sg
