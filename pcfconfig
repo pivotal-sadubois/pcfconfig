@@ -212,10 +212,6 @@ echo "########### JUMP SERVER ############"
     JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
     SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@$JUMP_HOST"
     SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
-echo "$SSHPAR"
-
-exit 1
-
 
     echo ""
     echo "# --- JUMP HOST ACCESS ---"
@@ -229,13 +225,18 @@ exit 1
       [ $ret -ne 0 ] && sleep 10
     done
 
+echo gaga1
+
     echo "------------------------------ CLONE / UPDATE PCFCONFIG GIT RPOSITORY -------------------------------------"
     ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
+echo gaga2
     ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
+echo gaga3
 
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
     stt=$(ssh ${SSHPAR} -n "[ -f /jump_software_installed ] && echo true")
+echo "gaga4 STT:$stt"
     if [ "${stt}" == "" ]; then
       echo "----------------------------------------- INSTALL SOFTWARE ------------------------------------------------"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
