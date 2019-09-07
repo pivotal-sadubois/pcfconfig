@@ -246,9 +246,22 @@ echo "gaga4 STT:$stt"
       scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
-    ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_CERTIFICATE ubuntu@$JUMP_HOST:/tmp/tls_cert.pem
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_PRIVATE_KEY ubuntu@$JUMP_HOST:/tmp/tls_private_key.pem
+      scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_ROOT_CERT ubuntu@$JUMP_HOST:/tmp/tls_root_cert.pem
+
+      TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem --tls_root_cert /tmp/tls_root_cert.pem"
+      ARGS=$(echo "$CMDLINE_ARGS $TLSSTR" | sed -e 's/--jump-server//g')
+    else
+      ARGS=$(echo "$CMDLINE_ARGS" | sed -e 's/--jump-server//g')
+    fi
+
+    echo "# --- JUMP HOST ACCESS ---"
+    echo "ssh -qo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
 
     ssh ${SSHPAR} -n "~/pcfconfig/pcfconfig.sh $ARGS"
+    ssh ${SSHPAR} -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
 
     echo "# --- JUMP HOST ACCESS ---"
     echo "ssh -qo StrictHostKeyChecking=no ubuntu@$JUMP_HOST"
