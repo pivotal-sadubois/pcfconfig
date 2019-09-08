@@ -238,6 +238,7 @@ echo "########### JUMP SERVER ############"
           nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN"
       echo "-----------------------------------------------------------------------------------------------------------"
       #scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
+      scp -rqo StrictHostKeyChecking=no ~/.aws ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
     # --- LOGIN TO AZURE ---

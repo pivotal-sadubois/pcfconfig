@@ -3384,13 +3384,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     let i=i+1; sleep 10
   done
 
-  pks get-credentials cl1
-
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo gaga1
+    pks get-credentials $cluster > /dev/null 2>&1
+echo gaga2
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
-    pks get-credentials $cluster > /dev/null 2>&1
 echo gaga4
     kubectl config use-context $cluster > /dev/null 2>&1
 echo gaga5
@@ -3435,7 +3435,7 @@ echo gaga14
 echo gaga14
 echo "DNSLB:$DNSLB"
 #gggggggggggggggg
-    if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
+    if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
       AWS_LB="k8s-master-$cluster"
       AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
@@ -3473,21 +3473,32 @@ echo "AWS_VP:$AWS_VP"
       fi
     fi
 
-echo gaga15
-    if [ "${ROUTE53_TOKEN}" != "" ]; then
-echo gaga151
-echo "aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX}"
+    if [ "${TF_DEPLOYMENT}" == "azure" ]; then
+      DNS_NAME="*.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+      echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+
+      #az network dns record-set a list --resource-group azpks --zone-name azpks.pcfsdu.com
+      #az network dns record-set a add-record -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com" -a 40.74.1.33
+
+      #az network dns record-set a show -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com1"
+
+echo "az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
+echo "az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
+echo "az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
+
+    fi
+
+exit 1
+
+    if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
+      echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
-echo gaga152
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-echo gaga153
       DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].DNSName')
-echo gaga154
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
-echo gaga155
-
 
 echo "ZONE_ID:$ZONE_ID"
 echo "ZONE_ID_STR:$ZONE_ID_STR"
