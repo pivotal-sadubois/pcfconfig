@@ -237,8 +237,16 @@ echo "########### JUMP SERVER ############"
       ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
           nohup sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PIVNET_TOKEN"
       echo "-----------------------------------------------------------------------------------------------------------"
-      scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
+      #scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
     fi
+
+    stt=$(az group list > /dev/null 2>&1; stt=$?)
+    if [ "${stt}" -ne 0 ]; then
+      echo "------------------------------------ AZ-LOGIN -------------------------------------------"
+      az login 
+echo "$?; gagga"
+    fi
+
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_CERTIFICATE ubuntu@$JUMP_HOST:/tmp/tls_cert.pem
@@ -339,7 +347,7 @@ echo "########### JUMP SERVER ############"
       gcloud compute scp --zone=$ZONE --recurse ~/.aws pcfjump:~/ > /dev/null 2>&1
     fi
 
-    stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- gcloud compute instances list > /dev/null 2>&1; echo $?)
+    stt=$(gcloud compute ssh --zone=$ZONE pcfjump -- gcloud compute instances list > /dev/null 2>&1; stt=$?)
     if [ "${stt}" -ne 0 ]; then
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
       gcloud compute scp --zone=$ZONE $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
