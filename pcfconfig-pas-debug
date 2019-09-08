@@ -3408,16 +3408,22 @@ echo gaga8
         exit 1
       fi
 
+echo gaga9
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
+echo gaga10
       helm repo update > /dev/null 2>&1
+echo gaga11
       kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
+echo gaga12
       helm init --service-account tiller > /dev/null 2>&1
+echo gaga13
       helm install stable/nginx-ingress \
   	--name nginx \
   	--set rbac.create=true \
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+echo gaga14
     fi
 
     DNSLB="pending"
@@ -3426,6 +3432,9 @@ echo gaga8
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
 
+echo gaga14
+echo "1DNSLB:$DNSLB"
+echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
       AWS_LB="k8s-master-$cluster"
@@ -3444,25 +3453,18 @@ echo gaga8
       DNS_NAME="*.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
       echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
-      az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
-      if [ $? -eq 0 ]; then
-        az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME" > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
-          echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
-          echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
-          echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
-          exit 1
-        fi
-      fi
+      #az network dns record-set a list --resource-group azpks --zone-name azpks.pcfsdu.com
+      #az network dns record-set a add-record -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com" -a 40.74.1.33
 
-      az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
-      if [ $? -eq 0 ]; then
-        echo "ERROR: failed to create DNS record-set for $DNS_NAME"
-        echo "       => az network dns record-set a add-record -g $DNS_PREFIX \\"
-        echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
-        exit 1
-      fi
+      #az network dns record-set a show -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com1"
+
+echo "az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+echo "az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+echo "az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+
     fi
+
+exit 1
 
     if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
       echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
