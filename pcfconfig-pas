@@ -3453,16 +3453,26 @@ echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
       DNS_NAME="*.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
       echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
-      #az network dns record-set a list --resource-group azpks --zone-name azpks.pcfsdu.com
-      #az network dns record-set a add-record -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com" -a 40.74.1.33
+      az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME" > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
+          echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
+          echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+          exit 1
+        fi
+      fi
 
-      #az network dns record-set a show -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com1"
-
-echo "az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
-echo "az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
-echo "az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
-
+      az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        echo "ERROR: failed to create DNS record-set for $DNS_NAME"
+        echo "       => az network dns record-set a add-record -g $DNS_PREFIX \\"
+        echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+        exit 1
+      fi
     fi
+
 
 exit 1
 
