@@ -3440,7 +3440,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
       if [ $? -eq 0 ]; then
         az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
+        if [ $? -ne 0 ]; then
           echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
           echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
           echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
@@ -3448,8 +3448,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
         fi
       fi
 
-      az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
-      if [ $? -eq 0 ]; then
+      az network dns record-set a add-record -g $DNS_PREFIX -z "${DNS_PREFIX}.${DNS_SUFFIX}" -n $DNS_NAME > /dev/null 2>&1
+echo "az network dns record-set a add-record -g $DNS_PREFIX -z \"${DNS_PREFIX}.${DNS_SUFFIX}\" -n $DNS_NAME"
+      if [ $? -ne 0 ]; then
         echo "ERROR: failed to create DNS record-set for $DNS_NAME"
         echo "       => az network dns record-set a add-record -g $DNS_PREFIX \\"
         echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
