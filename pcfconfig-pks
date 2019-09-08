@@ -3434,7 +3434,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
-      DNS_NAME="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+      DNS_NAME="*.apps-${cluster}"
       echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
       az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
