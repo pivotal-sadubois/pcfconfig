@@ -3473,13 +3473,19 @@ echo "AWS_VP:$AWS_VP"
       fi
     fi
 
+echo gaga15
     if [ "${ROUTE53_TOKEN}" != "" ]; then
+echo gaga151
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+echo gaga152
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+echo gaga153
       DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].DNSName')
+echo gaga154
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+echo gaga155
 
 
 echo "ZONE_ID:$ZONE_ID"
