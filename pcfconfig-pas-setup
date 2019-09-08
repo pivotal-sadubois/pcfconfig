@@ -3384,12 +3384,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     let i=i+1; sleep 10
   done
 
+  pks get-credentials cl1
+
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo gaga1
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-echo gaga2
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
-echo gaga3
 
     pks get-credentials $cluster > /dev/null 2>&1
 echo gaga4
@@ -3433,6 +3432,8 @@ echo gaga14
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
 
+echo gaga14
+echo "DNSLB:$DNSLB"
 #gggggggggggggggg
     if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
@@ -3479,6 +3480,12 @@ echo "AWS_VP:$AWS_VP"
           jq -r '.LoadBalancerDescriptions[0].DNSName')
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+
+echo "ZONE_ID:$ZONE_ID"
+echo "ZONE_ID_STR:$ZONE_ID_STR"
+echo "DNSLB:$DNSLB"
+echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 
       if [ "${ZONE_ID}" != "" ]; then
         ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
