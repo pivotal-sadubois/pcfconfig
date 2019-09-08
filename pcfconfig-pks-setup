@@ -3476,6 +3476,7 @@ echo "AWS_VP:$AWS_VP"
 echo gaga15
     if [ "${ROUTE53_TOKEN}" != "" ]; then
 echo gaga151
+echo "aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX}"
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
 echo gaga152
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
