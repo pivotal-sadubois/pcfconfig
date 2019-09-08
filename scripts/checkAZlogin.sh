@@ -1,4 +1,5 @@
 #!/bin/bash
+echo xxxxxx
 
 stt=1
 while [ $stt -ne 0 ]; do
