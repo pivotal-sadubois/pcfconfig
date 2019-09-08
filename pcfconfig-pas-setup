@@ -3458,9 +3458,9 @@ echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
 
       #az network dns record-set a show -g azpks -z azpks.pcfsdu.com -n "*.apps.cl1.azpks.pcfsdu.com1"
 
-echo "az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
-echo "az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
-echo "az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n "$DNS_NAME"
+echo "az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+echo "az network dns record-set a add-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+echo "az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
 
     fi
 
