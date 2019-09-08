@@ -241,6 +241,7 @@ echo "########### JUMP SERVER ############"
     fi
 
     # --- LOGIN TO AZURE ---
+echo "ssh ${SSHPAR} -n \"~/pcfconfig/scripts/checkAZlogin.sh\""
     ssh ${SSHPAR} -n "~/pcfconfig/scripts/checkAZlogin.sh"
 
     stt=$(az group list > /dev/null 2>&1)
