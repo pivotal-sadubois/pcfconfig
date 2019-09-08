@@ -241,17 +241,25 @@ echo "########### JUMP SERVER ############"
     fi
 
     # --- LOGIN TO AZURE ---
-    ssh ${SSHPAR} -n "~/pcfconfig/scripts/checkAZlogin.sh"
-#gaga
-  echo "AZURE_SUBSCRIPTION_ID:$AZURE_SUBSCRIPTION_ID"
-  echo "AZURE_TENANT_ID:$AZURE_TENANT_ID"
-  echo "AZURE_CLIENT_ID:$AZURE_CLIENT_ID"
+    #ssh ${SSHPAR} -n "~/pcfconfig/scripts/checkAZlogin.sh"
+    ssh ${SSHPAR} -n "az login --username $AZURE_CLIENT_ID \
+       --password $AZURE_CLIENT_SECRET --service-principal --tenant $AZURE_TENANT_ID"
+    ssh ${SSHPAR} -n "az group list >/dev/null 2>&1"
+    if [ $? -ne 0 ]; then 
+      echo "ERROR: failed to login to azure on jumphost"
+      echo "       => ssh ${SSHPAR}"
+      echo "       => az login --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET \\"
+      echo "            --service-principal --tenant $AZURE_TENANT_ID"
+      exit 1
+    fi
 
-echo "az login --username $AZURE_CLIENT_ID --password pivotal --service-principal --tenant $AZURE_TENANT_ID"
-
-    #az login --username 3487faeb-52ab-44a1-9aac-210c4d2ea65e --password pivotal --service-principal --tenant 29248f74-371f-4db2-9a50-c62a6877a0c1
-
-    stt=$(az group list > /dev/null 2>&1)
+    ssh ${SSHPAR} -n "az group list >/dev/null 2>&1"
+    if [ $? -ne 0 ]; then 
+      echo "ERROR: failed to login to azure on jumphost"
+      echo "       => ssh ${SSHPAR}"
+      echo "       => az group list"
+      exit 1
+    fi
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
       scp -rqo StrictHostKeyChecking=no -i ~/.ssh/${JUMP_HOST}.pem $TLS_CERTIFICATE ubuntu@$JUMP_HOST:/tmp/tls_cert.pem
@@ -589,7 +597,6 @@ if [ "${CLOUD_PROVIDER}" == "aws" ]; then
   echo "dns_suffix         = \"${DNS_DOMAIN}\""                                >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE gaga"
 
   if [ "$TLS_CERTIFICATE" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then 
     cat $TLS_CERTIFICATE >> $TF_VARFILE
