@@ -229,9 +229,8 @@ echo "########### JUMP SERVER ############"
     ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
     ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
 
-    stt=$(az group list > /dev/null 2>&1; stt=$?)
-echo "STT:$stt"
-    if [ "${stt}" -ne 0 ]; then
+    stt=$(az group list > /dev/null 2>&1)
+    if [ $? -ne 0 ]; then
       echo "------------------------------------ AZ-LOGIN -------------------------------------------"
       az login 
 echo "$?; gagga"
