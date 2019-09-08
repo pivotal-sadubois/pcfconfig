@@ -229,6 +229,13 @@ echo "########### JUMP SERVER ############"
     ssh ${SSHPAR} -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF"
     ssh ${SSHPAR} -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull"
 
+    stt=$(az group list > /dev/null 2>&1; stt=$?)
+    if [ "${stt}" -ne 0 ]; then
+      echo "------------------------------------ AZ-LOGIN -------------------------------------------"
+      az login 
+echo "$?; gagga"
+    fi
+
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
     stt=$(ssh ${SSHPAR} -n "[ -f /jump_software_installed ] && echo true")
@@ -240,12 +247,6 @@ echo "########### JUMP SERVER ############"
       #scp -rqo StrictHostKeyChecking=no ~/.azure ubuntu@$JUMP_HOST:/home/ubuntu
     fi
 
-    stt=$(az group list > /dev/null 2>&1; stt=$?)
-    if [ "${stt}" -ne 0 ]; then
-      echo "------------------------------------ AZ-LOGIN -------------------------------------------"
-      az login 
-echo "$?; gagga"
-    fi
 
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
