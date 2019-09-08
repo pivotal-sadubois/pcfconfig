@@ -235,6 +235,7 @@ echo "########### JUMP SERVER ############"
       az login 
 echo "$?; gagga"
     fi
+exit 1
 
     # --- TEST FOR RUNNING REMOTE SCRIPT ---
     stt=$(ssh ${SSHPAR} -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
