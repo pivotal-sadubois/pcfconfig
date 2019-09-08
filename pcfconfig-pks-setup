@@ -3385,45 +3385,32 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   done
 
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo gaga1
     pks get-credentials $cluster > /dev/null 2>&1
-echo gaga2
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
-echo gaga4
     kubectl config use-context $cluster > /dev/null 2>&1
-echo gaga5
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
-echo gaga6
 
     cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo gaga7
 
     if [ $cnt -eq 0 ]; then
-echo gaga8
       HELM=$(which helm)
       if [ ! -x "$HELM" ]; then
         echo "ERROR: unable to find the helm utility"
         exit 1
       fi
 
-echo gaga9
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
-echo gaga10
       helm repo update > /dev/null 2>&1
-echo gaga11
       kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
-echo gaga12
       helm init --service-account tiller > /dev/null 2>&1
-echo gaga13
       helm install stable/nginx-ingress \
   	--name nginx \
   	--set rbac.create=true \
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
-echo gaga14
     fi
 
     DNSLB="pending"
@@ -3432,9 +3419,6 @@ echo gaga14
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
 
-echo gaga14
-echo "1DNSLB:$DNSLB"
-echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
       AWS_LB="k8s-master-$cluster"
@@ -3455,7 +3439,7 @@ echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
 
       az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
       if [ $? -eq 0 ]; then
-        az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME" > /dev/null 2>&1
+        az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
         if [ $? -eq 0 ]; then
           echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
           echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
@@ -3473,9 +3457,6 @@ echo "PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
       fi
     fi
 
-
-exit 1
-
     if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
       echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
@@ -3485,11 +3466,6 @@ exit 1
           jq -r '.LoadBalancerDescriptions[0].DNSName')
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
-
-echo "ZONE_ID:$ZONE_ID"
-echo "ZONE_ID_STR:$ZONE_ID_STR"
-echo "DNSLB:$DNSLB"
-echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 
       if [ "${ZONE_ID}" != "" ]; then
         ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
