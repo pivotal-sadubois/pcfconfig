@@ -3388,7 +3388,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     pks get-credentials $cluster > /dev/null 2>&1
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
-echo "gaga USERID:$userid"
 
     kubectl config use-context $cluster > /dev/null 2>&1
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
@@ -3402,7 +3401,6 @@ echo "gaga USERID:$userid"
         exit 1
       fi
 
-echo xxx
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
       helm repo update > /dev/null 2>&1
@@ -3426,7 +3424,12 @@ echo xxx
       sleep 10
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
-echo "DNSLB:$DNSLB"
+
+    if [ "${DNSLB}" == "" ]; then
+      echo "ERROR: optaining name/ip of Ingress Controller"
+      echo "       => kubectl get svc -n ingress | grep nginx-nginx-ingress-controller"
+      exit 1
+    fi
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
