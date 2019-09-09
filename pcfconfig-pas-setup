@@ -2623,7 +2623,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       if [ "$?" -ne 0 ]; then 
         echo "ERROR: Can not create DNS record for  PKS-API (api.pks.${DNS_PREFIX}.${DNS_SUFFIX})"
         echo "       => az network dns record-set a add-record -g ${DNS_PREFIX} \\"
-          echo "             --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} --record-set-name api.pks \\"
+        echo "             --zone-name ${DNS_PREFIX}.${DNS_SUFFIX} --record-set-name api.pks \\"
         echo "             --ipv4-address $ipa"; exit 1
       fi
     else
@@ -3388,6 +3388,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     pks get-credentials $cluster > /dev/null 2>&1
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+echo "gaga USERID:$userid"
 
     kubectl config use-context $cluster > /dev/null 2>&1
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
@@ -3401,6 +3402,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
         exit 1
       fi
 
+echo xxx
       # --- INSTALLING HELM ---
       helm init --history-max 200 > /dev/null 2>&1
       helm repo update > /dev/null 2>&1
@@ -3411,6 +3413,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   	--set rbac.create=true \
   	--namespace ingress \
   	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: failed to deploy ingress controller with helm"
+        echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
+        echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
+        exit 1
+      fi
     fi
 
     DNSLB="pending"
@@ -3418,6 +3426,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       sleep 10
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
+echo "DNSLB:$DNSLB"
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
