@@ -14,6 +14,57 @@ getPCFconfigState() {
   fi
 }
 
+demo_usage() {
+  echo "USAGE: $0 [options]"
+  echo "             Demo Settings"
+  echo "                       --run-interactive          - Run Demo in Interactive Mode"
+  echo "                       --run-unattended           - Run Demo in Unattended Mode"
+  echo "                       --dry-run                  - List Available deployments"
+}
+
+verifyTLScertificate() {
+  TLS_CERTIFICATE=$1
+  TLS_PRIVATE_KEY=$2
+
+  dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | \
+      uniq -c | awk '{ print $1 }')
+  if [ "$dif" == "" ]; then dif=0; fi
+  if [ $dif -ne 2 ]; then
+    echo "ERROR: Certificate modulus of $TLS_CERTIFICATE does not match with the private_key $TLS_PRIVATE_KEY"
+    echo "       => openssl x509 -in $TLS_CERTIFICATE -noout -modulus"
+    echo "       => openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus"
+    exit 1
+  fi
+}
+
+showK8sEnvironment() {
+  pks clusters > /dev/null
+  if [ $? -ne 0 ]; then exit 1; fi
+
+  export PKS_CLNAME=$(kubectl config current-context 2>/dev/null)
+  PKS_ENNAME=$(pks cluster cl1 | grep 'Kubernetes Master Host:' | \
+      awk '{ print $NF }' | sed "s/${PKS_CLNAME}\.//g")
+  PKS_APPATH="apps-${PKS_CLNAME}.${PKS_ENNAME}"
+
+  echo "Kubernetes Cluster ...........: $PKS_CLNAME"
+  echo "Kubernetes Master Host .......: $PKS_ENNAME"
+  echo "DNS Application Domain .......: *.apps-${PKS_CLNAME}.$PKS_ENNAME"
+  echo ""
+}
+
+command() {
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+
+  echo -e "     => ${bold}$1${normal}\c"; read x
+  echo "     ---------------------------------------------------------------------------------------"
+  $1 | sed -e '/^$/d' -e 's/^/     /g'
+  echo "     ---------------------------------------------------------------------------------------"
+  echo ""
+  if [ $? -ne 0 ]; then exit 1; fi
+}
+
+
 installJumpHost() {
   if [ "${CLOUD_PROVIDER}" == "azure" ]; then
     messagePrint "Creating Azure Jump-Server" "pcfjump"
