@@ -3422,7 +3422,7 @@ echo xxx
     fi
 
     DNSLB="pending"
-    while [ "${DNSLB}" == "pending" ]; do
+    while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
       sleep 10
       DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
     done
