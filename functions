@@ -22,6 +22,11 @@ demo_usage() {
   echo "                       --dry-run                  - List Available deployments"
 }
 
+verifyEnvVariables() {
+echo gaga
+
+}
+
 verifyTLScertificate() {
   TLS_CERTIFICATE=$1
   TLS_PRIVATE_KEY=$2
@@ -41,7 +46,7 @@ showK8sEnvironment() {
   pks clusters > /dev/null
   if [ $? -ne 0 ]; then exit 1; fi
 
-  export PKS_CLNAME=$(kubectl config current-context 2>/dev/null)
+  PKS_CLNAME=$(kubectl config current-context 2>/dev/null)
   PKS_ENNAME=$(pks cluster cl1 | grep 'Kubernetes Master Host:' | \
       awk '{ print $NF }' | sed "s/${PKS_CLNAME}\.//g")
   PKS_APPATH="apps-${PKS_CLNAME}.${PKS_ENNAME}"
@@ -57,9 +62,10 @@ command() {
   normal=$(tput sgr0)
 
   echo -e "     => ${bold}$1${normal}\c"; read x
-  echo "     ---------------------------------------------------------------------------------------"
-  $1 | sed -e '/^$/d' -e 's/^/     /g'
-  echo "     ---------------------------------------------------------------------------------------"
+  echo "     -----------------------------------------------------------------------------------------------------------"
+  eval "$1" | sed -e '/^$/d' -e 's/^/     /g'
+  #$1 | sed -e '/^$/d' -e 's/^/     /g'
+  echo "     -----------------------------------------------------------------------------------------------------------"
   echo ""
   if [ $? -ne 0 ]; then exit 1; fi
 }
@@ -326,7 +332,7 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
           echo "       => aws ec2 --region=$AWS_REGION create-tags --resources $rtb --tags Key=type,Value=pcfjump"; exit 1
         fi
 
-        aws ec2 --region=$AWS_REGION create-route --route-table-id ärtb --destination-cidr-block 0.0.0.0/0 --gateway-id $igw
+        aws ec2 --region=$AWS_REGION create-route --route-table-id $rtb --destination-cidr-block 0.0.0.0/0 --gateway-id $igw
         #aws ec2 --region=$AWS_REGION describe-route-tables --route-table-id rtb-0483bed5665fd7eff
   
       else
@@ -1565,8 +1571,116 @@ checkOpsMantools() {
   fi
 }
 
+checkCloudAccess() {
+  missing_variables=0
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
+    if [ "${AZURE_SUBSCRIPTION_ID}" == "" -o "${AZURE_TENNANT_ID}" == "" -o \
+         "${AZURE_CLIENT_ID}" == "" -o "${AZURE_CLIENT_SECRET}" == "" -o "${AZURE_REGION}" == "" ]; then
+
+      missing_variables=1
+      echo ""
+      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  --------------------------------------------------------------------------------------------------------------"
+
+      if [ "${AZURE_SUBSCRIPTION_ID}" == "" ]; then
+        echo "  AZURE_SUBSCRIPTION_ID           (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
+      fi 
+
+      if [ "${AZURE_TENNANT_ID}" == "" ]; then
+        echo "  AZURE_TENNANT_ID                (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
+      fi 
+
+      if [ "${AZURE_CLIENT_ID}" == "" ]; then
+        echo "  AZURE_CLIENT_ID                 (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
+      fi 
+
+      if [ "${AZURE_CLIENT_SECRET}" == "" ]; then
+        echo "  AZURE_CLIENT_SECRET             (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
+      fi
+
+      if [ "${AZURE_REGION}" == "" ]; then
+        echo "  AZURE_REGION                    (required) Choose the Azure Region where your installation should run"
+        echo "                                  => az account list-locations -o table | awk '{ print $NF }'"
+        echo "                                     westeurope, northeurope, switzerlandnorth etc."
+      fi
+
+      echo 
+      echo "  Preparing to Deploy Ops Manager on Azure Manually"
+      echo "  https://docs.pivotal.io/pcf/om/2-6/azure/prepare-env-manual.html"
+      #echo "  --------------------------------------------------------------------------------------------------------------"
+    fi
+  fi
+
+  if [ "${PCF_PIVNET_TOKEN}" == "" -o "${PCF_ENVIRONMENT_NAME}" == "" -o \
+       "${AWS_HOSTED_DNS_DOMAIN}" == "" -o "${AWS_HOSTED_ZONE_ID}" == "" ]; then
+
+    missing_variables=1
+    echo ""
+    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+    echo "  --------------------------------------------------------------------------------------------------------------"
+
+    if [ "${PCF_PIVNET_TOKEN}" == "" ]; then
+      echo "  PCF_PIVNET_TOKEN                (required) PIVNET Access Token to download software. Get a UAA API TOKEN from"
+      echo "                                  => https://network.pivotal.io/users/dashboard/edit-profile"
+    fi
+
+    if [ "${PCF_ENVIRONMENT_NAME}" == "" ]; then
+      echo "  PCF_ENVIRONMENT_NAME            (required) Represent your environment ie. mypas, mypks etc."
+    fi
+
+    if [ "${AWS_HOSTED_DNS_DOMAIN}" == "" ]; then
+      echo "  AWS_HOSTED_DNS_DOMAIN           (required) A DNS Domain managed by AWS Route 53 ie. yourdomain.com with a"
+      echo "                                  valid DNS Zone. => https://console.aws.amazon.com/route53"
+    fi
+
+    if [ "${AWS_HOSTED_ZONE_ID}" == "" ]; then
+      echo "  AWS_HOSTED_ZONE_ID              (required) An AWS Route 53 Token is required to add/update DNS records"
+      echo "                                  => https://console.aws.amazon.com/route53 -> hosted Zones -> Zone ID"
+    fi
+  fi
+
+  if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" -o \
+       "${TLS_ROOT_CA}" == "" ]; then
+
+    missing_variables=1
+    echo ""
+    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+    echo "  --------------------------------------------------------------------------------------------------------------"
+
+    if [ "${TLS_CERTIFICATE}" == "" ]; then
+      echo "  TLS_CERTIFICATE=<cert.pem>      (optional) To allow TLS encrypted httpd traffic a Certificate and key needs to"
+    fi
+
+    if [ "${TLS_PRIVATE_KEY}" == "" ]; then
+      echo "  TLS_PRIVATE_KEY=<key.pem>       be created for your DNS Domain. Free certificates can be optained"
+    fi
+
+    if [ "${TLS_ROOT_CA}" == "" ]; then
+      echo "  TLS_ROOT_CA=<ca.pem>            through https://letsencrypt.org. Please include the following Wildcard entries"
+    fi
+
+    echo "                                  "
+    echo "                                  <env>.<domain>"
+    echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
+    echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
+    echo ""
+    echo "                                  PAS *.<env>.<domain> *.apps.<domain> *.sys.<env>.<domain>"
+    echo "                                  PKS *.<env>.<domain> *.apps-cl1.<env>.<domain> *.apps-cl2.<env>.<domain>"
+    echo "                                      *.apps-cl3.<env>.<domain> *.api.<env>.<domain>"
+    echo ""
+  fi
+
+  if [ ${missing_variables} -eq 1 ]; then
+    echo "  Please set the missing environment variables to proceed as mentioned above. You can set them in the pcfconfig"
+    echo "  file in your home directory ~/.pcfconfig or just in your shell. Please use the 'export' command for all variables"
+    echo "    ie. => export TLS_CERTIFICATE=/home/demouser/certs/cert.pem"
+  fi
+  write_line
+}
+
 checkCloudCLI() {
-  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
+  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" -o "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     # --- CHECK FOR AWS CLI ---
     GCLOUD=$(which gcloud)
     if [ "${GCLOUD}" != "" ]; then
@@ -1586,9 +1700,28 @@ checkCloudCLI() {
       echo "ERROR: gcloud utility is not installed. please install terraform from"
       echo "       https://cloud.google.com/sdk/install"; exit 1
     fi
+
+    # --- CHECK FOR AWS CLI ---
+    AWSCLI=$(which aws)
+    if [ "${AWSCLI}" != "" ]; then
+      $AWSCLI --version >/dev/null 2>&1; ret=$?
+      if [ ${ret} -eq 0 ]; then
+        AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
+        AWS_CLI_ENABLED=1
+        messagePrint "checking for AWS CLI utility (needed for AWS Route53)" "installed - ${AWS_VERSION}"
+      else
+        echo ""
+        echo "ERROR: the AWS cli utility does not seam to be correct, please reinstall it from:"
+        echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
+      fi
+    else
+      messagePrint "checking for AWS CLI utility" "not installed"
+      echo "ERROR: the AWS cli utility is not installed, please install it from:"
+      echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
+    fi
   fi
 
-  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
+  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" -o "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     # --- CHECK FOR AWS CLI ---
     AWSCLI=$(which aws)
     if [ "${AWSCLI}" != "" ]; then
@@ -1609,7 +1742,7 @@ checkCloudCLI() {
     fi
   fi
 
-  if [ "${cloud}" == "Azure" -o "${TF_DEPLOYMENT}" == "azure" ]; then
+  if [ "${cloud}" == "Azure" -o "${TF_DEPLOYMENT}" == "azure" -o "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     # --- CHECK FOR AWS CLI ---
     AZCLI=$(which az)
     if [ "${AZCLI}" != "" ]; then
@@ -1617,7 +1750,7 @@ checkCloudCLI() {
       if [ ${ret} -eq 0 ]; then
         AZ_VERSION=$($AZCLI -v 2>/dev/null | egrep "^azure-cli" | awk '{ print $2 }'); ret=$?
         AZURE_CLI_ENABLED=1
-        messagePrint "checking for $cloud CLI utility" "installed - ${AZ_VERSION}"
+        messagePrint "checking for Azure CLI utility (az)" "installed - ${AZ_VERSION}"
       else
         echo ""
         echo "ERROR: the $cloud CLI $(which az) does not seam to be correct"
@@ -1626,7 +1759,30 @@ checkCloudCLI() {
     else
       messagePrint "checking for $cloud CLI utility" "no installed"
     fi
+
+    # --- CHECK FOR AWS CLI ---
+    AWSCLI=$(which aws)
+    if [ "${AWSCLI}" != "" ]; then
+      $AWSCLI --version >/dev/null 2>&1; ret=$?
+      if [ ${ret} -eq 0 ]; then
+        AWS_VERSION=$($AWSCLI --version 2>/dev/null | awk -F'/' '{ print $2 }' | awk '{ print $1}')
+        AWS_CLI_ENABLED=1
+        messagePrint "checking for AWS CLI utility (needed for AWS Route53)" "installed - ${AWS_VERSION}"
+      else
+        echo ""
+        echo "ERROR: the AWS cli utility does not seam to be correct, please reinstall it from:"
+        echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
+      fi
+    else
+      messagePrint "checking for AWS CLI utility" "not installed"
+      echo "ERROR: the AWS cli utility is not installed, please install it from:"
+      echo "       https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"; exit 1
+    fi
   fi
+}
+
+write_line() {
+  echo "----------------------------------------------------------------------------------------------------------------"
 }
 
 wait_loop() {

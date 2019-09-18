@@ -1520,7 +1520,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   messagePrint " - OpsManager Variable File" "$VARFILE"
 
   # --- DO FIRST ONLY IAAS-CONFIGURATION (TWO-STEPS-REQUIRED) --
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug: PASS:$PASS USER:$USER"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
   sed -n '1,/^#END-STAGE-1/p' $OPSMAN_CONFIG | sed '$d' > /tmp/$$_tmpcfg.yml
 
   pending=$($OM $OM_LOGIN pending-changes | grep "p-bosh" | awk '{ print $4 }')
@@ -1613,7 +1614,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   checkEnvironment
 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug1: PASS:$PASS USER:$USER"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
 #  pending=$($OM $OM_LOGIN pending-changes | grep "p-bosh" | awk '{ print $4 }')
 #  if [ "${pending}" != "unchanged" ]; then
@@ -1770,7 +1772,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   # --- VERIFY IF PKS PRODUCT TILE HAS BEEN UPDLOADED ALREADY --- 
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug2: PASS:$PASS USER:$USER"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
   OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "$PIVNET_SLUG" | awk '{ print $4 }')
 
   if [ "$OPSMAN_AVAILABLE_PRODUCT" == "" ]; then 
@@ -1870,7 +1873,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       messagePrint " - Generating Self-Signed TLS Certificate" "${TLS_HOST_NAME}"
 
       TLS_TEMP_CERT=/tmp/$$_cert
-      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug3: USER:$USER PASS:$PASS"
+      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
       $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
       if [ $? -ne 0 ]; then
         echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1 
@@ -2121,7 +2125,8 @@ TLS_PRIVATE_KEY=""
       messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
       TLS_TEMP_CERT=/tmp/$$_cert
-      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug4: USER:$USER PASS:$PASS"
+      OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
       $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
       if [ $? -ne 0 ]; then
         echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1 
@@ -2415,7 +2420,8 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug4: USER:$USER PASS:$PASS"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
@@ -2534,7 +2540,8 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug6: USER:$USER PASS:$PASS"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
@@ -3295,7 +3302,8 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   checkEnvironment 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal"
+echo "debug7: USER:$USER PASS:$PASS"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
   TMP_JQ=/tmp/$$_jq; TMP_SEC=/tmp/$$_sec;
