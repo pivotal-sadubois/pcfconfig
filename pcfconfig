@@ -740,7 +740,8 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     [ "${PKS_CLUSTER_3_NAME}" == "" ] && PKS_CLUSTER_3_NAME="-"
   
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
-    pcfconfig-pks-setup --pks-admin-user $PKS_ADMIN_USER --pks-admin-pass $PKS_ADMIN_PASS \
+    pcfconfig-pks-setup -u $OPSMAN_USER -p $OPSMAN_PASS \
+         --pks-admin-user $PKS_ADMIN_USER --pks-admin-pass $PKS_ADMIN_PASS \
          --pks-admin-mail $PKS_ADMIN_MAIL --aws-route53 $ROUTE53_TOKEN \
          --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
          --pks-cluster-1-plan $PKS_CLUSTER_1_PLAN \
@@ -809,8 +810,8 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "started"
-    pcfconfig-pas-setup --pas-admin-user $PAS_ADMIN_USER --pas-admin-pass $PAS_ADMIN_PASS \
-         --pas-admin-mail $PAS_ADMIN_MAIL 
+    pcfconfig-pas-setup -u $OPSMAN_USER  -p $OPSMAN_PASS --pas-admin-user $PAS_ADMIN_USER \
+         --pas-admin-pass $PAS_ADMIN_PASS --pas-admin-mail $PAS_ADMIN_MAIL 
 
     if [ $? -ne 0 ]; then
       setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "failed"
