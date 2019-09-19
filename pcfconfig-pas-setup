@@ -1809,7 +1809,7 @@ echo "debug2: PASS:$PASS USER:$USER"
       echo "if [ ! -f /tmp/$PIVNET_GLOB ]; then"                                                                >> $TMP_SCRIPT
       echo "  while [ 1 ]; do"                                                                                  >> $TMP_SCRIPT
       echo "    om --request-timeout=60 --skip-ssl-validation --target ${OPS_MANAGER_URL} \\"                   >> $TMP_SCRIPT
-      echo "       --username admin --password pivotal \\"                                                      >> $TMP_SCRIPT
+      echo "       --username $USER --password $PASS \\"                                                      >> $TMP_SCRIPT
       echo "       download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"                 >> $TMP_SCRIPT
       echo "       --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"                  >> $TMP_SCRIPT
       echo "       --product-version \"${PXS_VERSION}\" "                                                       >> $TMP_SCRIPT
@@ -1826,7 +1826,7 @@ echo "debug2: PASS:$PASS USER:$USER"
       echo "  done"                                                                                             >> $TMP_SCRIPT
       echo "fi"                                                                                                 >> $TMP_SCRIPT
       echo ""                                                                                                   >> $TMP_SCRIPT
-      echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username admin --password pivotal \\"        >> $TMP_SCRIPT
+      echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS\\"           >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                      >> $TMP_SCRIPT
 
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
