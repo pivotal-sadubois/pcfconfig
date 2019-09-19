@@ -330,11 +330,18 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
         if [ $? -ne 0 ]; then
           echo "ERROR: Creating of Tags failed"
           echo "       => aws ec2 --region=$AWS_REGION create-tags --resources $rtb --tags Key=type,Value=pcfjump"; exit 1
+          exit 1
         fi
 
         aws ec2 --region=$AWS_REGION create-route --route-table-id $rtb --destination-cidr-block 0.0.0.0/0 --gateway-id $igw
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating route failed"
+          echo "       => aws ec2 --region=$AWS_REGION create-route --route-table-id $rtb --destination-cidr-block 0.0.0.0/0 \\"
+          echo "                  --gateway-id $igw"
+          exit 1
+        fi
+
         #aws ec2 --region=$AWS_REGION describe-route-tables --route-table-id rtb-0483bed5665fd7eff
-  
       else
         messagePrint " - Verify Internet Gateway" "$igw"
       fi
@@ -345,7 +352,23 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
   
         messagePrint " - Associate Routing Table $rtb" "Subnet $sid"
         aws ec2 --region=$AWS_REGION associate-route-table  --subnet-id $sid --route-table-id $rtb > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Associate Routing Table failed"
+          echo "       => aws ec2 --region=$AWS_REGION associate-route-table  --subnet-id $sid --route-table-id $rtb"
+          echo "-----------------------------------------------------------------------------------------------------------"
+          aws ec2 --region=$AWS_REGION associate-route-table  --subnet-id $sid --route-table-id $rtb
+          echo "-----------------------------------------------------------------------------------------------------------"
+        fi
+#gaga
+
         aws ec2 --region=$AWS_REGION modify-subnet-attribute --subnet-id $sid --map-public-ip-on-launch > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Modify Routing Table attribut failed"
+          echo "       => aws ec2 --region=$AWS_REGION modify-subnet-attribute --subnet-id $sid --map-public-ip-on-launch"
+          echo "-----------------------------------------------------------------------------------------------------------"
+          aws ec2 --region=$AWS_REGION modify-subnet-attribute --subnet-id $sid --map-public-ip-on-launch
+          echo "-----------------------------------------------------------------------------------------------------------"
+        fi
       done
   
       # --- CREATE SECURITY GROUP ---
@@ -377,10 +400,12 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
       aim=ami-0015c36f           # Amazon Linux  t2.nano
       aim=ami-0085d4f8878cddc81  # Ubuntu Server t2.medium
       aim=ami-0085d4f8878cddc81  # Ubuntu Server t2.micro
+      aim=ami-0085d4f8878cddc81  # Ubuntu Server t2.medium
+      typ=t2.medium
 
       messagePrint " - Create Instance" "pcfjump"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
-             --instance-type t2.micro --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
+             --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
              --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]' > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
@@ -442,6 +467,8 @@ EOF
       fi
     fi
   fi
+
+  echo "installJumpHost: completed"
 }
 
 cleanRoute53() {
@@ -1164,7 +1191,6 @@ cleanAWSenv() {
           exit 1
         fi
       else
-#gagadu
         messagePrint " - Detaching Volume:" "$vid"
         #aws ec2 --region $AWS_LOCATION detach-volume --volume-id $vid > /dev/null 2>&1
         #aws ec2 --region $AWS_LOCATION ec2 delete-volume --volume-id $vid > /dev/null 2>&1

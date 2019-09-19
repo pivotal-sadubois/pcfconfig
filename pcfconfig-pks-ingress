@@ -1888,8 +1888,8 @@ echo "debug3: USER:$USER PASS:$PASS"
       echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
       echo "routing_custom_ca_certificates: $TLS_ROOT_CERT" >> $VARFILE
 
-      echo "skip_cert_verify: true" >> $VARFILE
       echo "skip_cert_verify: false" >> $VARFILE
+      echo "skip_cert_verify: true" >> $VARFILE
     else
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
       dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
