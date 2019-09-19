@@ -1852,6 +1852,7 @@ echo "debug2: PASS:$PASS USER:$USER"
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas" ]; then
     VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
+echo "debug31: $USER $PASS"
 
     # --- COPY JQ FILES FROM THE TEMPLATES ---
     PAS_MINOR_VERSION=$(echo $PAS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
