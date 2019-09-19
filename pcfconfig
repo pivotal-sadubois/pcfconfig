@@ -810,7 +810,7 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "started"
-    pcfconfig-pas-setup -u $OPSMAN_USER  -p $OPSMAN_PASS --pas-admin-user $PAS_ADMIN_USER \
+    pcfconfig-pas-setup -u $OPSMAN_USER -p $OPSMAN_PASS --pas-admin-user $PAS_ADMIN_USER \
          --pas-admin-pass $PAS_ADMIN_PASS --pas-admin-mail $PAS_ADMIN_MAIL 
 
     if [ $? -ne 0 ]; then
@@ -826,7 +826,8 @@ else
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---
   cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
-  pcfconfig-pas-debug --pas-admin-user $PAS_ADMIN_USER --pas-admin-pass $PAS_ADMIN_PASS \
+  pcfconfig-pas-debug -u $OPSMAN_USER -p $OPSMAN_PASS \
+       --pas-admin-user $PAS_ADMIN_USER --pas-admin-pass $PAS_ADMIN_PASS \
        --pas-admin-mail $PAS_ADMIN_MAIL
 
 fi
