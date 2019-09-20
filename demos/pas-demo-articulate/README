@@ -1,0 +1,8 @@
+# SOURCE 
+wget http://uhtec.com/articulate.zip
+
+demo_articulate_deploy.sh          # Articulate Demo
+demo_articulate_BlueGreen.sh       # Articulate Blue/Green Demo   
+demo_articulate_BlueGreen_reset.sh # Articulate Blue/Green Reset
+demo_articulate_cleanup.sh         # Articulate CleanUp
+
