@@ -1917,7 +1917,9 @@ echo "debug31: $USER $PASS"
       echo "skip_cert_verify: true" >> $VARFILE
     fi
 
+echo gaga1
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+echo gaga2
 #gaga
       tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
       tg2=$($JQ -r '.modules[].outputs.web_target_groups.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
@@ -1933,6 +1935,7 @@ echo "debug31: $USER $PASS"
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
     fi
+exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
