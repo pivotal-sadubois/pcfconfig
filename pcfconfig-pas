@@ -1463,7 +1463,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "access_key_id: $AWS_ACCESS_KEY"               >> $VARFILE
     echo "secret_access_key: $AWS_SECRET_KEY"           >> $VARFILE
     echo "aws-region: ${AWS_REGION}" >> $VARFILE
-
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
@@ -1494,8 +1493,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "client_id: $AZURE_CLIENT"                     >> $VARFILE
     echo "client_secret: $AZURE_SECRET"                 >> $VARFILE
   fi
-echo "xxxxxxxxxxxxxxxxx 2"
-exit 1
 
   #$JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
   $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | \
@@ -1530,7 +1527,6 @@ exit 1
   messagePrint " - OpsManager Variable File" "$VARFILE"
 
   # --- DO FIRST ONLY IAAS-CONFIGURATION (TWO-STEPS-REQUIRED) --
-echo "debug: PASS:$PASS USER:$USER"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
   sed -n '1,/^#END-STAGE-1/p' $OPSMAN_CONFIG | sed '$d' > /tmp/$$_tmpcfg.yml
 
