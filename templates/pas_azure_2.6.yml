@@ -351,7 +351,7 @@ resource-config:
       id: automatic
     internet_connected: true
     elb_names:
-    - ((ssh_target_group))
+    - ((diego_ssh_lb_name))
   diego_cell:
     instances: automatic
     instance_type:
@@ -427,8 +427,7 @@ resource-config:
       id: automatic
     internet_connected: true
     elb_names:
-    - ((web_target_group_80))
-    - ((web_target_group_443))
+    - ((web_lb))
   syslog_adapter:
     instances: automatic
     instance_type:
@@ -447,7 +446,6 @@ resource-config:
       id: automatic
     internet_connected: true
     elb_names:
-    - alb:default-tg-1024
   uaa:
     instances: automatic
     instance_type:
