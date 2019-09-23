@@ -1477,6 +1477,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
 
+#gaga
+echo "xxxxxxxxxxxxxxxxx"
+exit 1
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
@@ -1486,6 +1489,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "client_id: $AZURE_CLIENT"                     >> $VARFILE
     echo "client_secret: $AZURE_SECRET"                 >> $VARFILE
   fi
+echo "xxxxxxxxxxxxxxxxx 2"
+exit 1
 
   #$JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
   $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | \
