@@ -31,13 +31,13 @@ networks-configuration:
       reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
       - "null"
-  - name: pks
+  - name: pas
     subnets:
-    - iaas_identifier: ((network_name))/((pks_subnet_name))
-      cidr: ((pks_subnet_cidr))
-      dns: ((pks_subnet_dns))
-      gateway: ((pks_subnet_gateway))
-      reserved_ip_ranges: ((pks_subnet_range))
+    - iaas_identifier: ((network_name))/((pas_subnet_name))
+      cidr: ((pas_subnet_cidr))
+      dns: ((pas_subnet_dns))
+      gateway: ((pas_subnet_gateway))
+      reserved_ip_ranges: ((pas_subnet_range))
       availability_zone_names:
       - "null"
   - name: services

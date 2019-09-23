@@ -19,11 +19,11 @@
 "infrastructure_subnet_dns: " + "168.63.129.16",
 
 # PKS-SUBNET
-"pks_subnet_cidr: " + .modules[].outputs.pks_subnet_cidr.value,
-"pks_subnet_name: " + .modules[].outputs.pks_subnet_name.value,
-"pks_subnet_gateway: " + .modules[].outputs.pks_subnet_gateway.value,
-"pks_subnet_ids: " + .modules[].outputs.pks_subnet_ids.value[0],
-"pks_subnet_dns: " + "168.63.129.16",
+"pas_subnet_cidr: " + .modules[].outputs.pas_subnet_cidr.value,
+"pas_subnet_name: " + .modules[].outputs.pas_subnet_name.value,
+"pas_subnet_gateway: " + .modules[].outputs.pas_subnet_gateway.value,
+"pas_subnet_ids: " + .modules[].outputs.pas_subnet_ids.value[0],
+"pas_subnet_dns: " + "168.63.129.16",
 
 # SERVICES-SUBNET
 "services_subnet_cidr: " + .modules[].outputs.services_subnet_cidr.value,
