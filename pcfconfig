@@ -666,6 +666,11 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
 
   cd ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/terraforming-${PRODUCT_TILE}
 
+  if [ "${CLOUD_PROVIDER}" == "azure" ]; then 
+    cp main.tf main.tf.orig
+    sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
+  fi
+
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${CLOUD_PROVIDER}/modules/ops_manager
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
