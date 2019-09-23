@@ -4,7 +4,7 @@
 #pas-ver:min-opsman:stemcell:version:azure:aws:gcp:
 2.6.4:gcp:default:2.6:default:ubuntu-xenial-stemcell:315.72:opsman_gcp_pas.yml:pas_gcp_2.5.yml
 2.5.4:gcp:default:2.5:default:ubuntu-xenial-stemcell:315.36:opsman_gcp_pas.yml:pas_gcp_2.5.yml
-2.6.5:azure:default:2.6:default:ubuntu-xenial-stemcell:315.93:opsman_azure_pas.yml:pas_azure_2.5.yml
+2.6.5:azure:default:2.6:default:ubuntu-xenial-stemcell:315.93:opsman_azure_as_pas.yml:pas_azure_2.5.yml
 2.5.3:azure:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_azure_pas.yml:pas_azure_2.5.yml
 2.6.4:aws:default:2.6:default:ubuntu-xenial-stemcell:315.72:opsman_aws_pas.yml:pas_aws_2.5.yml
 2.5.3:aws:default:2.5:default:ubuntu-xenial-stemcell:250.38:opsman_aws_pas.yml:pas_aws_2.5.yml
