@@ -1470,18 +1470,23 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     cid_inf=$($JQ -r '.modules[].outputs.infrastructure_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_inf=$(echo "$cid_inf" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
-            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
-    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
     cid_svc=$($JQ -r '.modules[].outputs.services_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
 
-#gaga
-echo "xxxxxxxxxxxxxxxxx"
-exit 1
+    if [ "${OPSMAN_MODE}" == "pks" ]; then
+      cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+      rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+      echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
+    else
+      cid_pas=$($JQ -r '.modules[].outputs.pas_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+      rng_pas=$(echo "$cid_pas" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+      echo "pas_subnet_range: ${rng_pks}"                 >> $VARFILE
+    fi
+
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
-    echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
 
     echo "subscription_id: $AZURE_SUBSCRIPTION"         >> $VARFILE
