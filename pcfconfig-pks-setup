@@ -1870,7 +1870,7 @@ echo "debug31: $USER $PASS"
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
-echo gagag00000:w
+echo gagag00000
 
 #aaaaaaaaaaaaaaaaaaaaa
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
