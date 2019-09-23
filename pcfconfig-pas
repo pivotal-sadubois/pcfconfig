@@ -1482,7 +1482,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       cid_pas=$($JQ -r '.modules[].outputs.pas_subnet_cidr.value' $TERRAFORM_TFSTATE | \
               sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
       rng_pas=$(echo "$cid_pas" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-      echo "pas_subnet_range: ${rng_pks}"                 >> $VARFILE
+      echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
     fi
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE

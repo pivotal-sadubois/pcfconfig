@@ -30,7 +30,7 @@ networks-configuration:
       gateway: ((infrastructure_subnet_gateway))
       reserved_ip_ranges: ((infrastructure_subnet_range))
       availability_zone_names:
-      - "null"
+      - "Availability Sets"
   - name: pas
     subnets:
     - iaas_identifier: ((network_name))/((pas_subnet_name))
@@ -39,7 +39,7 @@ networks-configuration:
       gateway: ((pas_subnet_gateway))
       reserved_ip_ranges: ((pas_subnet_range))
       availability_zone_names:
-      - "null"
+      - "Availability Sets"
   - name: services
     subnets:
     - iaas_identifier: ((network_name))/((services_subnet_name))
@@ -48,7 +48,7 @@ networks-configuration:
       gateway: ((services_subnet_gateway))
       reserved_ip_ranges: ((services_subnet_range))
       availability_zone_names:
-      - "null"
+      - "Availability Sets"
 properties-configuration:
   director_configuration:
     blobstore_type: local
