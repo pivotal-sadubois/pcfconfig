@@ -1880,7 +1880,6 @@ echo "debug31: $USER $PASS"
       messagePrint " - Generating Self-Signed TLS Certificate" "${TLS_HOST_NAME}"
 
       TLS_TEMP_CERT=/tmp/$$_cert
-echo "debug3: USER:$USER PASS:$PASS"
       OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
       $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
       if [ $? -ne 0 ]; then
@@ -1916,6 +1915,23 @@ echo "debug3: USER:$USER PASS:$PASS"
       echo "container_service_pas_tls_private_key_pem: \"$TLS_PRIVATE_KEY\"" >> $VARFILE
       echo "routing_custom_ca_certificates: \"$TLS_ROOT_CERT\"" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
+    fi
+
+    if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+#gaga
+      tg1=$($JQ -r '.modules[].outputs.web_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg2=$($JQ -r '.modules[].outputs.web_target_groups.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg3=$($JQ -r '.modules[].outputs.ssh_target_groups.value[0]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+
+      echo "pas_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
+      echo "web_target_group_80: alb:${tg1}" >> $VARFILE
+      echo "web_target_group_443: alb:${tg2}" >> $VARFILE
+      echo "ssh_target_group: alb:${tg3}" >> $VARFILE
+      echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+      echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+      echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
