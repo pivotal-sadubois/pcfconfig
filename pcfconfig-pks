@@ -3379,6 +3379,8 @@ echo "debug7: USER:$USER PASS:$PASS"
   TLS_CUSTOMER_CERT=$(echo | openssl s_client -connect api.sys.${DNS_PREFIX}.${DNS_SUFFIX}:443 2> /dev/null | \
      grep "Verify return code:" | grep -c "self signed")
 
+echo "TLS_CUSTOMER_CERT:$TLS_CUSTOMER_CERT"
+echo "api.sys.${DNS_PREFIX}.${DNS_SUFFIX}"
   if [ "${TLS_CUSTOMER_CERT}" -eq 1 ]; then
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
