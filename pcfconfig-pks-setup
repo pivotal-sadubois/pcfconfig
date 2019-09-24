@@ -3373,14 +3373,12 @@ echo "debug7: USER:$USER PASS:$PASS"
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PAS WEB ACCESS CREDENTIALS - APPS MANAGER"
-  echo "https://apps.sys.awspas.pcfsdu.com - ($PAS_ADMIN_USER/$PAS_ADMIN_PASS)"
+  echo "https://apps.sys.${DNS_PREFIX}.${DNS_SUFFIX} - ($PAS_ADMIN_USER/$PAS_ADMIN_PASS)"
   echo "# PAS CONSOLE ACCESS CREDENTIALS"
 
   TLS_CUSTOMER_CERT=$(echo | openssl s_client -connect api.sys.${DNS_PREFIX}.${DNS_SUFFIX}:443 2> /dev/null | \
      grep "Verify return code:" | grep -c "self signed")
 
-echo "TLS_CUSTOMER_CERT:$TLS_CUSTOMER_CERT"
-echo "api.sys.${DNS_PREFIX}.${DNS_SUFFIX}"
   if [ "${TLS_CUSTOMER_CERT}" -eq 1 ]; then
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u admin -p $sec -s system"
     echo "cf login --skip-ssl-validation -a api.sys.${DNS_PREFIX}.${DNS_SUFFIX} -u $PAS_ADMIN_USER -p $PAS_ADMIN_PASS"
