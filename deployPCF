@@ -1,6 +1,6 @@
 #!/bin/bash
 # ############################################################################################
-# File: ........: deployPKS.sh
+# File: ........: deployPAS.sh
 # Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: PCF Installation and Configuration Utility
