@@ -2815,6 +2815,7 @@ echo "debug6: USER:$USER PASS:$PASS"
     ################################ CONFIGURE PKS LOADBALANCERS #################################
     ##############################################################################################
 
+#gaga
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       vmid=$(az vm list -g $DNS_PREFIX --query "[?tags.instance_group=='pivotal-container-service']" | jq -r '.[].name')
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
@@ -3584,6 +3585,12 @@ fi
 	#aws kms list-aliases --region eu-central-1
 	#aws kms delete-alias --alias-name alias/ppp --region eu-central-1
         #aws elbv2 describe-target-groups --region eu-central-1
+
+#sudo om --skip-ssl-validation --target https://pcf.azpks.pcfsdu.com/setup --username admin --password pivotal download-product --pivnet-product-slug='harbor-container-registry' --product-version='1.8.3' --output-directory=/tmp --pivnet-file-glob harbor-container-registry-1.8.3-build.2.pivotal --pivnet-api-token "f8ea72c2e1ce4cc8b9254ee6d0f37c75-r"
+#om --skip-ssl-validation --target https://pcf.azpks.pcfsdu.com/setup --username admin --password pivotal upload-product --product /tmp/harbor-container-registry-1.8.3-build.2.pivotal
+
+# sudo om --skip-ssl-validation --target https://pcf.azpks.pcfsdu.com/setup --username admin --password pivotal download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial --pivnet-file-glob bosh-stemcell-250.25-azure-hyperv-ubuntu-xenial-go_agent.tgz --product-version 250.25 --pivnet-api-token "f8ea72c2e1ce4cc8b9254ee6d0f37c75-r"
+# om --skip-ssl-validation --target https://pcf.azpks.pcfsdu.com/setup --username admin --password pivotal upload-stemcell --stemcell  /tmp/bosh-stemcell-250.25-azure-hyperv-ubuntu-xenial-go_agent.tgz
 
 
 exit

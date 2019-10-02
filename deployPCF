@@ -1,0 +1,104 @@
+#!/bin/bash
+# ############################################################################################
+# File: ........: deployPKS.sh
+# Language .....: bash
+# Author .......: Sacha Dubois, Pivotal
+# Description ..: PCF Installation and Configuration Utility
+# ############################################################################################
+
+PCFDEPLOY=$(basename $0)
+PCFPATH=$(dirname $0)
+
+. $PCFPATH/functions
+
+listDeployments() {
+  printf "%-25s %-5s %-10s %-10s %s\n" "CONFIURATION" "CLOUD" "DEPLOYMENT" "MAINTAINER" "DESCRIPTION" 
+  echo "-----------------------------------------------------------------------------------------------------------"
+
+  for deployment in $(ls -1 ${PCFPATH}/deployments/*.cfg); do
+    . $deployment
+
+    dep=$(basename $deployment) 
+
+    if [ "$PCF_TILE_PKS_VERSION" != "" ]; then 
+      TILE="PKS $PCF_TILE_PKS_VERSION"
+    else
+      TILE="PAS $PCF_TILE_PAS_VERSION"
+    fi
+
+    printf "%-25s %-5s %-10s %-10s %s\n" $dep $PCF_DEPLOYMENT_CLOUD "$TILE" $PCF_DEPLOYMENT_MAINTAINER \
+           "$PCF_DEPLOYMENT_DESCRIPTION"
+  done
+  
+  echo "-----------------------------------------------------------------------------------------------------------"
+}
+
+usage() {
+  echo "USAGE: $PCFDEPLOY <deployment.cfg>"
+}
+
+LIST_DEPLOYMENTS=0
+USAGE=0
+PCFMODE=""
+
+echo ""
+echo "PCF Deployment Utility ($PCFDEPLOY)"
+echo "by Sacha Dubois, Pivotal Inc,"
+echo "-----------------------------------------------------------------------------------------------------------"
+
+DEPLOYMENT="$1"
+if [ "${DEPLOYMENT}" == "" ]; then
+  listDeployments
+  usage; exit 0
+fi
+
+# --- VERIFY DEPLOYMENT ---
+if [ ! -f ${PCFPATH}/deployments/${DEPLOYMENT} ]; then 
+  echo "ERROR: Deployment file $pcf_deployment can not be found in ${PCFPATH}/deployments"
+  exit 1
+fi
+
+cnt=$(egrep -c "^PCF_DEPLOYMENT_CLOUD=" ${PCFPATH}/deployments/$DEPLOYMENT)
+if [ $cnt -eq 0 ]; then
+  echo "ERROR: $pcf_deployment is not a correct PCFCONFIG deployment configuration file"
+  exit 1
+else
+  .  ${PCFPATH}/deployments/${DEPLOYMENT}
+
+  echo "Deployment Settings"
+  messagePrint " - Cloud Provider"           "$PCF_DEPLOYMENT_CLOUD"
+  messagePrint " - Environment Name"         "$PCF_DEPLOYMENT_ENV_NAME"
+  messagePrint " - Deployment Description"   "$PCF_DEPLOYMENT_DESCRIPTION"
+  messagePrint " - Debug Information"        "$PCF_DEPLOYMENT_DEBUG"
+
+  echo "Operation Manager Configuration"
+  messagePrint " - OpsManager Version"       "$PCF_OPSMANAGER_VERSION"
+  messagePrint " - OM Configuration File"    "$PCF_OPSMANAGER_CONFIG"
+  messagePrint " - Administrator User"       "$PCF_OPSMANAGER_ADMIN_USER"
+  messagePrint " - Administrator Password"   "$PCF_OPSMANAGER_ADMIN_PASS"
+
+  if [ "${PCF_DEPLOY_TILE_PKS_VERSION}" != "" ]; then
+    echo "Pivotal Container Platform (PKS)"
+    messagePrint " - PKS Version"            "$PCF_DEPLOY_TILE_PKS_VERSION"
+    messagePrint " - OM Configuration File"  "$PCF_DEPLOY_TILE_PKS_CONFIG"
+    messagePrint " - Config Description"     "$PCF_DEPLOY_TILE_PKS_DESCRIPTION"
+  fi
+fi
+
+# --- VERIFY CLI TOOLS ---
+write_line
+checkCloudCLI
+write_line
+
+# --- CHECK ENVIRONMENT VARIABLES ---
+if [ -f ~/.pcfconfig ]; then 
+  . ~/.pcfconfig
+fi
+
+checkCloudAccess
+installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+
+createENVfile $DEPLOYMENT /tmp/deployPCFenv
+
+
+

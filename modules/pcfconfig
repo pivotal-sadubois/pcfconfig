@@ -210,8 +210,6 @@ echo "########### JUMP SERVER ############"
     GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
     PCFHOME="~/pcfconfig"
     JUMP_HOST=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
-    SSHPAR="-qo StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@$JUMP_HOST"
-    SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 -i ~/.ssh/${JUMP_HOST}.pem ubuntu@$JUMP_HOST"
     SSHPAR="-qo StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30 ubuntu@$JUMP_HOST"
 
     echo ""
