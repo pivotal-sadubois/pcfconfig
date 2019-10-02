@@ -2061,7 +2061,7 @@ checkCloudAccess() {
         echo "                                  => gcloud projects list | sed '1d' | awk '{ print \$1 }'"
       fi
 
-      if [ "${AWS_REGION}" == "" ]; then
+      if [ "${GCP_REGION}" == "" ]; then
         echo "  GCP_REGION                    (required) Choose the GCP Region where your installation should run"
         echo "                                  => gcloud compute zones list | sed '1d' | awk '{ print $2 }' | sort -u"
         echo "                                     europe-west1, us-east1, europe-west4  etc."
