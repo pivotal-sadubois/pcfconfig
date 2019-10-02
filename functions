@@ -57,7 +57,21 @@ showK8sEnvironment() {
   echo ""
 }
 
-command() {
+waitCmd() {
+  read
+}
+
+prtHead() {
+  if [ "${tocindex}" == "" ]; then tocindex=1; else let tocindex=tocindex+1; fi
+  printf "%2d.) %s\n" $tocindex "$1"
+}
+
+prtText() {
+  if [ "${tocindex}" == "" ]; then tocindex=1; else let tocindex=tocindex+1; fi
+  printf "%2s   %s\n" "" "$1"
+}
+
+execCmd() {
   bold=$(tput bold)
   normal=$(tput sgr0)
 
@@ -1630,16 +1644,231 @@ checkCloudAccess() {
         echo "                                  => az account list-locations -o table | awk '{ print $NF }'"
         echo "                                     westeurope, northeurope, switzerlandnorth etc."
       fi
+    else
+      echo "Azure Access Credentials"
+      messagePrint " - Azure SubscriptionId"         "$AZURE_SUBSCRIPTION_ID"
+      messagePrint " - Azure TennantId"              "$AZURE_TENNANT_ID"
+      messagePrint " - Azure ClientId"               "$AZURE_CLIENT_ID"
+      messagePrint " - Azure Client Secret"          "$AZURE_CLIENT_SECRET"
+      messagePrint " - Azure Region"                 "$AZURE_REGION"
+    fi
+
+    if [ "$PCF_TILE_PKS_VERSION" != "" ]; then
+#gaga
+      if [ "${AZURE_PKS_TLS_CERTIFICATE}" == "" -o "${AZURE_PKS_TLS_PRIVATE_KEY}" == "" -o \
+           "${AZURE_PKS_TLS_FULLCHAIN}" == "" ]; then
+
+        missing_variables=1
+        echo ""
+        echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+        echo "  --------------------------------------------------------------------------------------------------------------"
+        echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
+        echo "  certificates can be optained through https://letsencrypt.org."
+        echo ""
+
+        if [ "${AZURE_PKS_TLS_CERTIFICATE}" == "" ]; then
+          echo "  AZURE_PKS_TLS_CERTIFICATE       (optional) TLS Certificate (type PEM Certificate)"
+        fi
+
+        if [ "${AZURE_PKS_TLS_FULLCHAIN}" == "" ]; then
+          echo "  AZURE_PKS_TLS_FULLCHAIN         (optional) TLS Fullchain (type PEM Certificate)"
+        fi
+
+        if [ "${AZURE_PKS_TLS_PRIVATE_KEY}" == "" ]; then
+          echo "  AZURE_PKS_TLS_PRIVATE_KEY       (optional) TLS Private Key"
+        fi
+
+        if [ "${AZURE_TLS_ROOT_CA}" == "" ]; then
+          echo "  AZURE_PKS_TLS_ROOT_CA           (optional) TLS Root CA"
+        fi
+
+        dom="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+        echo "                                  "
+        echo "                                  $PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+        echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
+        echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
+        echo ""
+        echo "                                  The certificate Should include the following domains:"
+        echo "                                  - PKS Services (API, OpsMan, Harbor) .: *.${dom}"            
+        echo "                                  - PKS Cluster and Applications .......: *.apps.cl1.${dom}"
+        echo "                                                                          *.apps.cl2.${dom}"
+        echo "                                                                          *.apps.cl3.${dom}"
+        echo ""
+      else
+        howto=0
+        echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+
+        for n in $AZURE_PKS_TLS_CERTIFICATE $AZURE_PKS_TLS_FULLCHAIN; do
+          cnt=$(grep -c "BEGIN CERTIFICATE" $n) 
+          if [ $cnt -eq 0 ]; then 
+            echo "ERROR: The file ($(basename $n)) is not in (Base64) format"
+            echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
+            exit 1
+          fi
+        done
+
+        for n in $AZURE_PKS_TLS_PRIVATE_KEY; do
+          cnt=$(grep -c "BEGIN RSA PRIVATE KEY" $n)
+          if [ $cnt -eq 0 ]; then
+            echo "ERROR: The file ($(basename $n)) is not (private-key Base64) format"
+            echo "       It should begin with '-----BEGIN RSA PRIVATE' and end with '-----END RSA PRIVATE'"
+            exit 1
+          fi
+        done
+
+        # --- VERIFY THE CERTIFICATE ---
+        cnm="*.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+        cnt=$(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_FULLCHAIN | openssl pkcs7 -print_certs | egrep "^subject|^issuer" | \
+              sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' -e 's/	//g' -e 's/$/XXX/g' | \
+              egrep -c "^\*.${cnm}")
+        if [ $cnt -eq 0 ]; then
+          echo "ERROR: The file ($(basename $AZURE_PKS_TLS_FULLCHAIN)) does not contain the CN=${cnm}" 
+          exit 1
+        fi
+
+        ISSUER="${cnm}"; item_found=1
+        while [ ${item_found} -eq 1 ]; do
+          item_found=0
+          for item in $(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_FULLCHAIN | openssl pkcs7 -print_certs | \
+                        egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
+                        paste -d ':' - -); do
+
+            sub=$(echo "${item}" | awk -F: '{ print $1 }') 
+            iss=$(echo "${item}" | awk -F: '{ print $2 }') 
+
+            if [ "${sub}" == "${ISSUER}" ]; then ISSUER="${iss}"; SUBJECT="${sub}"; item_found=1; fi
+          done
+        done
+
+        ROOT_CA=$ISSUER
+        ROOT_CA_NAME=$(echo $ISSUER | sed 's/~1~/ /g') 
+
+        if [ "${AZURE_PKS_TLS_ROOT_CA}" == "" ]; then 
+          # --- TRY TO FIND THE ROOT_CA ---
+          if [ "${ROOT_CA_NAME}" == "DST Root CA X3" ]; then 
+            ROOT_CA_URL="https://letsencrypt.org/certs/trustid-x3-root.pem.txt"
+            curl --output /tmp/trustid-x3-root.pem $ROOT_CA_URL > /dev/null 2>&1
+            export AZURE_PKS_TLS_ROOT_CA=/tmp/trustid-x3-root.pem
+          fi
+
+          if [ "${AZURE_PKS_TLS_ROOT_CA}" == "" ]; then    
+            echo "ERROR: ROOT_CA for $ROOT_CA_NAME could not be found, please download the file manually" 
+            echo "       and set the variable in the ~/.pcfconfig"
+            echo "       => export AZURE_PKS_TLS_ROOT_CA=<ca.crt>"
+            exit 1
+          fi
+        fi
+
+        # --- VERIFY TO ROOT_CA ---
+        for n in $AZURE_PKS_TLS_ROOT_CA; do
+          if [ ! -f $n ]; then 
+            echo "ERROR: the file $n does not exist"; exit 1
+          fi
+
+          cnt=$(grep -c "BEGIN CERTIFICATE" $n)
+          if [ $cnt -eq 0 ]; then
+            echo "ERROR: The file ($(basename $n)) is not in (Base64) format"
+            echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
+            exit 1
+          fi
+        done
+
+        # --- VERIFY THE CERTIFICATE ISSUER AND SUBJECT ---
+        tmp=$(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_ROOT_CA | openssl pkcs7 -print_certs | \
+              egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
+              paste -d ':' - -)
+        sub=$(echo "${tmp}" | awk -F: '{ print $1 }' | sed 's/~1~/ /g') 
+        iss=$(echo "${tmp}" | awk -F: '{ print $2 }' | sed 's/~1~/ /g') 
+        if [ "${iss}" != "${sub}" ]; then
+          echo "ERROR: $AZURE_PKS_TLS_ROOT_CA is not a Root CA. Issuer and Subject should be the same"
+          echo "       => File: $AZURE_PKS_TLS_ROOT_CA Issuer=$sub / Subject=$iss"
+          exit 1
+        fi
+
+        if [ "${iss}" != "${ROOT_CA_NAME}" ]; then
+          echo "ERROR: $AZURE_PKS_TLS_ROOT_CA is not Signed by $ROOT_CA_NAME."
+          echo "       => File: $AZURE_PKS_TLS_ROOT_CA Subject=$iss"
+          exit 1
+        fi
+
+        # --- VERIFY CERTITICATE AND FULLCHAAIN SIGNED BY ROOT_CA ---
+        cat $AZURE_PKS_TLS_ROOT_CA $AZURE_PKS_TLS_FULLCHAIN > /tmp/ca.crt
+        openssl verify -CAfile /tmp/ca.crt $AZURE_PKS_TLS_CERTIFICATE > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Certificate ($AZURE_PKS_TLS_CERTIFICATE) was not signed by the Roor CA ($ROOT_CA_NAME)"
+          exit 1
+        fi
+
+        openssl verify -CAfile /tmp/ca.crt $AZURE_PKS_TLS_FULLCHAIN > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Certificate ($AZURE_PKS_TLS_FULLCHAIN) was not signed by the Roor CA ($ROOT_CA_NAME)"
+          exit 1
+        fi
+
+        messagePrint " - TLS Certificate"                  "$AZURE_PKS_TLS_CERTIFICATE"
+        messagePrint " - TLS fullchain"                    "$AZURE_PKS_TLS_FULLCHAIN"
+        messagePrint " - TLS Private Key"                  "$AZURE_PKS_TLS_PRIVATE_KEY"
+        messagePrint " - TLS Root CA ($ROOT_CA_NAME)"      "$AZURE_PKS_TLS_ROOT_CA"
+      fi
+    else
+#gaga
+      if [ "${AZURE_PAS_TLS_CERTIFICATE}" == "" -o "${AZURE_PAS_TLS_PRIVATE_KEY}" == "" -o \
+           "${AZURE_PAS_TLS_FULLCHAIN}" == "" ]; then
+
+        missing_variables=1
+        echo ""
+        echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+        echo "  --------------------------------------------------------------------------------------------------------------"
+        echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
+        echo "  certificates can be optained through https://letsencrypt.org."
+        echo ""
+
+        if [ "${AZURE_PAS_TLS_CERTIFICATE}" == "" ]; then
+          echo "  AZURE_PAS_TLS_CERTIFICATE       (optional) TLS Certificate (type PEM Certificate)"
+        fi
+
+        if [ "${AZURE_PAS_TLS_PRIVATE_KEY}" == "" ]; then
+          echo "  AZURE_PAS_TLS_PRIVATE_KEY       (optional) TLS Private Key"
+        fi
+
+        if [ "${AZURE_PAS_TLS_ROOT_CA}" == "" ]; then
+          echo "  AZURE_PAS_TLS_ROOT_CA           (optional) TLS Root CA"
+        fi
+
+        dom="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+        echo "                                  "
+        echo "                                  $PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+        echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
+        echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
+        echo ""
+        echo "                                  The certificate Should include the following domains:"
+        echo "                                  - PAS Services (API, OpsMan)..........: *.${dom}"            
+        echo "                                  - PAS System Domain ..................: *.sys.${dom}"
+        echo "                                  - PAS Application Domain .............: *.apps.${dom}"
+      else
+        echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+        messagePrint " - TLS Certificate"         "$AZURE_PAS_TLS_CERTIFICATE"
+        messagePrint " - TLS Private Key"         "$AZURE_PAS_TLS_PRIVATE_KEY"
+        messagePrint " - TLS Root CA"             "$AZURE_PAS_TLS_ROOT_CA"
+      fi
 
       echo 
       echo "  Preparing to Deploy Ops Manager on Azure Manually"
       echo "  https://docs.pivotal.io/pcf/om/2-6/azure/prepare-env-manual.html"
       #echo "  --------------------------------------------------------------------------------------------------------------"
+
+      # VERIFY ROOTCA
+      # https://kb.wisc.edu/middleware/page.php?id=4543
+      openssl verify -verbose -CAfile cacert.pem  server.crt
+
+      # Let's Encrypt - Chain of Trust
+      # https://letsencrypt.org/certificates/
+  
     fi
   fi
 
-  if [ "${PCF_PIVNET_TOKEN}" == "" -o "${PCF_ENVIRONMENT_NAME}" == "" -o \
-       "${AWS_HOSTED_DNS_DOMAIN}" == "" -o "${AWS_HOSTED_ZONE_ID}" == "" ]; then
+  if [ "${PCF_PIVNET_TOKEN}" == "" -o "${AWS_ACCESS_KEY}" == "" -o \
+       "${AWS_SECRET_KEY}" == "" -o "${AWS_HOSTED_DNS_DOMAIN}" == "" ]; then
 
     missing_variables=1
     echo ""
@@ -1651,8 +1880,14 @@ checkCloudAccess() {
       echo "                                  => https://network.pivotal.io/users/dashboard/edit-profile"
     fi
 
-    if [ "${PCF_ENVIRONMENT_NAME}" == "" ]; then
-      echo "  PCF_ENVIRONMENT_NAME            (required) Represent your environment ie. mypas, mypks etc."
+    if [ "${AWS_ACCESS_KEY}" == "" ]; then
+      echo "  AWS_ACCESS_KEY                  (required) A DNS Domain managed by AWS Route 53 ie. yourdomain.com with a"
+      echo "                                  valid DNS Zone. => https://console.aws.amazon.com/route53"
+    fi
+
+    if [ "${AWS_SECRET_KEY}" == "" ]; then
+      echo "  AWS_SECRET_KEY                  (required) A DNS Domain managed by AWS Route 53 ie. yourdomain.com with a"
+      echo "                                  valid DNS Zone. => https://console.aws.amazon.com/route53"
     fi
 
     if [ "${AWS_HOSTED_DNS_DOMAIN}" == "" ]; then
@@ -1660,49 +1895,77 @@ checkCloudAccess() {
       echo "                                  valid DNS Zone. => https://console.aws.amazon.com/route53"
     fi
 
-    if [ "${AWS_HOSTED_ZONE_ID}" == "" ]; then
-      echo "  AWS_HOSTED_ZONE_ID              (required) An AWS Route 53 Token is required to add/update DNS records"
-      echo "                                  => https://console.aws.amazon.com/route53 -> hosted Zones -> Zone ID"
-    fi
-  fi
+    #if [ "${AWS_HOSTED_ZONE_ID}" == "" ]; then
+    #  echo "  AWS_HOSTED_ZONE_ID              (required) An AWS Route 53 Token is required to add/update DNS records"
+    #  echo "                                  => https://console.aws.amazon.com/route53 -> hosted Zones -> Zone ID"
+    #fi
+  else
+    echo "Supporting services access (Pivotal Network, AWS Route53)"
+    messagePrint " - Pivotal Network Token"           "$PCF_PIVNET_TOKEN"
+    messagePrint " - AWS Route53 Hosted DNS Domain"   "$AWS_HOSTED_DNS_DOMAIN"
 
-  if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" -o \
-       "${TLS_ROOT_CA}" == "" ]; then
-
-    missing_variables=1
-    echo ""
-    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
-    echo "  --------------------------------------------------------------------------------------------------------------"
-
-    if [ "${TLS_CERTIFICATE}" == "" ]; then
-      echo "  TLS_CERTIFICATE=<cert.pem>      (optional) To allow TLS encrypted httpd traffic a Certificate and key needs to"
-    fi
-
-    if [ "${TLS_PRIVATE_KEY}" == "" ]; then
-      echo "  TLS_PRIVATE_KEY=<key.pem>       be created for your DNS Domain. Free certificates can be optained"
+    # --- VERIFY PIVNET ACCESS ---
+    pivnetAPI $PCF_PIVNET_TOKEN
+    if [ $? -ne 0 ]; then
+      write_line
+      echo "ERROR: Pivnet Token: $PCF_PIVNET_TOKEN does not seam to be valit. Please greate a new one by"
+      echo "       login to http://network.pivotal.io => Your login Name => Edit Profile => UAA API TOKEN"
+      exit 1
     fi
 
-    if [ "${TLS_ROOT_CA}" == "" ]; then
-      echo "  TLS_ROOT_CA=<ca.pem>            through https://letsencrypt.org. Please include the following Wildcard entries"
+    # --- CHECK IF AWS CLI IS CONFIGURED ---
+    if [ ! -d ~/.aws -o -d ~/.aws/credentials ]; then
+      echo "ERROR: AWS CLI is not configured yet, please run aws configure"
+      echo "       => aws configure"
+      exit 1
     fi
 
-    echo "                                  "
-    echo "                                  <env>.<domain>"
-    echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
-    echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
-    echo ""
-    echo "                                  PAS *.<env>.<domain> *.apps.<domain> *.sys.<env>.<domain>"
-    echo "                                  PKS *.<env>.<domain> *.apps-cl1.<env>.<domain> *.apps-cl2.<env>.<domain>"
-    echo "                                      *.apps-cl3.<env>.<domain> *.api.<env>.<domain>"
-    echo ""
+    export AWS_HOSTED_ZONE_ID=$(aws route53 list-hosted-zones --query "HostedZones[?starts_with(to_string(Name), '${AWS_HOSTED_DNS_DOMAIN}.')]" | \
+                        jq -r '.[].Id' | awk -F '/' '{ print $NF }')
+    if [ $? -ne 0 -o "${AWS_HOSTED_ZONE_ID}" == "" ]; then
+      echo "ERROR: failed to get domain information for ($AWS_HOSTED_DNS_DOMAIN)"
+      echo "       => aws route53 list-hosted-zones --query \"HostedZones[?starts_with(to_string(Name), '${AWS_HOSTED_DNS_DOMAIN}.')]\""
+      exit 1
+    else
+      messagePrint " - AWS Route53 ZoneID"              "$AWS_HOSTED_ZONE_ID"
+    fi
+
+    #pivnetAPI $PCF_PIVNET_TOKEN GET products/pivotal-container-service/releases/112041/eula_acceptance
+    #pivnetAPI $PCF_PIVNET_TOKEN GET products/pivotal-container-service/releases
+
+    pslug="pivotal-container-service"; pver="1.5"
+    pslug="elastic-runtime"; pver="2.6.6"
+    pslug="elastic-runtime"; pver="467928"
+
+
   fi
 
   if [ ${missing_variables} -eq 1 ]; then
-    echo "  Please set the missing environment variables to proceed as mentioned above. You can set them in the pcfconfig"
-    echo "  file in your home directory ~/.pcfconfig or just in your shell. Please use the 'export' command for all variables"
-    echo "    ie. => export TLS_CERTIFICATE=/home/demouser/certs/cert.pem"
+    echo "  IMPORTANT: Please set the missing environment variables either in your shell or in the pcfconfig"
+    echo "             configuration file ~/.pcfconfig and set all variables with the 'export' notation"
+    echo "             ie. => export AZURE_PKS_TLS_CERTIFICATE=/home/demouser/certs/cert.pem"
   fi
   write_line
+
+}
+
+pivnetAPI() {
+  REFRESH_TOKEN="$1"
+  token=$(curl -X POST https://network.pivotal.io/api/v2/authentication/access_tokens \
+               -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}" 2>/dev/null | jq -r '.access_token')
+  if [ "${token}" == "" -o "${token}" == "null" ]; then return 1; fi
+
+  # --- LOGIN INTO PIVNET ---
+  curl -X GET https://network.pivotal.io/api/v2/authentication -H "Authorization: Bearer $token" 
+
+  # --- PIVNET ACCESS TEST ---
+  if [ "${2}" == "" ]; then 
+    return 0
+  fi
+
+  curl -H "Authorization: Bearer $token" -X $2 https://network.pivotal.io/api/v2/$3
+
+  return 0
 }
 
 checkCloudCLI() {
