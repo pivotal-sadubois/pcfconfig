@@ -2058,7 +2058,7 @@ checkCloudAccess() {
 
       if [ "${GCP_PROJECT}" == "" ]; then
         echo "  GCP_PROJECT                   (required) GCP Project"
-        echo "                                  => gcloud projects list | sed '1d' | awk '{ print $1 }'"
+        echo "                                  => gcloud projects list | sed '1d' | awk '{ print \$1 }'"
       fi
 
       if [ "${AWS_REGION}" == "" ]; then
