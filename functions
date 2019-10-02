@@ -1869,7 +1869,6 @@ verifyCertificate () {
   if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" -o \
        "${TLS_FULLCHAIN}" == "" ]; then
     
-    missing_variables=1
     echo ""
     echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
     echo "  --------------------------------------------------------------------------------------------------------------"
