@@ -2252,6 +2252,7 @@ checkCloudAccess() {
     echo "             configuration file ~/.pcfconfig and set all variables with the 'export' notation"
     echo "             ie. => export AZURE_PKS_TLS_CERTIFICATE=/home/demouser/certs/cert.pem"
     echo "  --------------------------------------------------------------------------------------------------------------"
+    exit 1
   fi
 }
 
