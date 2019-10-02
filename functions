@@ -23,8 +23,96 @@ demo_usage() {
 }
 
 verifyEnvVariables() {
-echo gaga
+a=1
+}
 
+createENVfile() {
+  dep="$1"
+  envFile="$2"
+
+  PCFPATH=$(dirname $0)
+
+  rm -f $env
+  . ${PCFPATH}/deployments/$dep
+
+  cat ${PCFPATH}/deployments/$dep | sed '/^$/d' > $envFile
+
+
+  echo "AWS_HOSTED_ZONE_ID=$AWS_HOSTED_ZONE_ID"                           >> $envFile
+  echo "AWS_HOSTED_DNS_DOMAIN=$AWS_HOSTED_DNS_DOMAIN"                     >> $envFile
+  echo "PCF_PIVNET_TOKEN=$PCF_PIVNET_TOKEN"                               >> $envFile
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    echo "GCP_SERVICE_ACCOUNT=\"$GCP_SERVICE_ACCOUNT\""                   >> $envFile
+    echo "GCP_REGION=\"$GCP_SERVICE_ACCOUNT\""                            >> $envFile
+    echo "GCP_SERVICE_ACCOUNT=\"$GCP_SERVICE_ACCOUNT\""                   >> $envFile
+
+    if [ "${PCF_TILE_PKS_DEPLOY}" == "true" ]; then 
+      if [ "${GCP_PKS_TLS_CERTIFICATE}" != "" -a "${GCP_PKS_TLS_FULLCHAIN}" != "" -a \
+           "${GCP_PKS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "GCP_PKS_TLS_CERTIFICATE=\"$GCP_PKS_TLS_CERTIFICATE\""       >> $envFile
+        echo "GCP_PKS_TLS_FULLCHAIN=\"$GCP_PKS_TLS_FULLCHAIN\""           >> $envFile
+        echo "GCP_PKS_TLS_PRIVATE_KEY=\"$GCP_PKS_TLS_PRIVATE_KEY\""       >> $envFile
+      fi
+    fi
+
+    if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then
+      if [ "${GCP_PAS_TLS_CERTIFICATE}" != "" -a "${GCP_PAS_TLS_FULLCHAIN}" != "" -a \
+           "${GCP_PAS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "GCP_PAS_TLS_CERTIFICATE=\"$GCP_PAS_TLS_CERTIFICATE\""       >> $envFile
+        echo "GCP_PAS_TLS_FULLCHAIN=\"$GCP_PAS_TLS_FULLCHAIN\""           >> $envFile
+        echo "GCP_PAS_TLS_PRIVATE_KEY=\"$GCP_PAS_TLS_PRIVATE_KEY\""       >> $envFile
+      fi
+    fi
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    echo "AWS_ACCESS_KEY=\"$AWS_ACCESS_KEY\""                             >> $envFile
+    echo "AWS_SECRET_KEY=\"$AWS_SECRET_KEY\""                             >> $envFile
+    echo "AWS_REGION=\"$AWS_REGION\""                                     >> $envFile
+
+    if [ "${PCF_TILE_PKS_DEPLOY}" == "true" ]; then 
+      if [ "${AWS_PKS_TLS_CERTIFICATE}" != "" -a "${AWS_PKS_TLS_FULLCHAIN}" != "" -a \
+           "${AWS_PKS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "AWS_PKS_TLS_CERTIFICATE=\"$AWS_PKS_TLS_CERTIFICATE\""       >> $envFile
+        echo "AWS_PKS_TLS_FULLCHAIN=\"$AWS_PKS_TLS_FULLCHAIN\""           >> $envFile
+        echo "AWS_PKS_TLS_PRIVATE_KEY=\"$AWS_PKS_TLS_PRIVATE_KEY\""       >> $envFile
+      fi
+    fi
+
+    if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then
+      if [ "${AWS_PAS_TLS_CERTIFICATE}" != "" -a "${AWS_PAS_TLS_FULLCHAIN}" -o \
+           "${AWS_PAS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "AWS_PAS_TLS_CERTIFICATE=\"$AWS_PAS_TLS_CERTIFICATE\""       >> $envFile
+        echo "AWS_PAS_TLS_FULLCHAIN=\"$AWS_PAS_TLS_FULLCHAIN\""           >> $envFile
+        echo "AWS_PAS_TLS_PRIVATE_KEY=\"$AWS_PAS_TLS_PRIVATE_KEY\""       >> $envFile
+      fi
+    fi
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    echo "AZURE_SERVICE_ACCOUNT=\"$AZURE_SERVICE_ACCOUNT\""               >> $envFile
+    
+    if [ "${PCF_TILE_PKS_DEPLOY}" == "true" ]; then 
+      if [ "${AZURE_PKS_TLS_CERTIFICATE}" != "" -a "${AZURE_PKS_TLS_FULLCHAIN}" -o \
+           "${AZURE_PKS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "AZURE_PKS_TLS_CERTIFICATE=\"$AZURE_PKS_TLS_CERTIFICATE\""   >> $envFile
+        echo "AZURE_PKS_TLS_FULLCHAIN=\"$AZURE_PKS_TLS_FULLCHAIN\""       >> $envFile
+        echo "AZURE_PKS_TLS_PRIVATE_KEY=\"$AZURE_PKS_TLS_PRIVATE_KEY\""   >> $envFile
+      fi
+    fi
+
+    if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then 
+      if [ "${AZURE_PAS_TLS_CERTIFICATE}" != "" -a "${AZURE_PAS_TLS_FULLCHAIN}" -o \
+           "${AZURE_PAS_TLS_PRIVATE_KEY}" != "" ]; then
+        echo "AZURE_PAS_TLS_CERTIFICATE=\"$AZURE_PAS_TLS_CERTIFICATE\""   >> $envFile
+        echo "AZURE_PAS_TLS_FULLCHAIN=\"$AZURE_PAS_TLS_FULLCHAIN\""       >> $envFile
+        echo "AZURE_PAS_TLS_PRIVATE_KEY=\"$AZURE_PAS_TLS_PRIVATE_KEY\""   >> $envFile
+      fi
+    fi
+  fi
+
+  scripts/deployPCFremote.sh $envFile
 }
 
 verifyTLScertificate() {
@@ -84,18 +172,19 @@ execCmd() {
   if [ $? -ne 0 ]; then exit 1; fi
 }
 
-
 installJumpHost() {
-  if [ "${CLOUD_PROVIDER}" == "azure" ]; then
-    messagePrint "Creating Azure Jump-Server" "pcfjump"
+  JUMP_HOST="$1"
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    messagePrint "Creating Azure Jump-Server" "$JUMP_HOST"
 
     stt=$(az group exists --name Admin)
     if [ "$stt" == "false" ]; then
       messagePrint " - Creating Azure Ressource Group" "Admin"
-      az group create --name Admin --location $AZURE_LOCATION > /dev/null 2>&1
+      az group create --name Admin --location $AZURE_REGION > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating Ressource Group Admin"
-        echo "       => az group create --name Admin --location $AZURE_LOCATION"
+        echo "       => az group create --name Admin --location $AZURE_REGION"
         exit 1
       fi
     else
@@ -193,49 +282,96 @@ installJumpHost() {
       messagePrint " - Verify NIC" "AdminNic"
     fi
 
-    nam=$(az vm list --query "[?contains(name, 'jump')]" | jq -r '.[].name')
-    if [ "$nam" != "jump" ]; then
-      messagePrint " - Creating VM" "jump"
+#gaga
+    nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
+    if [ "$nam" != "$JUMP_HOST" ]; then
+      messagePrint " - Creating VM" "$JUMP_HOST"
 
       az vm create \
           --resource-group Admin \
-          --name jump \
-          --location $AZURE_LOCATION \
+          --name $JUMP_HOST \
+          --location $AZURE_REGION \
           --nics AdminNic \
           --image UbuntuLTS \
           --admin-username ubuntu \
           --generate-ssh-keys > /dev/null 2>&1
       if [ $? -ne 0 ]; then
-        echo "ERROR: Creating NIC AdminNic"
+        echo "ERROR: Creating VM"
+        echo "       => az vm create --resource-group Admin --name $JUMP_HOST --location $AZURE_REGION \\"
+        echo "          --nics AdminNic --image UbuntuLTS --admin-username ubuntu --generate-ssh-keys"
         exit 1
       fi
     else
-      messagePrint " - Verify NIC" "AdminNic"
+      stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState') 
+      messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
+      if [ "${stt}" != "VM running" ]; then 
+        messagePrint " - Starting VM" "$JUMP_HOST"
+        az vm start --resource-group Admin --name $JUMP_HOST
+      fi
     fi
+
+    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+
+    # --- UPDATE DNS DOMAIN ---
+    messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+    messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+    route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+
+    sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$pip
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
-  if [ "${CLOUD_PROVIDER}" == "gcp" ]; then
-    messagePrint "Creating GCP Jump-Server" "pcfjump"
+#gaga
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
     IMAGE_FAMILY="ubuntu-1804-lts"
-    INSTANCE_NAME="pcfjump"
+    INSTANCE_NAME="pcfjump":w
+    INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
     INSTANCE_TYPE="n1-standard-8"
     INSTANCE_TYPE="n1-standard-1"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
-    cnt=$(gcloud compute instances list --filter="name=( 'pcfjump' )" 2>/dev/null | egrep -c "^pcfjump")
+    cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
     if [ $cnt -eq 0 ]; then
-echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family=$IMAGE_FAMILY --image-project=ubuntu-os-cloud --maintenance-policy=TERMINATE --machine-type=$INSTANCE_TYPE"
+      messagePrint " - Creating VM" "$INSTANCE_NAME"
+
       gcloud compute instances create $INSTANCE_NAME \
         --zone=$ZONE \
         --image-family=$IMAGE_FAMILY \
         --image-project=ubuntu-os-cloud  \
         --maintenance-policy=TERMINATE \
         --machine-type=$INSTANCE_TYPE > /dev/null 2>&1
+      gcloud compute config-ssh > /dev/null 2>&1
+    else
+      messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
+
+      stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
+      if [ "${stt}" != "RUNNING" ]; then
+        messagePrint " - Starting VM" "$INSTANCE_NAME"
+        gcloud compute instances start $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
+        gcloud compute config-ssh > /dev/null 2>&1
+      fi
     fi
+
+    prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+
+    SSH_USER=$(whoami)
+    SSH_HOME=/home/$(whoami)
+    SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
-  if [ "${CLOUD_PROVIDER}" == "aws" ]; then
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
          Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
     if [ "${ins}" == "" ]; then
@@ -286,7 +422,6 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
             echo "                  --cidr-block 10.0.$i.0/24 --availability-zone $zone"; exit 1
           fi
   
-#gagadu
           aws ec2 --region=$AWS_REGION create-tags --resources $sid --tags Key=type,Value=pcfjump > /dev/null 2>&1
           if [ $? -ne 0 ]; then
             echo "ERROR: Creating of Tags failed"
@@ -373,7 +508,6 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
           aws ec2 --region=$AWS_REGION associate-route-table  --subnet-id $sid --route-table-id $rtb
           echo "-----------------------------------------------------------------------------------------------------------"
         fi
-#gaga
 
         aws ec2 --region=$AWS_REGION modify-subnet-attribute --subnet-id $sid --map-public-ip-on-launch > /dev/null 2>&1
         if [ $? -ne 0 ]; then
@@ -417,10 +551,10 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
       aim=ami-0085d4f8878cddc81  # Ubuntu Server t2.medium
       typ=t2.medium
 
-      messagePrint " - Create Instance" "pcfjump"
+      messagePrint " - Create Instance" "$JUMP_HOST"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
-             --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
-             --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]' > /dev/null 2>&1
+              --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
+              --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST}]" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
@@ -440,17 +574,142 @@ echo "gcloud compute instances create $INSTANCE_NAME --zone=$ZONE --image-family
       pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
            jq -r ".Reservations[].Instances[].PublicIpAddress")
   
-      #ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${ENV_NAME}.${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
-      #ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
+      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_HOSTED_DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-      messagePrint " - DNS Zone (${DNS_DOMAIN}:" "zone managed by route53"
-      messagePrint " - Updating Zone Record:" "$JUMP_HOST"
+      messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
 
-      # --- ROUTE53 TOKEN SPECIDIED ---
-      if [ "${ROUTE53_TOKEN}" != "" ]; then
+      # --- UPDATE DNS DOMAIN ---
+      route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+    else
+      messagePrint "Verify AWS Jump-Server" "$JUMP_HOST"
+      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+          jq -r ".Reservations[].Instances[].State.Name")
 
-cat << EOF | sed -e "s/FQHN/$JUMP_HOST/g" -e "s/IPADDR/$pip/g" > /tmp/$$_zone_record
+      messagePrint " - Verify Instance: $ins" "$stt"
+      if [ "${stt}" == "stopped" ]; then
+        messagePrint " - Starting Instance: $ins" "this can take several minutes"
+        aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
+        sleep 30
+      fi
+
+      ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+           Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+      pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+           jq -r ".Reservations[].Instances[].PublicIpAddress")
+
+      # --- UPDATE DNS DOMAIN ---
+      messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+      route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+    fi
+
+    sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$JUMP_HOST
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
+  fi
+
+  # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
+  ret=1
+  while [ $ret -ne 0 ]; do
+    $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
+    [ $ret -ne 0 ] && sleep 10
+  done
+  
+  GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
+  PCFHOME="${SSH_HOME}/pcfconfig"
+
+  messagePrint " - Verify SSH Access" "success"
+  messagePrint " - Update GIT repo"   "$GITPCF"
+
+  $SSH_COMMAND -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF > /dev/null 2>&1"
+  $SSH_COMMAND -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull > /dev/null 2>&1"
+
+  # --- HOSTNAME ---
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    $SSH_COMMAND -n "sudo hostname $JUMP_HOST > /dev/null 2>&1"
+  fi
+
+  # --- TEST FOR RUNNING REMOTE SCRIPT ---
+  stt=$($SSH_COMMAND -n "[ -f /tmp/pcfconfig.pid ] && pgrep -F /tmp/pcfconfig.pid")
+  stt=$($SSH_COMMAND -n "[ -f /jump_software_installed ] && echo true")
+  if [ "${stt}" == "" ]; then
+    messagePrint " - Install CLI Utilities"   "aws,az,gcp,bosh,pivnet,cf,om,jq"
+    $SSH_COMMAND -n "[ -d $SSH_HOME/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
+        sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PCF_PIVNET_TOKEN > /dev/null 2>&1"
+
+    # --- COPY THE AWS DIRECTORY ---
+    $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
+  fi
+
+  if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
+    $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
+    $SCP_COMMAND $TLS_FULLCHAIN   ${SSH_USER}@${SSH_HOST}:/tmp/tls_fullchain.pem > /dev/null 2>&1
+    $SCP_COMMAND $TLS_PRIVATE_KEY ${SSH_USER}@${SSH_HOST}:/tmp/tls_private_key.pem > /dev/null 2>&1
+    $SCP_COMMAND $TLS_ROOT_CA     ${SSH_USER}@${SSH_HOST}:/tmp/tls_root_ca.pem > /dev/null 2>&1
+
+    TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem \
+            --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    $SSH_COMMAND -n "az login --username $AZURE_CLIENT_ID \
+       --password $AZURE_CLIENT_SECRET --service-principal --tenant $AZURE_TENANT_ID >/dev/null 2>&1"
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to login to azure on jumphost"
+      echo "       => ssh ${SSHPAR}"
+      echo "       => az login --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET \\"
+      echo "            --service-principal --tenant $AZURE_TENANT_ID"
+      exit 1
+    fi
+
+    $SSH_COMMAND -n "az group list >/dev/null 2>&1"
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to login to azure on jumphost"
+      echo "       => ssh ${SSHPAR}"
+      echo "       => az group list"
+      exit 1
+    fi
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    $SSH_COMMAND -n "gcloud compute instances list > /dev/null 2>&1"; stt=$?
+    if [ "${stt}" -ne 0 ]; then
+      GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }')
+      GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT)
+
+      echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
+      $SCP_COMMAND $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
+      $SSH_COMMAND gcloud auth login --no-launch-browser --brief --quiet --project $GCP_PROJECT
+      $SSH_COMMAND -n "gcloud config set project $GCP_PROJECT"
+      $SSH_COMMAND -n "gcloud auth activate-service-account --quiet --key-file=/tmp/$GCPSVC 2>/dev/null"
+      echo "-----------------------------------------------------------------------------------------------------------"
+
+    fi
+  fi
+
+  echo 
+  echo "# --- JUMP HOST ACCESS ---"
+  echo "$SSH_COMMAND"
+}
+
+route53setDNSrecord () {
+  ipa=$1; hnm=$2; dom=$3
+
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${dom} | jq -r '.HostedZones[0].Id')
+  ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+  if [ "${ZONE_ID}" == "" ]; then 
+    echo "ERROR: ZoneID for domain $dom can not be optained, please veriofy manually"
+    echo "       aws route53 list-hosted-zones-by-name --dns-name ${dom}"
+    exit 1
+  fi
+
+cat << EOF | sed -e "s/FQHN/$hnm/g" -e "s/IPADDR/$ipa/g" > /tmp/$$_zone_record
 {
             "Comment": "CREATE/DELETE/UPSERT a record ",
             "Changes": [{
@@ -463,26 +722,14 @@ cat << EOF | sed -e "s/FQHN/$JUMP_HOST/g" -e "s/IPADDR/$pip/g" > /tmp/$$_zone_re
 }}]
 }
 EOF
-      fi
 
-      echo "-----------------------------------------------------------------------------------------------------------"
-      aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
-      echo "-----------------------------------------------------------------------------------------------------------"
-
-    else
-      messagePrint "Verify AWS Jump-Server" "$JUMP_HOST"
-      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
-          jq -r ".Reservations[].Instances[].State.Name")
-      messagePrint " - Verify Instance: $ins" "$stt"
-      if [ "${stt}" == "stopped" ]; then
-        messagePrint " - Starting Instance: $ins" ""
-        aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
-        sleep 300
-      fi
-    fi
-  fi
-
-  echo "installJumpHost: completed"
+   aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
+   if [ $? -ne 0 ]; then 
+     echo "ERROR: failed to set DNS for $hnm"
+     echo "       => aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record"
+     cat /tmp/$$_zone_record
+     exit 1
+   fi
 }
 
 cleanRoute53() {
@@ -1611,11 +1858,275 @@ checkOpsMantools() {
   fi
 }
 
+verifyCertificate () {
+  CLOUD="$1"
+  MODE="$2"
+  TLS_CERTIFICATE="$3"
+  TLS_FULLCHAIN="$4"
+  TLS_PRIVATE_KEY="$5"
+  TLS_ROOT_CA="$6"
+
+  if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" -o \
+       "${TLS_FULLCHAIN}" == "" ]; then
+    
+    missing_variables=1
+    echo ""
+    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+    echo "  --------------------------------------------------------------------------------------------------------------"
+    echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
+    echo "  certificates can be optained through https://letsencrypt.org."
+    echo "" 
+        
+    if [ "${TLS_CERTIFICATE}" == "" ]; then
+      echo "  ${CLOUD}_${MODE}_TLS_CERTIFICATE       (optional)  TLS Certificate (type PEM Certificate)"
+    fi
+    
+    if [ "${TLS_FULLCHAIN}" == "" ]; then
+      echo "  ${CLOUD}_${MODE}_TLS_FULLCHAIN         (optional)  TLS Fullchain (type PEM Certificate)"
+    fi
+    
+    if [ "${TLS_PRIVATE_KEY}" == "" ]; then
+      echo "  ${CLOUD}_${MODE}_TLS_PRIVATE_KEY       (optional)  TLS Private Key"
+    fi
+    
+    if [ "${ROOT_CA}" == "" ]; then 
+      echo "  ${CLOUD}_${MODE}_TLS_ROOT_CA           (automatic) TLS Root CA"
+    fi
+        
+    dom="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+    echo "                                  "
+    echo "                                  $PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+    echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
+    echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
+    echo ""                                 
+    echo "                                  The certificate Should include the following domains:"
+    echo "                                  - PKS Services (API, OpsMan, Harbor) .: *.${dom}"
+    echo "                                  - PKS Cluster and Applications .......: *.apps.cl1.${dom}"
+    echo "                                                                          *.apps.cl2.${dom}"
+    echo "                                                                          *.apps.cl3.${dom}"
+    echo ""
+  else
+    echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+
+    for n in $TLS_CERTIFICATE $TLS_FULLCHAIN; do
+      cnt=$(grep -c "BEGIN CERTIFICATE" $n) 
+      if [ $cnt -eq 0 ]; then 
+        echo "ERROR: The file ($n) is not in (Base64) format"
+        echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
+        exit 1
+      fi
+    done
+
+    for n in $TLS_PRIVATE_KEY; do
+      cnt=$(egrep -c "BEGIN RSA PRIVATE|BEGIN PRIVATE" $n)
+      if [ $cnt -eq 0 ]; then
+        echo "ERROR: The file ($n) is not (private-key Base64) format"
+        echo "       It should begin with '-----BEGIN RSA PRIVATE' and end with '-----END RSA PRIVATE'"
+        exit 1
+      fi
+    done
+
+    # --- VERIFY THE CERTIFICATE ---
+    cnm="*.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    cnt=$(openssl crl2pkcs7 -nocrl -certfile $TLS_FULLCHAIN | openssl pkcs7 -print_certs | egrep "^subject|^issuer" | \
+          sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' -e 's/	//g' -e 's/$/XXX/g' | \
+          egrep -c "^\*.${cnm}")
+    if [ $cnt -eq 0 ]; then
+      echo "ERROR: The file ($(basename $TLS_FULLCHAIN)) does not contain the CN=${cnm}" 
+      exit 1
+    fi
+
+
+    ISSUER="${cnm}"; item_found=1
+    while [ ${item_found} -eq 1 ]; do
+      item_found=0
+      for item in $(openssl crl2pkcs7 -nocrl -certfile $TLS_FULLCHAIN | openssl pkcs7 -print_certs | \
+                    egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
+                    paste -d ':' - -); do
+  
+        sub=$(echo "${item}" | awk -F: '{ print $1 }') 
+        iss=$(echo "${item}" | awk -F: '{ print $2 }') 
+  
+        if [ "${sub}" == "${ISSUER}" ]; then ISSUER="${iss}"; SUBJECT="${sub}"; item_found=1; fi
+      done
+    done
+
+    ROOT_CA=$ISSUER
+    ROOT_CA_NAME=$(echo $ISSUER | sed 's/~1~/ /g') 
+
+    if [ "${TLS_ROOT_CA}" == "" ]; then 
+      # --- TRY TO FIND THE ROOT_CA ---
+      if [ "${ROOT_CA_NAME}" == "DST Root CA X3" ]; then 
+        ROOT_CA_URL="https://letsencrypt.org/certs/trustid-x3-root.pem.txt"
+        curl --output /tmp/trustid-x3-root.pem $ROOT_CA_URL > /dev/null 2>&1
+        TLS_ROOT_CA=/tmp/trustid-x3-root.pem
+        eval export ${CLOUD}_${MODE}_TLS_ROOT_CA=/tmp/trustid-x3-root.pem
+      fi
+
+      if [ "${TLS_ROOT_CA}" == "" ]; then    
+        echo "ERROR: ROOT_CA for $ROOT_CA_NAME could not be found, please download the file manually" 
+        echo "       and set the variable in the ~/.pcfconfig"
+        echo "       => export ${CLOUD}_${MODE}_TLS_ROOT_CA=<ca.crt>"
+        exit 1
+      fi
+    fi
+
+    # --- VERIFY TO ROOT_CA ---
+    for n in $TLS_ROOT_CA; do
+      if [ ! -f $n ]; then 
+        echo "ERROR: the file $n does not exist"; exit 1
+      fi
+
+      cnt=$(grep -c "BEGIN CERTIFICATE" $n)
+      if [ $cnt -eq 0 ]; then
+        echo "ERROR: The file ($(basename $n)) is not in (Base64) format"
+        echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
+        exit 1
+      fi
+    done
+
+    # --- VERIFY THE CERTIFICATE ISSUER AND SUBJECT ---
+    tmp=$(openssl crl2pkcs7 -nocrl -certfile $TLS_ROOT_CA | openssl pkcs7 -print_certs | \
+          egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
+          paste -d ':' - -)
+    sub=$(echo "${tmp}" | awk -F: '{ print $1 }' | sed 's/~1~/ /g') 
+    iss=$(echo "${tmp}" | awk -F: '{ print $2 }' | sed 's/~1~/ /g') 
+    if [ "${iss}" != "${sub}" ]; then
+      echo "ERROR: $TLS_ROOT_CA is not a Root CA. Issuer and Subject should be the same"
+      echo "       => File: $TLS_ROOT_CA Issuer=$sub / Subject=$iss"
+      exit 1
+    fi
+
+    if [ "${iss}" != "${ROOT_CA_NAME}" ]; then
+      echo "ERROR: $TLS_ROOT_CA is not Signed by $ROOT_CA_NAME."
+      echo "       => File: $TLS_ROOT_CA Subject=$iss"
+      exit 1
+    fi
+
+    # --- VERIFY CERTITICATE AND FULLCHAAIN SIGNED BY ROOT_CA ---
+    cat $TLS_ROOT_CA $TLS_FULLCHAIN > /tmp/ca.crt
+    openssl verify -CAfile /tmp/ca.crt $TLS_CERTIFICATE > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Certificate ($TLS_CERTIFICATE) was not signed by the Roor CA ($ROOT_CA_NAME)"
+      exit 1
+    fi
+
+    openssl verify -CAfile /tmp/ca.crt $TLS_FULLCHAIN > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Certificate ($TLS_FULLCHAIN) was not signed by the Roor CA ($ROOT_CA_NAME)"
+      exit 1
+    fi
+
+    # --- VERIFY IF PRIVATE KEY MATCH THE CERTIFICATE ---
+    pk=$(openssl rsa  -noout -modulus -in $TLS_PRIVATE_KEY | openssl md5) 
+    cr=$(openssl x509 -noout -modulus -in $TLS_CERTIFICATE | openssl md5) 
+    fc=$(openssl x509 -noout -modulus -in $TLS_FULLCHAIN | openssl md5) 
+
+    if [ "${pk}" != "${cr}" ]; then
+      echo "ERROR: Cert ($(basename $TLS_CERTIFICATE)) does not match the private key ($(basename $TLS_PRIVATE_KEY))"
+      echo "       => openssl rsa -noout -modulus -in $TLS_PRIVATE_KEY | openssl md5"
+      echo "       => openssl x509 -noout -modulus -in $TLS_CERTIFICATE | openssl md5"
+      exit 1
+    fi
+
+    if [ "${pk}" != "${fc}" ]; then
+      echo "ERROR: Cert ($(basename $TLS_FULLCHAIN)) does not match the private key ($(basename $TLS_PRIVATE_KEY))"
+      echo "       => openssl rsa -noout -modulus -in $TLS_PRIVATE_KEY | openssl md5"
+      echo "       => openssl x509 -noout -modulus -in $TLS_FULLCHAIN | openssl md5"
+      exit 1
+    fi
+
+    messagePrint " - TLS Certificate"                  "$TLS_CERTIFICATE"
+    messagePrint " - TLS fullchain"                    "$TLS_FULLCHAIN"
+    messagePrint " - TLS Private Key"                  "$TLS_PRIVATE_KEY"
+    messagePrint " - TLS Root CA ($ROOT_CA_NAME)"      "$TLS_ROOT_CA"
+  fi
+}
+
 checkCloudAccess() {
   missing_variables=0
 
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    if [ "${GCP_SERVICE_ACCOUNT}" == "" -o "${GCP_REGION}" == "" -o "${GCP_PROJECT}" == "" ]; then 
+      missing_variables=1
+      echo ""
+      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  --------------------------------------------------------------------------------------------------------------"
+
+      if [ "${GCP_SERVICE_ACCOUNT}" == "" ]; then
+        echo "  GCP_SERVICE_ACCOUNT           (required) GCP Service Account"
+      fi
+
+      if [ "${GCP_PROJECT}" == "" ]; then
+        echo "  GCP_PROJECT                   (required) GCP Project"
+        echo "                                  => gcloud projects list | sed '1d' | awk '{ print $1 }'"
+      fi
+
+      if [ "${AWS_REGION}" == "" ]; then
+        echo "  GCP_REGION                    (required) Choose the GCP Region where your installation should run"
+        echo "                                  => gcloud compute zones list | sed '1d' | awk '{ print $2 }' | sort -u"
+        echo "                                     europe-west1, us-east1, europe-west4  etc."
+      fi
+    else
+      echo "GCP Access Credentials"
+      messagePrint " - GCP Service Account"          "$GCP_SERVICE_ACCOUNT"
+      messagePrint " - GCP Project"                  "$GCP_PROJECT"
+      messagePrint " - GCP Region"                   "$GCP_REGION"
+    fi
+
+    if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
+        verifyCertificate GCP PKS "$GCP_PKS_TLS_CERTIFICATE" "$GCP_PKS_TLS_FULLCHAIN" \
+                                  "$GCP_PKS_TLS_PRIVATE_KEY" "$GCP_PKS_TLS_ROOT_CA"
+    fi
+
+    if [ "$PCF_TILE_PAS_DEPLOY" == "true" ]; then
+        verifyCertificate GCP PAS "$GCP_PAS_TLS_CERTIFICATE" "$GCP_PKS_TLS_FULLCHAIN" \
+                                  "$GCP_PAS_TLS_PRIVATE_KEY" "$GCP_PAS_TLS_ROOT_CA"
+    fi
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    if [ "${AWS_ACCESS_KEY}" == "" -o "${AWS_SECRET_KEY}" == "" -o \
+         "${AWS_REGION}" == "" ]; then
+
+      missing_variables=1
+      echo ""
+      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  --------------------------------------------------------------------------------------------------------------"
+
+      if [ "${AWS_ACCESS_KEY}" == "" ]; then
+        echo "  AWS_ACCESS_KEY                  (required) AWS Acess Key"
+      fi
+
+      if [ "${AWS_SECRET_KEY}" == "" ]; then
+        echo "  AWS_SECRET_KEY                  (required) AWS Secret Key"
+      fi
+
+      if [ "${AWS_REGION}" == "" ]; then
+        echo "  AWS_REGION                    (required) Choose the AWS Region where your installation should run"
+        echo "                                  => aws ec2 --region=eu-west-3 describe-regions --output text | awk '{ print $NF }'"
+        echo "                                     eu-north-1, eu-west-3, eu-central-1 etc."
+      fi
+    else
+      echo "Azure Access Credentials"
+      messagePrint " - AWS AccwssKey"                "$AWS_ACCESS_KEY"
+      messagePrint " - AWS SecretKey"                "$AWS_SECRET_KEY"
+      messagePrint " - AWS Region"                   "$AWS_REGION"
+    fi
+
+    if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
+        verifyCertificate AWS PKS "$AWS_PKS_TLS_CERTIFICATE" "$AWS_PKS_TLS_FULLCHAIN" \
+                                  "$AWS_PKS_TLS_PRIVATE_KEY" "$AWS_PKS_TLS_ROOT_CA"
+    fi
+
+    if [ "$PCF_TILE_PAS_DEPLOY" == "true" ]; then
+        verifyCertificate AWS PAS "$AWS_PAS_TLS_CERTIFICATE" "$AWS_PKS_TLS_FULLCHAIN" \
+                                  "$AWS_PAS_TLS_PRIVATE_KEY" "$AWS_PAS_TLS_ROOT_CA"
+    fi
+  fi
+
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
-    if [ "${AZURE_SUBSCRIPTION_ID}" == "" -o "${AZURE_TENNANT_ID}" == "" -o \
+    if [ "${AZURE_SUBSCRIPTION_ID}" == "" -o "${AZURE_TENANT_ID}" == "" -o \
          "${AZURE_CLIENT_ID}" == "" -o "${AZURE_CLIENT_SECRET}" == "" -o "${AZURE_REGION}" == "" ]; then
 
       missing_variables=1
@@ -1627,8 +2138,8 @@ checkCloudAccess() {
         echo "  AZURE_SUBSCRIPTION_ID           (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
       fi 
 
-      if [ "${AZURE_TENNANT_ID}" == "" ]; then
-        echo "  AZURE_TENNANT_ID                (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
+      if [ "${AZURE_TENANT_ID}" == "" ]; then
+        echo "  AZURE_TENANT_ID                 (required) has the format <xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>"
       fi 
 
       if [ "${AZURE_CLIENT_ID}" == "" ]; then
@@ -1647,223 +2158,20 @@ checkCloudAccess() {
     else
       echo "Azure Access Credentials"
       messagePrint " - Azure SubscriptionId"         "$AZURE_SUBSCRIPTION_ID"
-      messagePrint " - Azure TennantId"              "$AZURE_TENNANT_ID"
+      messagePrint " - Azure TennantId"              "$AZURE_TENANT_ID"
       messagePrint " - Azure ClientId"               "$AZURE_CLIENT_ID"
       messagePrint " - Azure Client Secret"          "$AZURE_CLIENT_SECRET"
       messagePrint " - Azure Region"                 "$AZURE_REGION"
     fi
 
-    if [ "$PCF_TILE_PKS_VERSION" != "" ]; then
-#gaga
-      if [ "${AZURE_PKS_TLS_CERTIFICATE}" == "" -o "${AZURE_PKS_TLS_PRIVATE_KEY}" == "" -o \
-           "${AZURE_PKS_TLS_FULLCHAIN}" == "" ]; then
+    if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
+        verifyCertificate AZURE PKS "$AZURE_PKS_TLS_CERTIFICATE" "$AZURE_PKS_TLS_FULLCHAIN" \
+                                    "$AZURE_PKS_TLS_PRIVATE_KEY" "$AZURE_PKS_TLS_ROOT_CA"
+    fi
 
-        missing_variables=1
-        echo ""
-        echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
-        echo "  --------------------------------------------------------------------------------------------------------------"
-        echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
-        echo "  certificates can be optained through https://letsencrypt.org."
-        echo ""
-
-        if [ "${AZURE_PKS_TLS_CERTIFICATE}" == "" ]; then
-          echo "  AZURE_PKS_TLS_CERTIFICATE       (optional) TLS Certificate (type PEM Certificate)"
-        fi
-
-        if [ "${AZURE_PKS_TLS_FULLCHAIN}" == "" ]; then
-          echo "  AZURE_PKS_TLS_FULLCHAIN         (optional) TLS Fullchain (type PEM Certificate)"
-        fi
-
-        if [ "${AZURE_PKS_TLS_PRIVATE_KEY}" == "" ]; then
-          echo "  AZURE_PKS_TLS_PRIVATE_KEY       (optional) TLS Private Key"
-        fi
-
-        if [ "${AZURE_TLS_ROOT_CA}" == "" ]; then
-          echo "  AZURE_PKS_TLS_ROOT_CA           (optional) TLS Root CA"
-        fi
-
-        dom="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-        echo "                                  "
-        echo "                                  $PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-        echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
-        echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
-        echo ""
-        echo "                                  The certificate Should include the following domains:"
-        echo "                                  - PKS Services (API, OpsMan, Harbor) .: *.${dom}"            
-        echo "                                  - PKS Cluster and Applications .......: *.apps.cl1.${dom}"
-        echo "                                                                          *.apps.cl2.${dom}"
-        echo "                                                                          *.apps.cl3.${dom}"
-        echo ""
-      else
-        howto=0
-        echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
-
-        for n in $AZURE_PKS_TLS_CERTIFICATE $AZURE_PKS_TLS_FULLCHAIN; do
-          cnt=$(grep -c "BEGIN CERTIFICATE" $n) 
-          if [ $cnt -eq 0 ]; then 
-            echo "ERROR: The file ($(basename $n)) is not in (Base64) format"
-            echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
-            exit 1
-          fi
-        done
-
-        for n in $AZURE_PKS_TLS_PRIVATE_KEY; do
-          cnt=$(grep -c "BEGIN RSA PRIVATE KEY" $n)
-          if [ $cnt -eq 0 ]; then
-            echo "ERROR: The file ($(basename $n)) is not (private-key Base64) format"
-            echo "       It should begin with '-----BEGIN RSA PRIVATE' and end with '-----END RSA PRIVATE'"
-            exit 1
-          fi
-        done
-
-        # --- VERIFY THE CERTIFICATE ---
-        cnm="*.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
-        cnt=$(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_FULLCHAIN | openssl pkcs7 -print_certs | egrep "^subject|^issuer" | \
-              sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' -e 's/	//g' -e 's/$/XXX/g' | \
-              egrep -c "^\*.${cnm}")
-        if [ $cnt -eq 0 ]; then
-          echo "ERROR: The file ($(basename $AZURE_PKS_TLS_FULLCHAIN)) does not contain the CN=${cnm}" 
-          exit 1
-        fi
-
-        ISSUER="${cnm}"; item_found=1
-        while [ ${item_found} -eq 1 ]; do
-          item_found=0
-          for item in $(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_FULLCHAIN | openssl pkcs7 -print_certs | \
-                        egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
-                        paste -d ':' - -); do
-
-            sub=$(echo "${item}" | awk -F: '{ print $1 }') 
-            iss=$(echo "${item}" | awk -F: '{ print $2 }') 
-
-            if [ "${sub}" == "${ISSUER}" ]; then ISSUER="${iss}"; SUBJECT="${sub}"; item_found=1; fi
-          done
-        done
-
-        ROOT_CA=$ISSUER
-        ROOT_CA_NAME=$(echo $ISSUER | sed 's/~1~/ /g') 
-
-        if [ "${AZURE_PKS_TLS_ROOT_CA}" == "" ]; then 
-          # --- TRY TO FIND THE ROOT_CA ---
-          if [ "${ROOT_CA_NAME}" == "DST Root CA X3" ]; then 
-            ROOT_CA_URL="https://letsencrypt.org/certs/trustid-x3-root.pem.txt"
-            curl --output /tmp/trustid-x3-root.pem $ROOT_CA_URL > /dev/null 2>&1
-            export AZURE_PKS_TLS_ROOT_CA=/tmp/trustid-x3-root.pem
-          fi
-
-          if [ "${AZURE_PKS_TLS_ROOT_CA}" == "" ]; then    
-            echo "ERROR: ROOT_CA for $ROOT_CA_NAME could not be found, please download the file manually" 
-            echo "       and set the variable in the ~/.pcfconfig"
-            echo "       => export AZURE_PKS_TLS_ROOT_CA=<ca.crt>"
-            exit 1
-          fi
-        fi
-
-        # --- VERIFY TO ROOT_CA ---
-        for n in $AZURE_PKS_TLS_ROOT_CA; do
-          if [ ! -f $n ]; then 
-            echo "ERROR: the file $n does not exist"; exit 1
-          fi
-
-          cnt=$(grep -c "BEGIN CERTIFICATE" $n)
-          if [ $cnt -eq 0 ]; then
-            echo "ERROR: The file ($(basename $n)) is not in (Base64) format"
-            echo "       It should begin with '-----BEGIN CERTIFICATE-----' and end with '-----END CERTIFICATE-----'"
-            exit 1
-          fi
-        done
-
-        # --- VERIFY THE CERTIFICATE ISSUER AND SUBJECT ---
-        tmp=$(openssl crl2pkcs7 -nocrl -certfile $AZURE_PKS_TLS_ROOT_CA | openssl pkcs7 -print_certs | \
-              egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
-              paste -d ':' - -)
-        sub=$(echo "${tmp}" | awk -F: '{ print $1 }' | sed 's/~1~/ /g') 
-        iss=$(echo "${tmp}" | awk -F: '{ print $2 }' | sed 's/~1~/ /g') 
-        if [ "${iss}" != "${sub}" ]; then
-          echo "ERROR: $AZURE_PKS_TLS_ROOT_CA is not a Root CA. Issuer and Subject should be the same"
-          echo "       => File: $AZURE_PKS_TLS_ROOT_CA Issuer=$sub / Subject=$iss"
-          exit 1
-        fi
-
-        if [ "${iss}" != "${ROOT_CA_NAME}" ]; then
-          echo "ERROR: $AZURE_PKS_TLS_ROOT_CA is not Signed by $ROOT_CA_NAME."
-          echo "       => File: $AZURE_PKS_TLS_ROOT_CA Subject=$iss"
-          exit 1
-        fi
-
-        # --- VERIFY CERTITICATE AND FULLCHAAIN SIGNED BY ROOT_CA ---
-        cat $AZURE_PKS_TLS_ROOT_CA $AZURE_PKS_TLS_FULLCHAIN > /tmp/ca.crt
-        openssl verify -CAfile /tmp/ca.crt $AZURE_PKS_TLS_CERTIFICATE > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
-          echo "ERROR: Certificate ($AZURE_PKS_TLS_CERTIFICATE) was not signed by the Roor CA ($ROOT_CA_NAME)"
-          exit 1
-        fi
-
-        openssl verify -CAfile /tmp/ca.crt $AZURE_PKS_TLS_FULLCHAIN > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
-          echo "ERROR: Certificate ($AZURE_PKS_TLS_FULLCHAIN) was not signed by the Roor CA ($ROOT_CA_NAME)"
-          exit 1
-        fi
-
-        messagePrint " - TLS Certificate"                  "$AZURE_PKS_TLS_CERTIFICATE"
-        messagePrint " - TLS fullchain"                    "$AZURE_PKS_TLS_FULLCHAIN"
-        messagePrint " - TLS Private Key"                  "$AZURE_PKS_TLS_PRIVATE_KEY"
-        messagePrint " - TLS Root CA ($ROOT_CA_NAME)"      "$AZURE_PKS_TLS_ROOT_CA"
-      fi
-    else
-#gaga
-      if [ "${AZURE_PAS_TLS_CERTIFICATE}" == "" -o "${AZURE_PAS_TLS_PRIVATE_KEY}" == "" -o \
-           "${AZURE_PAS_TLS_FULLCHAIN}" == "" ]; then
-
-        missing_variables=1
-        echo ""
-        echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
-        echo "  --------------------------------------------------------------------------------------------------------------"
-        echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
-        echo "  certificates can be optained through https://letsencrypt.org."
-        echo ""
-
-        if [ "${AZURE_PAS_TLS_CERTIFICATE}" == "" ]; then
-          echo "  AZURE_PAS_TLS_CERTIFICATE       (optional) TLS Certificate (type PEM Certificate)"
-        fi
-
-        if [ "${AZURE_PAS_TLS_PRIVATE_KEY}" == "" ]; then
-          echo "  AZURE_PAS_TLS_PRIVATE_KEY       (optional) TLS Private Key"
-        fi
-
-        if [ "${AZURE_PAS_TLS_ROOT_CA}" == "" ]; then
-          echo "  AZURE_PAS_TLS_ROOT_CA           (optional) TLS Root CA"
-        fi
-
-        dom="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-        echo "                                  "
-        echo "                                  $PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-        echo "                                    |      |_________ represented by the PCF_ENVIRONMENT_NAME variable"
-        echo "                                    |________________ represented by the AWS_HOSTED_DNS_DOMAIN variable"
-        echo ""
-        echo "                                  The certificate Should include the following domains:"
-        echo "                                  - PAS Services (API, OpsMan)..........: *.${dom}"            
-        echo "                                  - PAS System Domain ..................: *.sys.${dom}"
-        echo "                                  - PAS Application Domain .............: *.apps.${dom}"
-      else
-        echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
-        messagePrint " - TLS Certificate"         "$AZURE_PAS_TLS_CERTIFICATE"
-        messagePrint " - TLS Private Key"         "$AZURE_PAS_TLS_PRIVATE_KEY"
-        messagePrint " - TLS Root CA"             "$AZURE_PAS_TLS_ROOT_CA"
-      fi
-
-      echo 
-      echo "  Preparing to Deploy Ops Manager on Azure Manually"
-      echo "  https://docs.pivotal.io/pcf/om/2-6/azure/prepare-env-manual.html"
-      #echo "  --------------------------------------------------------------------------------------------------------------"
-
-      # VERIFY ROOTCA
-      # https://kb.wisc.edu/middleware/page.php?id=4543
-      openssl verify -verbose -CAfile cacert.pem  server.crt
-
-      # Let's Encrypt - Chain of Trust
-      # https://letsencrypt.org/certificates/
-  
+    if [ "$PCF_TILE_PAS_DEPLOY" == "true" ]; then
+        verifyCertificate AZURE PAS "$AZURE_PAS_TLS_CERTIFICATE" "$AZURE_PKS_TLS_FULLCHAIN" \
+                                    "$AZURE_PAS_TLS_PRIVATE_KEY" "$AZURE_PAS_TLS_ROOT_CA"
     fi
   fi
 
@@ -1936,17 +2244,15 @@ checkCloudAccess() {
     pslug="pivotal-container-service"; pver="1.5"
     pslug="elastic-runtime"; pver="2.6.6"
     pslug="elastic-runtime"; pver="467928"
-
-
   fi
 
   if [ ${missing_variables} -eq 1 ]; then
+    echo "  --------------------------------------------------------------------------------------------------------------"
     echo "  IMPORTANT: Please set the missing environment variables either in your shell or in the pcfconfig"
     echo "             configuration file ~/.pcfconfig and set all variables with the 'export' notation"
     echo "             ie. => export AZURE_PKS_TLS_CERTIFICATE=/home/demouser/certs/cert.pem"
+    echo "  --------------------------------------------------------------------------------------------------------------"
   fi
-  write_line
-
 }
 
 pivnetAPI() {
