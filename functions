@@ -282,7 +282,6 @@ installJumpHost() {
       messagePrint " - Verify NIC" "AdminNic"
     fi
 
-#gaga
     nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
     if [ "$nam" != "$JUMP_HOST" ]; then
       messagePrint " - Creating VM" "$JUMP_HOST"
@@ -373,7 +372,8 @@ installJumpHost() {
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
-         Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+         Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+#gaga
     if [ "${ins}" == "" ]; then
       messagePrint "Creating AWS Jump-Server" "$JUMP_HOST"
 
@@ -554,7 +554,8 @@ installJumpHost() {
       messagePrint " - Create Instance" "$JUMP_HOST"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
               --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
-              --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST}]" > /dev/null 2>&1
+              --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST},{Key=type,Value=pcfjump}]" > /dev/null 2>&1
+#gaga
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
@@ -566,7 +567,7 @@ installJumpHost() {
       fi
 
       ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
-           Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+           Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
            jq -r ".Reservations[].Instances[].State.Name")
       dns=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
@@ -594,7 +595,7 @@ installJumpHost() {
       fi
 
       ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
-           Name=tag:type,Values="pcfjump" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+           Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
       pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
            jq -r ".Reservations[].Instances[].PublicIpAddress")
 
@@ -1926,17 +1927,16 @@ verifyCertificate () {
     done
 
     # --- VERIFY THE CERTIFICATE ---
-    cnm="*.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    cnm="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     cnt=$(openssl crl2pkcs7 -nocrl -certfile $TLS_FULLCHAIN | openssl pkcs7 -print_certs | egrep "^subject|^issuer" | \
           sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' -e 's/	//g' -e 's/$/XXX/g' | \
           egrep -c "^\*.${cnm}")
     if [ $cnt -eq 0 ]; then
-      echo "ERROR: The file ($(basename $TLS_FULLCHAIN)) does not contain the CN=${cnm}" 
+      echo "ERROR: The file ($(basename $TLS_FULLCHAIN)) does not contain the CN=*.${cnm}" 
       exit 1
     fi
 
-
-    ISSUER="${cnm}"; item_found=1
+    ISSUER="*.${cnm}"; item_found=1
     while [ ${item_found} -eq 1 ]; do
       item_found=0
       for item in $(openssl crl2pkcs7 -nocrl -certfile $TLS_FULLCHAIN | openssl pkcs7 -print_certs | \
@@ -1945,7 +1945,7 @@ verifyCertificate () {
   
         sub=$(echo "${item}" | awk -F: '{ print $1 }') 
         iss=$(echo "${item}" | awk -F: '{ print $2 }') 
-  
+
         if [ "${sub}" == "${ISSUER}" ]; then ISSUER="${iss}"; SUBJECT="${sub}"; item_found=1; fi
       done
     done
@@ -2119,7 +2119,7 @@ checkCloudAccess() {
     fi
 
     if [ "$PCF_TILE_PAS_DEPLOY" == "true" ]; then
-        verifyCertificate AWS PAS "$AWS_PAS_TLS_CERTIFICATE" "$AWS_PKS_TLS_FULLCHAIN" \
+        verifyCertificate AWS PAS "$AWS_PAS_TLS_CERTIFICATE" "$AWS_PAS_TLS_FULLCHAIN" \
                                   "$AWS_PAS_TLS_PRIVATE_KEY" "$AWS_PAS_TLS_ROOT_CA"
     fi
   fi
