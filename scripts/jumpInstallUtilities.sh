@@ -1,7 +1,9 @@
 #!/bin/bash
 
 export PIVNET_TOKEN=$1
-export LC_ALL=en_US.UTF-8
+LOC=$(locale | grep LC_CTYPE | sed 's/"//g' | awk -F= '{ print $2 }') 
+#export LC_ALL=en_US.UTF-8
+export LC_ALL="$LOC"
 sudo 2>/dev/null  mkdir -p /usr/local /usr/local/bin
 
 echo "Install Software on Jumphost"
@@ -14,6 +16,15 @@ apt-get update > /dev/null 2>&1
 if [ ! -x /usr/bin/az ]; then 
   echo "- Install AZ CLI"
   curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash > /dev/null 2>&1
+fi
+
+if [ ! -x /usr/bin/certbot ]; then 
+  sudo apt install software-properties-common -y
+  sudo apt-add-repository ppa:certbot/certbot -y
+  sudo apt update -y
+  sudo apt install certbot -y
+  sudo apt install python3-pip -y
+  sudo pip3 install certbot-dns-route53
 fi
 
 if [ ! -x /usr/bin/aws ]; then 
