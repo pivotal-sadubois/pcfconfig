@@ -12,14 +12,9 @@ fi
 
 envFile=$1
 
-PCFCONFIG_BASE=$(basename $0)
-if [ "$(dirname $0)" == "scripts" ]; then 
-  export PCFPATH=$(pwd) 
-else 
-  export PCFPATH=$(dirname $0)
-fi
+export PCFPATH=$HOME/pcfconfig
 
-echo "11111 $(dirname $0)"
+echo "11111 PCFPATH:$PCFPATH"
 
 # --- SOURCE FUNCTIONS---
 . ${PCFPATH}/functions
