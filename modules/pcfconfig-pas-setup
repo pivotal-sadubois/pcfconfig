@@ -14,15 +14,17 @@ DEBUG=0
 USAGE=0
 NO_APPLY=0
 NO_DOWNLOAD=0
-AWS_CLI_ENABLED=0
-GCP_CLI_ENABLED=0
-AZURE_CLI_ENABLED=0
+AWS_CLI_ENABLED=1
+GCP_CLI_ENABLED=1
+AZURE_CLI_ENABLED=1
 MSG_SILENT=0
 PIVNET_TOKEN=""
-PCFCONFIG_PATH=$(dirname $0)
-PCFCONFIG_BASE=$(basename $0)
 ROUTE53_TOKEN=""
 NOASK=0
+
+TMPPATH=$(dirname $0)
+PCFCONFIG_PATH=$(dirname $TMPPATH)
+PCFCONFIG_BASE=$(basename $0)
 
 # --- SOURCE FUNCTIONS---
 . ${PCFCONFIG_PATH}/functions
@@ -52,6 +54,7 @@ TLS_PRIVATE_KEY=""
 TERRAFORM_VARS=terraform.tfvars
 TERRAFORM_TFSTATE=terraform.tfstate
 TF_DEPLOYMENT=""
+TF_TEMPLATE=""
 PCF_VERSION=""
 TF_PKS_VARFILE=""
 TF_PAS_VARFILE=""
@@ -98,13 +101,57 @@ while [ "$1" != "" ]; do
     --pas-tfvars) TF_PAS_VARFILE=$2; shift;;        # TERRAFORM VARIABLE FILE
     --aws-route53) ROUTE53_TOKEN=$2; shift;;        # TERRAFORM VARIABLE FILE
     --cf-version) PCF_VERSION=$2; shift;;           # PCF VERSION
+    --tf-template) TF_TEMPLATE=$2; shift;;          # TERRAFORM TEMPLATE VERSION
     --deployment) TF_DEPLOYMENT=$2; shift;;         # TERRAFORM VARIABLE FILE
     --directory-prefix) TF_PREFIX=$2; shift;;       # DIRECTORY PREFIX
     --install-mode) TF_DIR_MODE=$2; shift;;         # DIRECTORY MODE (clean, preserve, delete)
     --opsman-template) OPSMAN_TEMPLATE=$2; shift;;  # OPSMAN TEMPLATE 
+    --stemcell-version) PCF_TILE_PKS_STEMCELL_VERSION=$2; shift;;     # PKS STEMCELL VERSION
+    --stemcell-type) PCF_TILE_PKS_STEMCELL_TYPE=$2; shift;;           # PKS STEMCELL TYPE
+    --pks-template) PCF_TILE_PKS_CONFIG=$2; shift;;                   # PKS STEMCELL TYPE
+    --pas-template) PCF_TILE_PAS_CONFIG=$2; shift;;                   # PKS STEMCELL TYPE
   esac
   shift
 done
+
+# --- COMPATIBLITE VALUES ---
+PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
+[ "$TF_DEPLOYMENT" == "aws" ]   && PCF_DEPLOYMENT_CLOUD="AWS" && PCF_DEPLOYMENT_CLOUDID="aws"
+[ "$TF_DEPLOYMENT" == "azure" ] && PCF_DEPLOYMENT_CLOUD="Azure" && PCF_DEPLOYMENT_CLOUDID="azure"
+[ "$TF_DEPLOYMENT" == "gcp" ]   && PCF_DEPLOYMENT_CLOUD="GCP" && PCF_DEPLOYMENT_CLOUDID="gcp"
+
+if [ "${PKS_VERSION}" != "" ]; then
+  cnt=$(echo $PKS_VERSION | awk -F'.' '{ print NF }')
+  if [ $cnt -eq 2 ]; then
+    PCF_TILE_PKS_BUNDLE=$PKS_VERSION
+    PCF_TILE_PKS_VERSION=""
+  else
+    PCF_TILE_PKS_BUNDLE=$(echo $PKS_VERSION | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}')
+    PCF_TILE_PKS_VERSION=$PKS_VERSION
+  fi
+fi
+
+if [ "${PAS_VERSION}" != "" ]; then
+  cnt=$(echo $PAS_VERSION | awk -F'.' '{ print NF }')
+  if [ $cnt -eq 2 ]; then
+    PCF_TILE_PAS_BUNDLE=$PAS_VERSION
+    PCF_TILE_PAS_VERSION=""
+  else
+    PCF_TILE_PAS_BUNDLE=$(echo $PAS_VERSION | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}')
+    PCF_TILE_PAS_VERSION=$PAS_VERSION
+  fi
+fi
+
+if [ "${PCF_VERSION}" != "" ]; then 
+  cnt=$(echo $PCF_VERSION | awk -F'.' '{ print NF }') 
+  if [ $cnt -eq 2 ]; then 
+    PCF_OPSMANAGER_BUNDLE=$PCF_VERSION
+    PCF_OPSMANAGER_VERSION=""
+  else
+    PCF_OPSMANAGER_BUNDLE=$(echo $PCF_VERSION | awk -F'.' '{ printf("%s.%s\n",$1,$2 )}') 
+    PCF_OPSMANAGER_VERSION=$PCF_VERSION
+  fi
+fi
 
 [ "$PKS_CLUSTER_1_NAME" == "-" ] && PKS_CLUSTER_1_NAME=""
 [ "$PKS_CLUSTER_1_PLAN" == "-" ] && PKS_CLUSTER_1_PLAN=""
@@ -118,7 +165,7 @@ done
 ##############################################################################################
 
 echo ""
-echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
+echo "PCF Configuration Utility Module: ($PCFCONFIG_BASE)"
 echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -364,8 +411,9 @@ checkEnvironment() {
       GCP_OPS_MANAGER_URL=$(egrep "^opsman_image_url" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
       GCP_AVAILABILITY_ZONES=$(egrep "^zones" $TERRAFORM_VARS | \
         sed -e 's/^.*= //g' -e 's/"//g' -e 's/\[//g' -e 's/\]//g')
-      OPSMAN_VERSION=$(egrep ",${GCP_OPS_MANAGER_URL}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | \
-        head -1 | awk -F',' '{ print $1}')
+      OPSMAN_VERSION=guguseli
+      #OPSMAN_VERSION=$(egrep ",${GCP_OPS_MANAGER_URL}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | \
+      #  head -1 | awk -F',' '{ print $1}')
       OPSMAN_MINOR_VERSION=$(echo $OPSMAN_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
       DNS_SUFFIX=$GCP_DNS_SUFFIX
       DNS_PREFIX=$GCP_DNS_PREFIX
@@ -579,8 +627,9 @@ checkEnvironment() {
       AWS_OPS_MANAGER_AMI=$(egrep "^ops_manager_ami" $TERRAFORM_VARS | sed 's/"//g' | awk '{ print $NF }')
       AWS_AVAILABILITY_ZONES=$(egrep "^availability_zones" $TERRAFORM_VARS | \
         sed -e 's/^.*= //g' -e 's/"//g' -e 's/\[//g' -e 's/\]//g')
-      OPSMAN_VERSION=$(egrep ",${AWS_OPS_MANAGER_AMI}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | \
-        head -1 | awk -F',' '{ print $1}')
+      OPSMAN_VERSION="guguseli"
+      #OPSMAN_VERSION=$(egrep ",${AWS_OPS_MANAGER_AMI}," $PCFCONFIG_PATH/files/old/opsman-release-notes.txt | \
+      #  head -1 | awk -F',' '{ print $1}')
       OPSMAN_MINOR_VERSION=$(echo $OPSMAN_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
       DNS_SUFFIX=$AWS_DNS_SUFFIX
       DNS_PREFIX=$AWS_DNS_PREFIX
@@ -990,7 +1039,6 @@ checkEnvironment() {
 ##############################################################################################
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
-
   if [ "${PIVNET_TOKEN}" == "" -o "${TF_WORKDIR}" == "" -o \
        "${TF_DEPLOYMENT}" == "" -o "${PCF_VERSION}" == "" ]; then
     usage_terraform
@@ -1040,38 +1088,18 @@ OM=$(which om)
 TF=$(which terraform)
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
-  checkOpsMantools
-  checkPKStools
-  checkCloudCLI
+  #checkOpsMantools
+  #checkPKStools
+  #checkCloudCLI
 
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
 
-  echo "-----------------------------------------------------------------------------------------------------------"
-  echo "             PCF Version  Terraform Templates               Released    End od Support"
-  echo "             ----------------------------------------------------------------------------------------------"
-  for n in $(egrep -v "^#" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
-           awk -F: '{ print $2 }' | awk -F'.' '{ printf("%s.%s\n",$1,$2) }' | sort -ur); do
-
-    egrep ":${n}\." ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | grep ":${TF_DEPLOYMENT}:" | head -3 | \
-    awk -F: '{ printf("%-12s PCF-%-7s  %-33s %s  %s\n",a,$2,$4,$6,$7 ); a=""}' a="PCF ${n}"
-    echo "-----------------------------------------------------------------------------------------------------------"
-  done
-
-  cnt=$(grep -c ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt)
-  if [ $cnt -eq 0 ]; then
-    echo "ERROR: The PCF Version (${PCF_VERSION}) is not known. Please specify one from the list above"
-    exit 1
-  fi
-
-  TF_TEMPLATE_VERSION=$(egrep ":${PCF_VERSION}:${TF_DEPLOYMENT}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
-    awk -F: '{ print $4 }' | awk '{ print $NF }')
-
   # --- DOWNLOAD TERRAFORM ---
   echo "Download Terraform Configuration"
-  messagePrint " - PCF Version" "$PCF_VERSION"
-  messagePrint " - Terraform Template Version" "$TF_TEMPLATE_VERSION"
-  messagePrint " - Deployment Environment" "$TF_DEPLOYMENT"
+  messagePrint " - Terraform Template Name" "$PCF_DEPLOYMENT_CLOUD Terraform Templates"
+  messagePrint " - Terraform Template Version" "$TF_TEMPLATE"
   messagePrint " - Terraform Directory Prefix" "$TF_PREFIX"
+  messagePrint " - Terraform Directory Mode" "$TF_DIR_MODE"
   messagePrint " - Terraform Instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}"
 
   if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
@@ -1081,9 +1109,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   fi
 
   # --- CHECK OPSMANAGER VERSION ---
-  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS_ORIG | awk '{ print $NF }' | sed 's/"//g')
+  #opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS_ORIG | \
+  #         awk '{ print $NF }' | sed 's/"//g')
   region=$(egrep "^(region|location)" $TERRAFORM_VARS_ORIG | awk '{ print $NF }' | sed 's/"//g')
-  opsmanver=$(grep "${opsman}" $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }') 
+
   PCF_REGION=$region
 
   # --- REGION FIX ---
@@ -1106,26 +1135,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
     esac
   fi
 
-  echo "-----------------------------------------------------------------------------------------------------------"
-  echo "             OpsManager (Version/Build)  Ops-Manager Install Image          Released    End od Support"
-  echo "             ----------------------------------------------------------------------------------------------"
-  for n in $(egrep -v "^#" ${PCFCONFIG_PATH}/files/opsman-release-notes.txt | \
-           awk -F',' '{ print $1 }' | awk -F'.' '{ printf("%s.%s\n",$1,$2) }' | sort -ur); do
-
-    egrep "${n}\." ${PCFCONFIG_PATH}/files/opsman-release-notes.txt | egrep ",${TF_DEPLOYMENT},$PCF_REGION," | \
-    head -3 | sed 's/http.*images\///g' | \
-    awk -F',' '{ printf("%-12s %-7s %-18s  %-34s %s  %s\n",a,$1,$2,$5,$6,$7 ); a=""}' a="PCF ${n}"
-    echo "-----------------------------------------------------------------------------------------------------------"
-  done
-
-  echo "OpsManager Information (terraform.tfvars)"
-  messagePrint " - Terraform Variable File (Source)" "$TERRAFORM_VARS_ORIG"
-  messagePrint " - Terraform Variable File (Local)" "$TERRAFORM_VARS"
-  messagePrint " - OpsManager Image" "$opsman"
-  messagePrint " - OpsManager Version" "$opsmanver"
-  messagePrint " - PCF Cloud" "$TF_DEPLOYMENT"
-  messagePrint " - PCF Region" "$region"
-
 #  if [ "${TF_DEPLOYMENT}" == "azure" ]; then
 #    cnt=$(echo "${opsman}" | grep -c "${region}")
 #    if [ "${cnt}" -eq 0 ]; then
@@ -1134,23 +1143,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
 #    fi
 #  fi
 
+#gaga
   TF_HOME=$(eval echo "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}")
-  idx=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
-        egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $1 }')
-  dat=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
-        egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $5 }')
-
-  if [ "${TF_DIR_MODE}" == "clean" -a -f $TF_HOME/RELEASE_INFO ]; then
-     pcf=$(egrep "^pcf:" $TF_HOME/RELEASE_INFO | awk -F: '{ print $2 }')
-     tft=$(egrep "^terraform_template:" $TF_HOME/RELEASE_INFO | awk -F: '{ print $2 }')
-
-     if [ "${tft}" != "${TF_TEMPLATE_VERSION}" ]; then 
-       echo ""
-       echo "ERROR: `basename $0` --install-mode clean can not be used as different terraform templates"
-       echo "       will be used (current: $TF_TEMPLATE_VERSION new: ${tft}. Use option 'preserve'"
-       echo "       or 'delete' instead"; exit 1
-     fi
-  fi
+#  idx=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
+#        egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $1 }')
+#  dat=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
+#        egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $5 }')
 
   if [ -d $TF_HOME ]; then
     if [ $NOASK -eq 0 ]; then
@@ -1177,7 +1175,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   if [ -d "${TF_HOME}" ]; then 
     if [ "${TF_DIR_MODE}" != "" ]; then 
       if [ "${TF_DIR_MODE}" == "delete" ]; then 
-        messagePrint " - Deleting existing instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}"
         rm -rf "${TF_HOME}"
       fi
 
@@ -1191,7 +1188,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
       fi
 
       if [ "${TF_DIR_MODE}" == "clean" ]; then 
-        messagePrint " - Target directory already exists" "Cleaning up terraform files from las run"
         for n in terraforming-pas terraforming-pks; do
           if [ -d ${TF_HOME}/${n} ]; then 
             rm -rf ${TF_HOME}/${n}/.terraform
@@ -1211,32 +1207,25 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   fi
 
   if [ "${TF_DIR_MODE}" != "clean" ]; then 
-    rm -f /tmp/$dat
-    $OM --skip-ssl-validation download-product --output-directory=/tmp --pivnet-file-glob ${dat} \
-        --pivnet-product-slug "elastic-runtime" --pivnet-api-token "${PIVNET_TOKEN}" \
-        --product-version "${PCF_VERSION}" > /dev/null 2>&1; ret=$?
-  
-    if [ $ret -ne 0 ]; then 
-      $OM --skip-ssl-validation download-product --output-directory=/tmp --pivnet-file-glob ${dat} \
-          --pivnet-product-slug "elastic-runtime" --pivnet-api-token "${PIVNET_TOKEN}" \
-          --product-version "${PCF_VERSION}" 
-      echo "ERROR: download of file: $dat has been failed"; exit 1
+#gaga
+    PCF_TERRAFORM_TEMPLATE_FILE=$(getTerraformTemplate $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_BUNDLE $TF_TEMPLATE) 
+    PCF_TERRAFORM_DIRNAME=$(zipinfo $PCF_TERRAFORM_TEMPLATE_FILE | grep pivotal-cf-terraforming | head -1 | \
+              awk '{ print $NF }' | awk -F'/' '{ print $1 }')
+
+    messagePrint " - Terraform Template File" "$PCF_TERRAFORM_TEMPLATE_FILE"
+    messagePrint " - Terraform Package Name" "$PCF_TERRAFORM_DIRNAME"
+    if [ "${PCF_TERRAFORM_DIRNAME}" != "" ]; then
+      unzip -oq $PCF_TERRAFORM_TEMPLATE_FILE -d /tmp 
+      mkdir -p $TF_HOME
+      cd /tmp/${PCF_TERRAFORM_DIRNAME}; tar -cf - . | (cd $TF_HOME; tar -xpf -)
     else
-      tmpname=$(zipinfo /tmp/${dat} | grep pivotal-cf-terraforming | head -1 | awk '{ print $NF }' | awk -F'/' '{ print $1 }')
-      if [ "${tmpname}" != "" ]; then
-        unzip -oq /tmp/$dat -d /tmp 
-        mkdir -p $TF_HOME
-        cd /tmp/${tmpname}; tar -cf - . | (cd $TF_HOME; tar -xpf -)
-      else
-        echo "ERROR: can not determain unzip directory from file $dat"; exit 1
-      fi
+      echo "ERROR: can not determain unzip directory from file $PCF_TERRAFORM_TEMPLATE_FILE"; exit 1
     fi
   fi
 
   # --- PLACE RELEASE INFORMATION IN TERRAFORM DIRECTORY ---  
-  echo "pcf:$PCF_VERSION"                         > $TF_HOME/RELEASE_INFO
-  echo "terraform_template:$TF_TEMPLATE_VERSION" >> $TF_HOME/RELEASE_INFO
-  echo "deployment:$TF_DEPLOYMENT"               >> $TF_HOME/RELEASE_INFO
+  echo "terraform_template:$PCF_TERRAFORM_TEMPLATE_FILE" >> $TF_HOME/RELEASE_INFO
+  echo "deployment:$TF_DEPLOYMENT"                       >> $TF_HOME/RELEASE_INFO
 
   # --- VERIFY TERRAFORM FILES ---
   if [ "$TF_PKS_VARFILE" != "" ]; then
@@ -1296,29 +1285,15 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 
   checkEnvironment
 
+  OPSMAN_TEMPLATE="$(basename $OPSMAN_TEMPLATE)"
+
   if [ "$OPSMAN_TEMPLATE" != "" ]; then
-    dn=$(dirname $OPSMAN_TEMPLATE)
-    bn=$(basename $OPSMAN_TEMPLATE)
-    cc=$(echo "$OPSMAN_TEMPLATE" | grep -c "/")
-
-    if [ ${cc} -gt 0 ]; then
-      echo "ERROR: Please copy $OPSMAN_TEMPLATE into the pcfconfig template directory"
-      echo "       $PCFCONFIG_PATH/templates/${bn} and provide meta information into VERSION_OPSMAN"
-      echo "       the --opsman-template should not contain any path, only the template file name"
+    if [ ! -f "$PCFCONFIG_PATH/templates/${OPSMAN_TEMPLATE}" ]; then
+      echo "ERROR: OpsMan Configuration file $PCFCONFIG_PATH/templates/${OPSMAN_TEMPLATE}"
+      echo "       Could not be found"
       exit 1
-    fi
-
-    if [ -f "$PCFCONFIG_PATH/templates/${bn}" ]; then
-      cnt=$(egrep -c "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN) 
-      if [ $cnt -gt 0 ]; then 
-        OPSMAN_CONFIG=$PCFCONFIG_PATH/templates/${bn}
-      else
-        echo "ERROR: Please create for $bn an entry in the VERSION_OPSMAN file and"
-        echo "       specify the meta information"
-      fi
     else
-      echo "ERROR: $OPSMAN_TEMPLATE needs to be placed in the $PCFCONFIG_PATH/templates directory"
-      echo "       and an entry in the VERSION_OPSMAN to be created for the metadata"; exit 1
+      OPSMAN_CONFIG="$PCFCONFIG_PATH/templates/${OPSMAN_TEMPLATE}"
     fi
   else
     opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
@@ -1373,47 +1348,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "ERROR: $OPSMAN_CONFIG is not a valid BOSH Director configuration file"
     exit 1
   fi
-
-  cld=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $2 }') 
-  ver=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $3 }') 
-  st1=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $4 }') 
-  tby=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $5 }') 
-  twn=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $6 }') 
-  des=$(egrep "^${bn}:" $PCFCONFIG_PATH/templates/VERSION_OPSMAN | head -1 | awk -F: '{ print $7 }') 
-
-  # --- CHECK OPSMANAGER VERSION ---
-  opsman=$(egrep "^(ops_manager_image_uri|ops_manager_ami|opsman_image_url)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-  region=$(egrep "^(region|location)" $TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-
-  if [ "${PCF_CLOUD_NAME}" = "azure" ]; then
-    #bld=$(echo "${opsman}" | sed -e 's/^.*ops-manager-//g' -e 's/\.vhd//g')
-    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
-    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
-  fi
-
-  if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
-    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
-    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
-  fi
-
-  if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
-    bld=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $2 }')
-    ver=$(egrep ",${opsman}," $PCFCONFIG_PATH/files/opsman-release-notes.txt | head -1 | awk -F',' '{ print $1 }')
-  fi
-
-  if [ "${cld}" != "${PCF_CLOUD_NAME}" ]; then
-    echo "ERROR: $OPSMAN_CONFIG is according its metadata in VERSION_OPSMAN for the $cld cloud"
-    echo "and not for $PCF_CLOUD_NAME"; exit 1
-  fi
-
-  echo "OpsManager Configuration Definitions ($bn)"
-  messagePrint " - OpsManager Version:  " "$ver"
-  messagePrint " - OpsManager Build:  " "$bld"
-  messagePrint " - Template File:  " "$OPSMAN_CONFIG"
-  messagePrint " - Template Status:  " "$st1"
-  messagePrint " - Template Maintained by:  " "$tby"
-  messagePrint " - Template Tested:  " "$twn"
-  messagePrint " - Template Description:  " "$des"
 
   # --- COPY JQ FILES FROM THE TEMPLATES ---
   JQ_FILTER=$PCFCONFIG_PATH/filter/opsman_${PCF_CLOUD_NAME}_${OPSMAN_MODE}.jq
@@ -1620,7 +1554,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   checkEnvironment
 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-echo "debug1: PASS:$PASS USER:$USER"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
 #  pending=$($OM $OM_LOGIN pending-changes | grep "p-bosh" | awk '{ print $4 }')
@@ -1718,23 +1651,20 @@ echo "debug1: PASS:$PASS USER:$USER"
   fi
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
-    echo "Looking for PKS Product Image ($PKS_VERSION)"
-    PIVNET_GLOB=$(egrep ":${PKS_VERSION}" $PCFCONFIG_PATH/files/pks-release-notes.txt | egrep -v "RC|beta" | head -1 | awk -F: '{ print $NF }')
-    if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
     PIVNET_SLUG=pivotal-container-service
+    PIVNET_SLUG_NAME="Pivotal Container Service"
+    if [ "${PCF_TILE_PKS_VERSION}" == "" ]; then
+      PCF_TILE_PKS_VERSION=$(getProductVersion $PCF_TILE_PKS_BUNDLE "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
+    fi
+
+    echo "Looking for PKS Product Image ($PCF_TILE_PKS_VERSION)"
+    PIVNET_GLOB=$(getProductSlug $PCF_TILE_PKS_BUNDLE "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
+    if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
-    messagePrint " - PKS Product Version requested" "$PKS_VERSION"
+    messagePrint " - PKS Product Version requested" "$PCF_TILE_PKS_VERSION"
     messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
-
-    cnt=$(egrep -c ":${PKS_VERSION}:" $PCFCONFIG_PATH/files/pks-release-notes.txt)
-    if [ "${cnt}" -eq 0 ]; then 
-      echo ""
-      echo "ERROR: The PKS Version (${PKS_VERSION}) is not known. Please choose one from the list:"
-      cat $PCFCONFIG_PATH/files/pks-release-notes.txt | awk -F: '{ printf("         PKS-%-7s\n",$2)}' | sed 1d
-      exit 1
-    fi
 
     PXS_VERSION=$PKS_VERSION
   else
@@ -1742,23 +1672,20 @@ echo "debug1: PASS:$PASS USER:$USER"
       max_instances=$(aws ec2 describe-account-attributes --region $AWS_REGION --attribute-names max-instances | \
           jq -r '.AccountAttributes[0].AttributeValues[0].AttributeValue')
       echo "max_instances:$max_instances"
-
     fi
 
     echo "Looking for PAS Product Image ($PAS_VERSION)"
     if [ "$PAS_SRT" -eq 1 ]; then
-      PAS_RELEASE_NOTES="$PCFCONFIG_PATH/files/pas-srt-release-notes.txt"
       PIVNET_SLUG=elastic-runtime
       PIVNET_SLUG_SHORT=srt
       PIVNET_SLUG_NAME="Small Footprint PAS"
     else
-      PAS_RELEASE_NOTES="$PCFCONFIG_PATH/files/pas-release-notes.txt"
       PIVNET_SLUG=elastic-runtime
       PIVNET_SLUG_SHORT=cf
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
 
-    PIVNET_GLOB=$(egrep ":${PAS_VERSION}" $PAS_RELEASE_NOTES | awk -F: '{ print $NF }' | head -1)
+    PIVNET_GLOB=$(getProductSlug $PAS_VERSION "$PIVNET_SLUG_NAME" elastic-runtime)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
@@ -1766,19 +1693,10 @@ echo "debug1: PASS:$PASS USER:$USER"
     messagePrint " - PIVNET Product Name" "$PIVNET_SLUG_NAME"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
-    cnt=$(egrep -c ":${PAS_VERSION}:" $PAS_RELEASE_NOTES)
-    if [ "${cnt}" -eq 0 ]; then 
-      echo ""
-      echo "ERROR: The PAS Version (${PAS_VERSION}) is not known. Please choose one from the list:"
-      cat $PAS_RELEASE_NOTES | awk -F: '{ printf("         PAS-%-7s\n",$2)}' | sed 1d
-      exit 1
-    fi
-
     PXS_VERSION=$PAS_VERSION
   fi
 
   # --- VERIFY IF PKS PRODUCT TILE HAS BEEN UPDLOADED ALREADY --- 
-echo "debug2: PASS:$PASS USER:$USER"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
   OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep "$PIVNET_SLUG" | awk '{ print $4 }')
 
@@ -1790,7 +1708,8 @@ echo "debug2: PASS:$PASS USER:$USER"
         messagePrint " - Verify download and caching options" "download-from-pivnet"
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
-          --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" --product-version "${PXS_VERSION}"; ret=$?
+          --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" \
+          --product-version "${PCF_TILE_PAS_VERSION}"; ret=$?
         echo "-----------------------------------------------------------------------------------------------------------"
         if [ $ret -ne 0 ]; then
           echo "ERROR: Download Product $PIVNET_GLOB failed"; exit 1 
@@ -1818,7 +1737,7 @@ echo "debug2: PASS:$PASS USER:$USER"
       echo "       --username $USER --password $PASS \\"                                                      >> $TMP_SCRIPT
       echo "       download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"                 >> $TMP_SCRIPT
       echo "       --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"                  >> $TMP_SCRIPT
-      echo "       --product-version \"${PXS_VERSION}\" "                                                       >> $TMP_SCRIPT
+      echo "       --product-version \"${PCF_TILE_PAS_VERSION}\""                                               >> $TMP_SCRIPT
       echo ""                                                                                                   >> $TMP_SCRIPT
       echo "    if [ \$? -eq 0 ]; then"                                                                         >> $TMP_SCRIPT
       echo "      if [ -f /tmp/$PIVNET_GLOB ]; then"                                                            >> $TMP_SCRIPT
@@ -1859,16 +1778,10 @@ echo "debug2: PASS:$PASS USER:$USER"
     VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
 
-    # --- COPY JQ FILES FROM THE TEMPLATES ---
-    PAS_MINOR_VERSION=$(echo $PAS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
-    if [ -f $PCFCONFIG_PATH/templates/${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_VERSION}.yml ]; then
-      PAS_TEMPLATE=${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_VERSION}.yml
-    else
-      PAS_TEMPLATE=${PAS_PRODUCT}_${PCF_CLOUD_NAME}_${PAS_MINOR_VERSION}.yml
-    fi
+    PAS_TEMPLATE=$PCF_TILE_PKS_CONFIG
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
-    messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PAS_TEMPLATE}"
+    messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
@@ -1915,13 +1828,9 @@ echo "debug2: PASS:$PASS USER:$USER"
       echo "skip_cert_verify: true" >> $VARFILE
     fi
 
-echo gaga1
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
-echo gaga11
       tg1=$($JQ -r '.modules[].outputs.web_lb_name.value' $TERRAFORM_TFSTATE | grep -v null | sort -u)
-echo gaga12
       tg2=$($JQ -r '.modules[].outputs.diego_ssh_lb_name.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
-echo gaga13
 
       #echo "pas_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
       echo "web_lb: ${tg1}" >> $VARFILE
@@ -1949,7 +1858,6 @@ echo gaga13
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
     fi
-echo gaga10
 
     messagePrint " - OpsManager URL" "http://$OPS_MANAGER_DNS"
     messagePrint " - PAS Variable File" "$VARFILE"
@@ -1987,9 +1895,9 @@ echo gaga10
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
-      echo "ERROR: Configuring Product with --config $PCFCONFIG_PATH/templates/${PAS_TEMPLATE} --vars-file $VARFILE failed"; exit 1 
+      echo "ERROR: Configuring Product with --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE failed"; exit 1 
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -2075,19 +1983,24 @@ EOF
 #      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
     fi
 
+    # --- GET STEMCEL-VERSION ---
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "aws" ]; then SLUG_STR="Ubuntu Xenial Stemcell for AWS"; fi
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "gcp" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
+
+    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_PAS_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PAS_STEMCELL_TYPE)
+
     echo "Uploading Stemcell for PAS"
-    scv=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-        tail -1 | awk -F: '{ print $2 }')
-    scf=$(grep ":${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-        tail -1 | awk -F: '{ print $5 }')
-    messagePrint " - Staging Stemcel Version:" "$scv"
-    messagePrint " - Staging Stemcel:" "$scf"
+    messagePrint " - Staging Stemcel Version:" "$PCF_TILE_PAS_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Type:" "$PCF_TILE_PAS_STEMCELL_TYPE"
+    messagePrint " - Staging Stemcel Description:" "$SLUG_STR $PCF_TILE_PAS_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Glob:" "$STEMCELL_GLOB"
 
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
-      --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}
+    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_PAS_STEMCELL_TYPE \
+      --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${PCF_TILE_PKS_STEMCELL_VERSION}
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf}
+    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB}
     echo "-----------------------------------------------------------------------------------------------------------"
 
     if [ $NO_APPLY -eq 0 ]; then
@@ -2114,41 +2027,18 @@ EOF
   else
     VARFILE=./pks_vars.yml; rm -rf $VARFILE; touch $VARFILE
 
-    cnt=$(egrep -c "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt)
-    if [ $cnt -eq 0 ]; then
-      vermin=$(echo "${ver}" | awk -F'.' '{ printf("%d.%d\n",$1,$2) }')
-      cfg=$(egrep "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt | \
-          head -1 | awk -F: '{ print $NF }')
-    else
-      cfg=$(egrep "^${PKS_VERSION}:${PCF_CLOUD_NAME}:default:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt | \
-          head -1 | awk -F: '{ print $NF }')
-    fi
-
     # --- COPY JQ FILES FROM THE TEMPLATES ---
-    PKS_TEMPLATE=$cfg
+    PKS_TEMPLATE=$PCF_TILE_PKS_CONFIG
 
-    #PKS_MINOR_VERSION=$(echo $PKS_VERSION | awk -F'.' '{ printf("%d.%d\n", $1, $2)}')
-    #if [ -f $PCFCONFIG_PATH/templates/pks${PKS_VERSION}.jq ]; then
-    #  PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_VERSION}.yml
-    #else
-    #  PKS_TEMPLATE=pks_${PCF_CLOUD_NAME}_${PKS_MINOR_VERSION}.yml
-    #fi
+    echo "Configuring PKS Tile (${PCF_TILE_PKS_CONFIG})"
+    messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
-    echo "Configuring PKS Tile (${PKS_VERSION})"
-    messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PKS_TEMPLATE}"
-
-#kkkkkkkkkk
-echo "XXXXXXXXXx => TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "XXXXXXXXXx => TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-TLS_CERTIFICATE=""
-TLS_PRIVATE_KEY=""
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
       TLS_TEMP_CERT=/tmp/$$_cert
-echo "debug4: USER:$USER PASS:$PASS"
       OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
       $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
       if [ $? -ne 0 ]; then
@@ -2286,8 +2176,8 @@ echo "debug4: USER:$USER PASS:$PASS"
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
-echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE"
-    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PKS_TEMPLATE} --vars-file $VARFILE
+echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE"
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
       echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
     fi
@@ -2372,19 +2262,18 @@ EOF
 #      echo "      of the $TLS_HOST_NAME with ALIAS: $DNSLB"
     fi
 
-
     # --- GET STEMCEL-VERSION ---
-    scv=$(egrep "^${PKS_VERSION}:${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/opsman-pks-release-notes.txt | \
-        awk -F: '{ print $7 }') 
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "aws" ]; then SLUG_STR="Ubuntu Xenial Stemcell for AWS"; fi
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
+    if [ "${PCF_DEPLOYMENT_CLOUDID}" == "gcp" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
+
+    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_PKS_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PKS_STEMCELL_TYPE)
 
     echo "Uploading Stemcell for PKS"
-    scf=$(grep "${scv}:${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-        tail -1 | awk -F: '{ print $5 }')
-    des=$(grep "${scv}:${PCF_CLOUD_NAME}:" $PCFCONFIG_PATH/files/stemcell-release-notes.txt | sort -t: -n -k2,2 | \
-        tail -1 | awk -F: '{ print $4 }')
-    messagePrint " - Staging Stemcel Version:" "$scv"
-    messagePrint " - Staging Stemcel Description:" "$des"
-    messagePrint " - Staging Stemcel Glob:" "$scf"
+    messagePrint " - Staging Stemcel Version:" "$PCF_TILE_PKS_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Type:" "$PCF_TILE_PKS_STEMCELL_TYPE"
+    messagePrint " - Staging Stemcel Description:" "$SLUG_STR $PCF_TILE_PKS_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Glob:" "$STEMCELL_GLOB"
 
     # --- CHECK IF ALREADY THERE ---
     if [ -f /tmp/${scf} ]; then 
@@ -2393,29 +2282,30 @@ EOF
     fi
  
     i=0
-    if [ ! -f /tmp/${scf} ]; then 
+    if [ ! -f /tmp/${STEMCELL_GLOB} ]; then 
       while [ 1 ]; do
         echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN --request-timeout=60 download-product --output-directory=/tmp --pivnet-product-slug stemcells-ubuntu-xenial \
-                      --pivnet-file-glob ${scf} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${scv}; ret=$?
+        $OM $OM_LOGIN --request-timeout=60 download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_PKS_STEMCELL_TYPE \
+                      --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" \
+                      --product-version ${PCF_TILE_PKS_STEMCELL_VERSION}; ret=$?
         if [ $ret -eq 0 ]; then 
-          gzip -l /tmp/${scf} > /dev/null 2>&1
+          gzip -l /tmp/${STEMCELL_GLOB} > /dev/null 2>&1
           if [ $? -eq 0 ]; then 
             break
           else
-            rm -f /tmp/${scf}
+            rm -f /tmp/${STEMCELL_GLOB}
           fi
         fi
           
         if [ $i -ge 3 ]; then
-          echo "ERROR: Downloading Product: ${scf} failed"; exit 1
+          echo "ERROR: Downloading Product: ${PCF_TILE_PKS_STEMCELL_VERSION} failed"; exit 1
         fi
         let i=i+1
       done
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${scf} 
+    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB} 
     echo "-----------------------------------------------------------------------------------------------------------"
 
     if [ $NO_APPLY -eq 0 ]; then
@@ -2815,7 +2705,6 @@ echo "debug6: USER:$USER PASS:$PASS"
     ################################ CONFIGURE PKS LOADBALANCERS #################################
     ##############################################################################################
 
-#gaga
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       vmid=$(az vm list -g $DNS_PREFIX --query "[?tags.instance_group=='pivotal-container-service']" | jq -r '.[].name')
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
