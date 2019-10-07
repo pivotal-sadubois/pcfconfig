@@ -176,7 +176,8 @@ installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 createENVfile $DEPLOYMENT /tmp/deployPCFenv
 $SCP_COMMAND /tmp/deployPCFenv ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
 
-scripts/deployPCFwrapper.sh $envFile
+$SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/deployPCFwrapper.sh ] && \$HOME/pcfconfig/scripts/deployPCFwrapper.sh $envFile"
+$SSH_COMMAND -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
 
 exit 1
 $SSH_COMMAND -n "~/pcfconfig/pcfconfig.sh $ARGS"
