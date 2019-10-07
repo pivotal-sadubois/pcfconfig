@@ -73,7 +73,7 @@ checkOpsMantools
 TLS_CERTIFICATE=$HOME/pcfconfig/certificates/cert.pem
 TLS_FULLCHAIN=$HOME/pcfconfig/certificates/fullchain.pem
 TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
-TLS_CHAIN=$HOME=/pcfconfig/certificates/chain.pem
+TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
 TLS_ROOT_CA=""
 
     verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
