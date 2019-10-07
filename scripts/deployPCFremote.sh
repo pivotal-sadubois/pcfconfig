@@ -14,15 +14,9 @@ envFile=$1
 
 export PCFPATH=$HOME/pcfconfig
 
-echo "11111 PCFPATH:$PCFPATH"
-
 # --- SOURCE FUNCTIONS---
 . ${PCFPATH}/functions
 . $envFile
-
-
-echo "111111 ${PCFPATH}/functions"
-echo "111111 envFile:$envFile"
 
 if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
   PRODUCT_TILE=pks
@@ -76,11 +70,11 @@ checkOpsMantools
 ###################################### SSL VERIFICATION ######################################
 ##############################################################################################
 
-TLS_CERTIFICATE=$HOME/pcfconfig/certificate/cert.pem
-TLS_FULLCHAIN=$HOME/pcfconfig/certificate/fullchain.pem
-TLS_PRIVATE_KEY=$HOME/pcfconfig/certificate/privkey.pem
-TLS_CHAIN=$HOME=/pcfconfig/certificate/chain.pem
-TLS_ROOT_CA=$HOME/pcfconfig/certificate/chain.pem
+TLS_CERTIFICATE=$HOME/pcfconfig/certificates/cert.pem
+TLS_FULLCHAIN=$HOME/pcfconfig/certificates/fullchain.pem
+TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
+TLS_CHAIN=$HOME=/pcfconfig/certificates/chain.pem
+TLS_ROOT_CA=""
 
     verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
                       "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$PKS_TLS_ROOT_CA"
