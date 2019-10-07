@@ -9,7 +9,7 @@
 
 LOGFILE=/tmp/pcfconfig.log
 PIDFILE=/tmp/pcfconfig.pid
-COMMAND=$HOME/pcfconfig/scripts/scripts/deployPCFremote.sh
+COMMAND=$HOME/pcfconfig/scripts/deployPCFremote.sh
 ARGS="$*"
 
 eof=0
