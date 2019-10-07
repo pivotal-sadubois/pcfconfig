@@ -2127,9 +2127,6 @@ verifyCertificate () {
           paste -d ':' - -)
     sub=$(echo "${tmp}" | awk -F: '{ print $1 }' | sed 's/~1~/ /g') 
     iss=$(echo "${tmp}" | awk -F: '{ print $2 }' | sed 's/~1~/ /g') 
-echo "TMP:$tmp"
-echo "SUB:$sub"
-echo "ISS:$iss"
     if [ "${iss}" != "${sub}" ]; then
       echo "ERROR: $TLS_ROOT_CA is not a Root CA. Issuer and Subject should be the same"
       echo "       => File: $TLS_ROOT_CA Issuer=$sub / Subject=$iss"
