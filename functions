@@ -629,7 +629,7 @@ installJumpHost() {
   fi
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
-  messagePrint " - Wait for SSH Daemon on jump-host to come online" "~120sec"
+  messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
   ret=1
   while [ $ret -ne 0 ]; do
     $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
@@ -719,6 +719,9 @@ installJumpHost() {
       $SSH_COMMAND -n "echo \"certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain'\"" 
       $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
                    -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: failed to generate certificate"; exit 1
+      fi
     else
       echo "Generate Certificate for PAS Domains ($domain)"  
       $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
