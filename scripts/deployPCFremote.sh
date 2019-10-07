@@ -19,9 +19,15 @@ else
   export PCFPATH=$(dirname $0)
 fi
 
+echo "11111 $(dirname $0)"
+
 # --- SOURCE FUNCTIONS---
 . ${PCFPATH}/functions
 . $envFile
+
+
+echo "111111 ${PCFPATH}/functions"
+echo "111111 envFile:$envFile"
 
 if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
   PRODUCT_TILE=pks
