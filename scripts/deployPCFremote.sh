@@ -76,10 +76,8 @@ TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
 TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
 TLS_ROOT_CA=""
 
-    verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
-                      "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$PKS_TLS_ROOT_CA"
-
-exit
+verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
+                  "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$PKS_TLS_ROOT_CA"
 
 ##############################################################################################
 ######################################### PREPERATION ########################################
