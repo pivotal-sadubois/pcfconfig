@@ -9,7 +9,7 @@ sudo 2>/dev/null  mkdir -p /usr/local /usr/local/bin
 echo "Install Software on Jumphost"
 echo "- Pivnet Token: $PIVNET_TOKEN"
 echo "- Update GIT repo https://github.com/pivotal-sadubois/pcfconfig.git"
-(cd ~/pcfconfig; git fetch)
+#(cd ~/pcfconfig; git fetch)
 
 apt-get update > /dev/null 2>&1
 
