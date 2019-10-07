@@ -701,6 +701,7 @@ installJumpHost() {
       $SCP_COMMAND $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       $SSH_COMMAND gcloud auth login --no-launch-browser --brief --quiet --project $GCP_PROJECT
       $SSH_COMMAND -n "gcloud config set project $GCP_PROJECT"
+      while read -t 1 garbage; do sleep 0; done
       $SSH_COMMAND -n "gcloud auth activate-service-account --quiet --key-file=/tmp/$GCPSVC 2>/dev/null"
     fi
   fi
@@ -722,8 +723,11 @@ installJumpHost() {
       $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
                    -m sadubois@pivotal.io --agree-tos -n --expand"
     fi
-    $SSH_COMMAND -n "sudo [ -d /etc/letsencrypt/live/$domain ] && sudo cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates
-    $SSH_COMMAND -n "sudo chmod 0777 ~/pcfconfig/certificates
+
+    $SSH_COMMAND -n "sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
+    $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
+    $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
+    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live/$domain ] && cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates"
     echo "----------------------------------------------------------------------------------------------------------------"
   fi
 
