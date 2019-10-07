@@ -629,7 +629,7 @@ installJumpHost() {
   fi
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
-  messagePrint " - Wait for SSH Daemon on ($JUMP_HOST) to come online" "~120sec"
+  messagePrint " - Wait for SSH Daemon on jump-host to come online" "~120sec"
   ret=1
   while [ $ret -ne 0 ]; do
     $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
