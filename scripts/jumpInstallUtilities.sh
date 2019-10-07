@@ -1,9 +1,12 @@
 #!/bin/bash
 
 export PIVNET_TOKEN=$1
-LOC=$(locale | grep LC_CTYPE | sed 's/"//g' | awk -F= '{ print $2 }') 
+#LOC=$(locale 2>/dev/null | grep LC_CTYPE | sed 's/"//g' | awk -F= '{ print $2 }') 
 #export LC_ALL=en_US.UTF-8
-export LC_ALL="$LOC"
+#export LC_ALL="$LOC"
+
+[ -d /usr/share/X11/locale/en_US.UTF-8 ] && export LC_ALL=en_US.UTF-8
+
 sudo 2>/dev/null  mkdir -p /usr/local /usr/local/bin
 
 echo "Install Software on Jumphost"
