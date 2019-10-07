@@ -2123,10 +2123,13 @@ verifyCertificate () {
 
     # --- VERIFY THE CERTIFICATE ISSUER AND SUBJECT ---
     tmp=$(openssl crl2pkcs7 -nocrl -certfile $TLS_ROOT_CA | openssl pkcs7 -print_certs | \
-          egrep "^subject|^issuer" | sed -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
+          egrep "^subject|^issuer" | sed -e 's/CN = /CN=/g' -e 's/^subject=.*CN=//g' -e 's/^issuer=.*CN=//g' -e 's/ /~1~/g' | \
           paste -d ':' - -)
     sub=$(echo "${tmp}" | awk -F: '{ print $1 }' | sed 's/~1~/ /g') 
     iss=$(echo "${tmp}" | awk -F: '{ print $2 }' | sed 's/~1~/ /g') 
+echo "TMP:$tmp"
+echo "SUB:$sub"
+echo "ISS:$iss"
     if [ "${iss}" != "${sub}" ]; then
       echo "ERROR: $TLS_ROOT_CA is not a Root CA. Issuer and Subject should be the same"
       echo "       => File: $TLS_ROOT_CA Issuer=$sub / Subject=$iss"
