@@ -2564,6 +2564,8 @@ getTerraformTemplate() {
 echo gaga1 >/tmp/log
   if [ "${ver}" == "latest" ]; then 
 echo gaga2 >>/tmp/log
+echo "pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases" >>/tmp/log
+echo "PCF_PIVNET_TOKEN:$PCF_PIVNET_TOKEN" >>/tmp/log
     id=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases 2>/dev/null | \
         jq -r ".releases[] | select(.version | scan(\"^$bundle\")).id" | head -1)
   
