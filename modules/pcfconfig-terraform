@@ -729,7 +729,6 @@ checkEnvironment() {
         printf "      %${sublen}s           $DNS4\n" ""
 
         TMPROUTE53=/tmp/$$_tmp_route53.json
-
         echo "{"                                                   >  $TMPROUTE53
         echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
         echo "  \"Changes\": [{"                                   >> $TMPROUTE53
@@ -753,7 +752,7 @@ checkEnvironment() {
           cat $TMPROUTE53
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
-
+echo "aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
@@ -763,6 +762,8 @@ checkEnvironment() {
           echo "WARNING: Unable to update AWS Route53 record $AWS_DNS_SUBDOMAIN for zone $AWS_DNS_SUFFIX"
           echo "         please try manually"
         fi
+
+exit 1
 
         wait_loop 60 "Waiting for DNS records to be pushed"
 
@@ -940,7 +941,6 @@ checkEnvironment() {
         printf "      %${sublen}s           $DNS4\n" ""
 
         TMPROUTE53=/tmp/$$_tmp_route53.json
-
         echo "{"                                                   >  $TMPROUTE53
         echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
         echo "  \"Changes\": [{"                                   >> $TMPROUTE53
