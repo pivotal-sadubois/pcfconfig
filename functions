@@ -2132,7 +2132,7 @@ verifyCertificate () {
       fi
 
       # --- GENERATE CA.PEM WITH ROOT_CA AND FULLCHAIN ---
-      cat $TLS_ROOT_CA $TLS_FULLCHAIN $HOME/pcfconfig/certificates/ca.pem
+      cat $TLS_ROOT_CA $TLS_FULLCHAIN > $HOME/pcfconfig/certificates/ca.pem
 
       if [ "${TLS_ROOT_CA}" == "" ]; then    
         echo "ERROR: ROOT_CA for $ROOT_CA_NAME could not be found, please download the file manually" 

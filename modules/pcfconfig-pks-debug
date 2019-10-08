@@ -1190,15 +1190,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   fi
 
   if [ "${TF_DIR_MODE}" != "clean" ]; then 
-#gaga
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
-echo "PCF_OPSMANAGER_BUNDLE:$PCF_OPSMANAGER_BUNDLE"
-echo "TF_TEMPLATE:$TF_TEMPLATE"
-echo "getTerraformTemplate $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_BUNDLE $TF_TEMPLATE"
     PCF_TERRAFORM_TEMPLATE_FILE=$(getTerraformTemplate $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_BUNDLE $TF_TEMPLATE) 
     PCF_TERRAFORM_DIRNAME=$(zipinfo $PCF_TERRAFORM_TEMPLATE_FILE | grep pivotal-cf-terraforming | head -1 | \
               awk '{ print $NF }' | awk -F'/' '{ print $1 }')
-echo "PCF_TERRAFORM_TEMPLATE_FILE:$PCF_TERRAFORM_TEMPLATE_FILE"
 
     messagePrint " - Terraform Template File" "$PCF_TERRAFORM_TEMPLATE_FILE"
     messagePrint " - Terraform Package Name" "$PCF_TERRAFORM_DIRNAME"
