@@ -1126,7 +1126,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
 #    fi
 #  fi
 
-#gaga
   TF_HOME=$(eval echo "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}")
 #  idx=$(egrep ":${PCF_VERSION}:" ${PCFCONFIG_PATH}/files/terraform-release-notes.txt | \
 #        egrep "\-${TF_DEPLOYMENT}-" | head -1 | awk -F: '{ print $1 }')
@@ -3295,7 +3294,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
 
     cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo gaga21
 
     if [ $cnt -eq 0 ]; then
       HELM=$(which helm)
@@ -3322,7 +3320,6 @@ echo gaga21
         exit 1
       fi
     fi
-echo gaga22
 
     DNSLB="pending"
     while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
@@ -3335,7 +3332,6 @@ echo gaga22
       echo "       => kubectl get svc -n ingress | grep nginx-nginx-ingress-controller"
       exit 1
     fi
-echo gaga23
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
@@ -3350,7 +3346,6 @@ echo gaga23
         a=1
       fi
     fi
-echo gaga24
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       DNS_NAME="*.apps-${cluster}"
@@ -3376,7 +3371,6 @@ echo gaga24
         exit 1
       fi
     fi
-echo gaga25
 
     if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
       echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
@@ -3421,10 +3415,7 @@ EOF
         cp /tmp/$$_zone_record /tmp/aws_zone_record
         rm -f /tmp/$$_zone_record
       fi
-echo gaga27
     fi
-
-echo gaga3
 
     #kubectl create namespace ingress
 
