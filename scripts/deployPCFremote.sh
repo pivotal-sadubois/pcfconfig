@@ -283,7 +283,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
                                         --install-mode delete --no-ask \
                                         --tf-template $PCF_TERRAFORMS_TEMPLATE_VERSION \
                                         --aws-route53 $AWS_HOSTED_ZONE_ID
-
+echo "deployPCFremote gaga1"
   if [ $? -ne 0 ]; then 
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
     echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
@@ -299,12 +299,14 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
+echo "deployPCFremote gaga2"
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/$$_log 2>&1
   terraform plan -out=plan >> /tmp/$$_log 2>&1
   terraform apply -auto-approve >> /tmp/$$_log 2>&1; ret=$?
   tail -20 /tmp/$$_log
   echo "-----------------------------------------------------------------------------------------------------------"
+echo "deployPCFremote gaga3 RET:$ret"
   if [ $ret -ne 0 ]; then
     echo "ERROR: Problem with teraform apply"
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
@@ -315,6 +317,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
 else
   messagePrint "pcfconfig-terraform already done" "skipping"
 fi
+echo "deployPCFremote gaga4"
 
 # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
 if [ "$(getPCFconfigState $PCFCONFIG_OPSMAN_STATE)" != "completed" ]; then 
@@ -393,7 +396,7 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     ${PCFPATH}/modules/pcfconfig-pks-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
          --deployment $TF_DEPLOYMENT \
-         --pks-admin-user $PCF_TILE_PKS_ADMIN_USER --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS \
+         --pks-admin-user $PCF_TILE_PKS_ADMIN_USER  --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS \
          --pks-admin-mail $PCF_TILE_PKS_ADMIN_EMAIL --aws-route53 $AWS_HOSTED_ZONE_ID \
          --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
          --pks-cluster-1-plan $PKS_CLUSTER_1_PLAN \
