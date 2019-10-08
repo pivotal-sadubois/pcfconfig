@@ -730,6 +730,13 @@ installJumpHost() {
                    -m sadubois@pivotal.io --agree-tos -n --expand"
     fi
 
+    # --- CLEANUP ---
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | jq -r ".HostedZones[] | select(.Name | \
+              scan(\"^$domain.\")).Id")
+    if [ "${ZONE_ID}" != "" ]; then
+      route53deleteHostedZone $ZONE_ID
+    fi
+
     $SSH_COMMAND -n "sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
     $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
     $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
@@ -767,7 +774,6 @@ route53deleteHostedZone() {
   fi
 }
 
-#gaga
 route53createHostedZone() {
   zone=$1
 
@@ -778,7 +784,7 @@ route53createHostedZone() {
   fi
 
   aws route53 create-hosted-zone --name $zone --caller-reference "$(date)" \
-       --hosted-zone-config Comment="command-line version" > /dev/null 2>&1
+       --hosted-zone-config Comment="PCF Configuration Utility (pcfconfig)" > /dev/null 2>&1
   if [ $? -ne 0 ]; then
       echo "ERROR: failed to create AWS Route53 zone $ZONE_ID"
       echo "       => aws route53 create-hosted-zone --name $zone --caller-reference \"$(date)\" \\"
@@ -906,6 +912,17 @@ cleanRoute53() {
 }
 
 cleanAWSenv() {
+
+  # --- DELETE HOSTED ZONE ---
+  domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
+            jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
+
+  if [ "${ZONE_ID}" != "" ]; then
+    messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
+    route53deleteHostedZone $ZONE_ID
+  fi
+
   # --- DELETE INSTANCES ---
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
@@ -925,7 +942,7 @@ cleanAWSenv() {
           exit 1
         fi
 
-        sleep 60
+        sleep 30
       fi
     fi
     

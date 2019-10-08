@@ -611,7 +611,7 @@ checkEnvironment() {
 
           echo ""
 
-          echo "3OpsManager Name can not be resolved through DNS"
+          echo "Manager Name can not be resolved through DNS"
           exit 1
         else
           OPS_MANAGER=OPS_MANAGER_DNS
@@ -813,7 +813,7 @@ echo "xxxx aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOK
 
           echo ""
 
-          echo "2OpsManager Name can not be resolved through DNS"
+          echo "Manager Name can not be resolved through DNS"
           exit 1
         else
           OPS_MANAGER=OPS_MANAGER_DNS
@@ -1004,7 +1004,7 @@ echo "xxxx aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOK
 
           echo ""
 
-          echo "1OpsManager Name can not be resolved through DNS"
+          echo "Manager Name can not be resolved through DNS"
           exit 1
         else
           OPS_MANAGER=OPS_MANAGER_DNS
