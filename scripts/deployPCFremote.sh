@@ -437,11 +437,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     PKS_CLUSTER_3_NAME=cl3
   fi
 
-echo "PCF_TILE_PKS_CLUSTER_CL1_PLAN:$PCF_TILE_PKS_CLUSTER_CL1_PLAN"
-echo "PKS_CLUSTER_1_PLAN:$PKS_CLUSTER_1_PLAN"
-#gaga
-exit 1
-
   ${PCFPATH}/modules/pcfconfig-pks-debug --pks-admin-user $PCF_TILE_PKS_ADMIN_USER \
        --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS --deployment $TF_DEPLOYMENT \
        --pks-admin-mail $PCF_TILE_PKS_ADMIN_EMAIL --aws-route53 $AWS_HOSTED_ZONE_ID \
