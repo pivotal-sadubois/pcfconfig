@@ -1590,6 +1590,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     messagePrint " - BOSH Director (Bosh/0) System Status" "$AWS_BOSH0_SYSTEM_STATUS"
   fi
 
+echo "hallo10 OPS_UPLOAD:$OPS_UPLOAD"
+
   # --- USE OPS-MANAGER AS JUMPHOST ---
   if [ $OPS_UPLOAD -eq 1 ]; then 
     TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
@@ -1608,6 +1610,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "echo "deb http://apt.starkandwayne.com stable main" > /etc/apt/sources.list.d/starkandwayne.list"                            >> $TMP_SCRIPT
     echo "apt-get -qq update > /dev/null 2>&1"                                                                                         >> $TMP_SCRIPT
     echo "apt-get -qq install om > /dev/null 2>&1"                                                                                     >> $TMP_SCRIPT
+
+echo "hallo11 $TMP_SCRIPT"
+cat $TMP_SCRIPT
 
 #if [ ! -x /usr/bin/kubectl ]; then
 #  echo "- Install Kubectl"
@@ -1629,6 +1634,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       exit 1
     fi
 
+echo hallo13
     ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
     if [ ${ret} -ne 0 ]; then 
       echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -1637,6 +1643,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       exit 1
     fi
   fi
+echo hallo14
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
     PIVNET_SLUG=pivotal-container-service

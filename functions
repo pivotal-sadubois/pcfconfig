@@ -30,10 +30,6 @@ createENVfile() {
   dep="$1"
   envFile="$2"
 
-echo "DEP:$dep"
-
-exit 1
-
   rm -f $env
   . ${PCFPATH}/deployments/$dep
 
@@ -104,7 +100,11 @@ exit 1
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-    echo "AZURE_SERVICE_ACCOUNT=\"$AZURE_SERVICE_ACCOUNT\""                      >> $envFile
+    echo "AZURE_SUBSCRIPTION_ID=\"$AZURE_SUBSCRIPTION_ID\""                      >> $envFile
+    echo "AZURE_TENANT_ID=\"$AZURE_TENANT_ID\""                                  >> $envFile
+    echo "AZURE_CLIENT_ID=\"$AZURE_CLIENT_ID\""                                  >> $envFile
+    echo "AZURE_CLIENT_SECRET=\"$AZURE_CLIENT_SECRET\""                          >> $envFile
+    echo "AZURE_REGION=\"$AZURE_REGION\""                                        >> $envFile
 
     echo "PCF_TERRAFORMS_TEMPLATE_BUNDLE=\"$PCF_TERRAFORMS_TEMPLATE_BUNDLE\""    >> $envFile
     echo "PCF_TERRAFORMS_TEMPLATE_NAME=\"$PCF_TERRAFORMS_TEMPLATE_NAME\""        >> $envFile
@@ -130,8 +130,6 @@ exit 1
       fi
     fi
   fi
-
-  #scripts/deployPCFremote.sh $envFile
 }
 
 verifyTLScertificate() {
@@ -711,11 +709,11 @@ installJumpHost() {
     fi
   fi
 
-  domain=$(echo "$JUMP_HOST" | sed 's/jump-//g') 
-  route53createHostedZone $domain
-
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
   if [ "${stt}" != "ok" ]; then 
+    domain=$(echo "$JUMP_HOST" | sed 's/jump-//g') 
+    route53createHostedZone $domain
+
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
     typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
     if [ $typ -ne 0 ]; then
@@ -788,7 +786,7 @@ route53createHostedZone() {
   fi
 
   aws route53 create-hosted-zone --name $zone --caller-reference "$(date)" \
-       --hosted-zone-config Comment="PCF Configuration Utility (pcfconfig)" > /dev/null 2>&1
+       --hosted-zone-config Comment="Managed by pcfconfig" > /dev/null 2>&1
   if [ $? -ne 0 ]; then
       echo "ERROR: failed to create AWS Route53 zone $ZONE_ID"
       echo "       => aws route53 create-hosted-zone --name $zone --caller-reference \"$(date)\" \\"
