@@ -2561,19 +2561,19 @@ getTerraformTemplate() {
   if [ "${cloud}" == "AWS" ]; then sstr="AWS Terraform Templates"; fi
   if [ "${cloud}" == "Azure" ]; then sstr="Azure Terraform Templates"; fi
 
-echo gaga1 1>&2
+echo gaga1 >/tmp/log
   if [ "${ver}" == "latest" ]; then 
-echo gaga1 2>&2
+echo gaga2 >>/tmp/log
     id=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases 2>/dev/null | \
         jq -r ".releases[] | select(.version | scan(\"^$bundle\")).id" | head -1)
   
     fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases/$id 2>/dev/null | \
       jq -r ".product_files[] | select(.name | scan(\"^$sstr\")).id")
 
-echo "gaga3 id:$id fid:$fid" 1>&2
+echo "gaga3 id:$id fid:$fid" >>/tmp/log
     if [ "${fid}" != "" ]; then
       # --- ACCEPT EULA ---
-echo "pivnetAPI $PCF_PIVNET_TOKEN POST products/$slug/releases/$id/eula_acceptance" 1>&2
+echo "pivnetAPI $PCF_PIVNET_TOKEN POST products/$slug/releases/$id/eula_acceptance" >>/tmp/log
       pivnetAPI $PCF_PIVNET_TOKEN POST products/$slug/releases/$id/eula_acceptance > /dev/null 2>&1
     fi
   else
