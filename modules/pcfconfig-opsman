@@ -114,9 +114,6 @@ while [ "$1" != "" ]; do
   shift
 done
 
-echo "PKS_CLUSTER_1_NAME:$PKS_CLUSTER_1_NAME"
-exit 1
-
 # --- COMPATIBLITE VALUES ---
 PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
 PCF_PIVNET_TOKEN=$PIVNET_TOKEN
@@ -3282,7 +3279,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
   echo ""
 
-echo gaga1
   i=1
   while [ $i -lt 10 ]; do
     pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
@@ -3290,10 +3286,7 @@ echo gaga1
     let i=i+1; sleep 10
   done
 
-echo gaga2
-echo "PKS_CLUSTER_1_NAME:$PKS_CLUSTER_1_NAME"
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "gaga21 $cluster"
     pks get-credentials $cluster > /dev/null 2>&1
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
