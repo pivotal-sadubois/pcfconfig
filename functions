@@ -30,6 +30,10 @@ createENVfile() {
   dep="$1"
   envFile="$2"
 
+echo "DEP:$dep"
+
+exit 1
+
   rm -f $env
   . ${PCFPATH}/deployments/$dep
 
