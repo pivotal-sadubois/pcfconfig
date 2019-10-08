@@ -39,6 +39,13 @@ createENVfile() {
   echo "AWS_HOSTED_DNS_DOMAIN=$AWS_HOSTED_DNS_DOMAIN"                            >> $envFile
   echo "PCF_PIVNET_TOKEN=$PCF_PIVNET_TOKEN"                                      >> $envFile
 
+  echo "PCF_TILE_PKS_ADMIN_USER=$PCF_TILE_PKS_ADMIN_USER"                        >> $envFile
+  echo "PCF_TILE_PKS_ADMIN_PASS=$PCF_TILE_PKS_ADMIN_PASS"                        >> $envFile
+  echo "PCF_TILE_PKS_ADMIN_EMAIL=$PCF_TILE_PKS_ADMIN_EMAIL"                      >> $envFile
+  echo "PCF_TILE_PAS_ADMIN_USER=$PCF_TILE_PAS_ADMIN_USER"                        >> $envFile
+  echo "PCF_TILE_PAS_ADMIN_PASS=$PCF_TILE_PAS_ADMIN_PASS"                        >> $envFile
+  echo "PCF_TILE_PAS_ADMIN_EMAIL=$PCF_TILE_PAS_ADMIN_EMAIL"                      >> $envFile
+
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     echo "GCP_SERVICE_ACCOUNT=\"$GCP_SERVICE_ACCOUNT\""                          >> $envFile
     echo "GCP_REGION=\"$GCP_REGION\""                                            >> $envFile
