@@ -73,6 +73,10 @@ properties-configuration:
     resurrector_enabled: true
     retry_bosh_deploys: true
     skip_director_drain: true
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: true
+    trusted_certificates: (( trusted_certificates )) 
 network-assignment:
   network:
     name: infrastructure
