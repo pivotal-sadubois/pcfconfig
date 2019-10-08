@@ -1590,8 +1590,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     messagePrint " - BOSH Director (Bosh/0) System Status" "$AWS_BOSH0_SYSTEM_STATUS"
   fi
 
-echo "hallo10 OPS_UPLOAD:$OPS_UPLOAD"
-
   # --- USE OPS-MANAGER AS JUMPHOST ---
   if [ $OPS_UPLOAD -eq 1 ]; then 
     TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
@@ -1601,26 +1599,11 @@ echo "hallo10 OPS_UPLOAD:$OPS_UPLOAD"
     [ "$TMP_OPSMAN" != "" ] && chmod 600 $TMP_OPSMAN
     [ "$TMP_SCRIPT" != "" ] && chmod 777 $TMP_SCRIPT
 
-#cd /usr/local/bin && wget -q -O om \
-#    "$(curl -s https://api.github.com/repos/pivotal-cf/om/releases/latest \
-#    |jq --raw-output '.assets[] | .browser_download_url' | grep linux)" && chmod +x om 
-
     echo "#!/bin/bash"                                                                                                                 >  $TMP_SCRIPT
     echo "wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add - > /dev/null 2>&1" >> $TMP_SCRIPT
     echo "echo "deb http://apt.starkandwayne.com stable main" > /etc/apt/sources.list.d/starkandwayne.list"                            >> $TMP_SCRIPT
     echo "apt-get -qq update > /dev/null 2>&1"                                                                                         >> $TMP_SCRIPT
     echo "apt-get -qq install om > /dev/null 2>&1"                                                                                     >> $TMP_SCRIPT
-
-echo "hallo11 $TMP_SCRIPT"
-cat $TMP_SCRIPT
-
-#if [ ! -x /usr/bin/kubectl ]; then
-#  echo "- Install Kubectl"
-#  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-#  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-#  apt-get install kubectl -y --allow-unauthenticated > /dev/null 2>&1
-#fi
-#sacha
 
     # --- CLEANUP OLD ENTRIES FROM KNOWN_HOSTS FILE ---
     if [ -f ~/.ssh/known_hosts ]; then 
@@ -1635,7 +1618,6 @@ cat $TMP_SCRIPT
       exit 1
     fi
 
-echo hallo13
     ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
     if [ ${ret} -ne 0 ]; then 
       echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -1644,7 +1626,6 @@ echo hallo13
       exit 1
     fi
   fi
-echo hallo14
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
     PIVNET_SLUG=pivotal-container-service
@@ -1719,8 +1700,6 @@ echo hallo14
       if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
-echo "hallo1 PXS_VERSION:$PXS_VERSION"
-echo "hallo2 TMP_SCRIPT:$TMP_SCRIPT"
       messagePrint " - Verify download and caching options" "ops-manager"
       echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                                  >  $TMP_SCRIPT
       echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                       >> $TMP_SCRIPT
@@ -1754,8 +1733,6 @@ echo "hallo2 TMP_SCRIPT:$TMP_SCRIPT"
       echo "om --skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS\\"           >> $TMP_SCRIPT
       echo "   upload-product --product /tmp/$PIVNET_GLOB"                                                      >> $TMP_SCRIPT
 
-echo "scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh"
-exit 1
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
         echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
