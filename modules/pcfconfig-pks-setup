@@ -1416,6 +1416,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "client_secret: $AZURE_SECRET"                 >> $VARFILE
   fi
 
+#ooooooooooo
+  # --- ADD TRUSTED CERTIFICATES ---
+  CA=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $HOME/pcfconfig/certificates/ca.pem)
+  echo "trusted_certificates: \"$CA\"" >> $VARFILE
+
   #$JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
   $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | \
       sort -u >> $VARFILE
