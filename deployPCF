@@ -37,7 +37,9 @@ listDeployments() {
 }
 
 usage() {
-  echo "USAGE: $PCFDEPLOY <deployment.cfg>"
+  echo "USAGE: $PCFDEPLOY [oprions] <deployment.cfg>"
+  echo "                   --cleanup    # Cleanup previous installation and stop"
+  echo "                                # the jump server"
 }
 
 LIST_DEPLOYMENTS=0
