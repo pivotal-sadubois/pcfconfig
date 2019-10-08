@@ -3308,6 +3308,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       helm repo update > /dev/null 2>&1
       kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
       helm init --service-account tiller > /dev/null 2>&1
+      sleep 30
       helm install stable/nginx-ingress \
   	--name nginx \
   	--set rbac.create=true \
