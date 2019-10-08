@@ -393,6 +393,11 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
       PKS_CLUSTER_3_NAME=cl3
     fi
 
+echo "PCF_TILE_PKS_CLUSTER_CL1_PLAN:$PCF_TILE_PKS_CLUSTER_CL1_PLAN"
+echo "PKS_CLUSTER_1_PLAN:$PKS_CLUSTER_1_PLAN"
+#gaga
+exit 1
+
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     ${PCFPATH}/modules/pcfconfig-pks-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
          --deployment $TF_DEPLOYMENT \
