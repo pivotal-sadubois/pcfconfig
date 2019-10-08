@@ -3169,19 +3169,6 @@ EOF
           for ins in $mst; do
             aws elb --region $AWS_REGION register-instances-with-load-balancer \
                --load-balancer-name k8s-master-$n --instances "${ins}" > /dev/null 2>&1; ret=$?
-echo "MST:$mst INS:$ins RET:$ret"
-sleep 10
-            aws elb --region $AWS_REGION register-instances-with-load-balancer \
-               --load-balancer-name k8s-master-$n --instances "${ins}" > /dev/null 2>&1; ret=$?
-echo "MST:$mst INS:$ins RET:$ret"
-sleep 30
-            aws elb --region $AWS_REGION register-instances-with-load-balancer \
-               --load-balancer-name k8s-master-$n --instances "${ins}" > /dev/null 2>&1; ret=$?
-echo "MST:$mst INS:$ins RET:$ret"
-sleep 60
-            aws elb --region $AWS_REGION register-instances-with-load-balancer \
-               --load-balancer-name k8s-master-$n --instances "${ins}" > /dev/null 2>&1; ret=$?
-echo "MST:$mst INS:$ins RET:$ret"
             if [ ${ret} -ne 0 ]; then
               echo "ERROR: Register Instances"
               echo "aws elb --region $AWS_REGION register-instances-with-load-balancer \\"
