@@ -1650,6 +1650,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
+#kkkkkk
     messagePrint " - PKS Product Version requested" "$PCF_TILE_PKS_VERSION"
     messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
@@ -1697,7 +1698,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \
           --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token "${PIVNET_TOKEN}" \
-          --product-version "${PCF_TILE_PAS_VERSION}"; ret=$?
+          --product-version "${PXS_VERSION}"; ret=$?
         echo "-----------------------------------------------------------------------------------------------------------"
         if [ $ret -ne 0 ]; then
           echo "ERROR: Download Product $PIVNET_GLOB failed"; exit 1 
@@ -1725,7 +1726,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "       --username $USER --password $PASS \\"                                                      >> $TMP_SCRIPT
       echo "       download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"                 >> $TMP_SCRIPT
       echo "       --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"                  >> $TMP_SCRIPT
-      echo "       --product-version \"${PCF_TILE_PAS_VERSION}\""                                               >> $TMP_SCRIPT
+      echo "       --product-version \"${PXS_VERSION}\""                                               >> $TMP_SCRIPT
+#kkkkkk
       echo ""                                                                                                   >> $TMP_SCRIPT
       echo "    if [ \$? -eq 0 ]; then"                                                                         >> $TMP_SCRIPT
       echo "      if [ -f /tmp/$PIVNET_GLOB ]; then"                                                            >> $TMP_SCRIPT
