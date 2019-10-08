@@ -720,7 +720,9 @@ installJumpHost() {
       $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
                    -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
       if [ $? -ne 0 ]; then 
-        echo "ERROR: failed to generate certificate. Try it again after some hours"; exit 1
+        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+        exit 1
       fi
     else
       echo "Generate Certificate for PAS Domains ($domain)"  
@@ -2559,15 +2561,19 @@ getTerraformTemplate() {
   if [ "${cloud}" == "AWS" ]; then sstr="AWS Terraform Templates"; fi
   if [ "${cloud}" == "Azure" ]; then sstr="Azure Terraform Templates"; fi
 
+echo gaga1 1>&2
   if [ "${ver}" == "latest" ]; then 
+echo gaga1 2>&2
     id=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases 2>/dev/null | \
         jq -r ".releases[] | select(.version | scan(\"^$bundle\")).id" | head -1)
   
     fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases/$id 2>/dev/null | \
       jq -r ".product_files[] | select(.name | scan(\"^$sstr\")).id")
 
+echo "gaga3 id:$id fid:$fid" 1>&2
     if [ "${fid}" != "" ]; then
       # --- ACCEPT EULA ---
+echo "pivnetAPI $PCF_PIVNET_TOKEN POST products/$slug/releases/$id/eula_acceptance" 1>&2
       pivnetAPI $PCF_PIVNET_TOKEN POST products/$slug/releases/$id/eula_acceptance > /dev/null 2>&1
     fi
   else
