@@ -393,11 +393,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
       PKS_CLUSTER_3_NAME=cl3
     fi
 
-echo "PCF_TILE_PKS_CLUSTER_CL1_PLAN:$PCF_TILE_PKS_CLUSTER_CL1_PLAN"
-echo "PKS_CLUSTER_1_PLAN:$PKS_CLUSTER_1_PLAN"
-#gaga
-exit 1
-
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     ${PCFPATH}/modules/pcfconfig-pks-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
          --deployment $TF_DEPLOYMENT \
@@ -422,12 +417,30 @@ exit 1
 
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
-  [ "${PKS_CLUSTER_1_PLAN}" == "" ] && PKS_CLUSTER_1_PLAN="-"
-  [ "${PKS_CLUSTER_2_PLAN}" == "" ] && PKS_CLUSTER_2_PLAN="-"
-  [ "${PKS_CLUSTER_3_PLAN}" == "" ] && PKS_CLUSTER_3_PLAN="-"
-  [ "${PKS_CLUSTER_1_NAME}" == "" ] && PKS_CLUSTER_1_NAME="-"
-  [ "${PKS_CLUSTER_2_NAME}" == "" ] && PKS_CLUSTER_2_NAME="-"
-  [ "${PKS_CLUSTER_3_NAME}" == "" ] && PKS_CLUSTER_3_NAME="-"
+
+  PKS_CLUSTER_1_PLAN="-"; PKS_CLUSTER_1_NAME="-"
+  PKS_CLUSTER_2_PLAN="-"; PKS_CLUSTER_2_NAME="-"
+  PKS_CLUSTER_3_PLAN="-"; PKS_CLUSTER_3_NAME="-"
+
+  if [ "${PCF_TILE_PKS_CLUSTER_CL1_PLAN}" != "" ]; then
+    PKS_CLUSTER_1_PLAN=$PCF_TILE_PKS_CLUSTER_CL1_PLAN
+    PKS_CLUSTER_1_NAME=cl1
+  fi
+
+  if [ "${PCF_TILE_PKS_CLUSTER_CL2_PLAN}" != "" ]; then
+    PKS_CLUSTER_2_PLAN=$PCF_TILE_PKS_CLUSTER_CL2_PLAN
+    PKS_CLUSTER_2_NAME=cl2
+  fi
+
+  if [ "${PCF_TILE_PKS_CLUSTER_CL3_PLAN}" != "" ]; then
+    PKS_CLUSTER_3_PLAN=$PCF_TILE_PKS_CLUSTER_CL3_PLAN
+    PKS_CLUSTER_3_NAME=cl3
+  fi
+
+echo "PCF_TILE_PKS_CLUSTER_CL1_PLAN:$PCF_TILE_PKS_CLUSTER_CL1_PLAN"
+echo "PKS_CLUSTER_1_PLAN:$PKS_CLUSTER_1_PLAN"
+#gaga
+exit 1
 
   ${PCFPATH}/modules/pcfconfig-pks-debug --pks-admin-user $PCF_TILE_PKS_ADMIN_USER \
        --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS --deployment $TF_DEPLOYMENT \
