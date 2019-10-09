@@ -106,8 +106,8 @@ while [ "$1" != "" ]; do
     --directory-prefix) TF_PREFIX=$2; shift;;       # DIRECTORY PREFIX
     --install-mode) TF_DIR_MODE=$2; shift;;         # DIRECTORY MODE (clean, preserve, delete)
     --opsman-template) OPSMAN_TEMPLATE=$2; shift;;  # OPSMAN TEMPLATE 
-    --stemcell-version) PCF_TILE_PKS_STEMCELL_VERSION=$2; shift;;     # PKS STEMCELL VERSION
-    --stemcell-type) PCF_TILE_PKS_STEMCELL_TYPE=$2; shift;;           # PKS STEMCELL TYPE
+    --stemcell-version) PCF_TILE_STEMCELL_VERSION=$2; shift;;     # PKS STEMCELL VERSION
+    --stemcell-type) PCF_TILE_STEMCELL_TYPE=$2; shift;;           # PKS STEMCELL TYPE
     --pks-template) PCF_TILE_PKS_CONFIG=$2; shift;;                   # PKS STEMCELL TYPE
     --pas-template) PCF_TILE_PAS_CONFIG=$2; shift;;                   # PKS STEMCELL TYPE
   esac
@@ -1766,9 +1766,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
-echo "9999 TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "9999 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -1974,17 +1971,18 @@ EOF
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "gcp" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
 
-    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_PAS_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PAS_STEMCELL_TYPE)
+    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PAS_STEMCELL_TYPE)
 
+#xxxx
     echo "Uploading Stemcell for PAS"
-    messagePrint " - Staging Stemcel Version:" "$PCF_TILE_PAS_STEMCELL_VERSION"
-    messagePrint " - Staging Stemcel Type:" "$PCF_TILE_PAS_STEMCELL_TYPE"
-    messagePrint " - Staging Stemcel Description:" "$SLUG_STR $PCF_TILE_PAS_STEMCELL_VERSION"
-    messagePrint " - Staging Stemcel Glob:" "$STEMCELL_GLOB"
+    messagePrint " - Staging Stemcell Version:" "$PCF_TILE_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcell Type:" "$PCF_TILE_PAS_STEMCELL_TYPE"
+    messagePrint " - Staging Stemcell Description:" "$SLUG_STR $PCF_TILE_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcell Glob:" "$STEMCELL_GLOB"
 
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_PAS_STEMCELL_TYPE \
-      --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${PCF_TILE_PKS_STEMCELL_VERSION}
+      --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${PCF_TILE_STEMCELL_VERSION}
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB}
     echo "-----------------------------------------------------------------------------------------------------------"
@@ -2253,12 +2251,12 @@ EOF
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "gcp" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
 
-    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_PKS_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PKS_STEMCELL_TYPE)
+    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_STEMCELL_TYPE)
 
     echo "Uploading Stemcell for PKS"
-    messagePrint " - Staging Stemcel Version:" "$PCF_TILE_PKS_STEMCELL_VERSION"
-    messagePrint " - Staging Stemcel Type:" "$PCF_TILE_PKS_STEMCELL_TYPE"
-    messagePrint " - Staging Stemcel Description:" "$SLUG_STR $PCF_TILE_PKS_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Version:" "$PCF_TILE_STEMCELL_VERSION"
+    messagePrint " - Staging Stemcel Type:" "$PCF_TILE_STEMCELL_TYPE"
+    messagePrint " - Staging Stemcel Description:" "$SLUG_STR $PCF_TILE_STEMCELL_VERSION"
     messagePrint " - Staging Stemcel Glob:" "$STEMCELL_GLOB"
 
     # --- CHECK IF ALREADY THERE ---
@@ -2271,9 +2269,9 @@ EOF
     if [ ! -f /tmp/${STEMCELL_GLOB} ]; then 
       while [ 1 ]; do
         echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN --request-timeout=60 download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_PKS_STEMCELL_TYPE \
+        $OM $OM_LOGIN --request-timeout=60 download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_STEMCELL_TYPE \
                       --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" \
-                      --product-version ${PCF_TILE_PKS_STEMCELL_VERSION}; ret=$?
+                      --product-version ${PCF_TILE_STEMCELL_VERSION}; ret=$?
         if [ $ret -eq 0 ]; then 
           gzip -l /tmp/${STEMCELL_GLOB} > /dev/null 2>&1
           if [ $? -eq 0 ]; then 
@@ -2284,7 +2282,7 @@ EOF
         fi
           
         if [ $i -ge 3 ]; then
-          echo "ERROR: Downloading Product: ${PCF_TILE_PKS_STEMCELL_VERSION} failed"; exit 1
+          echo "ERROR: Downloading Product: ${PCF_TILE_STEMCELL_VERSION} failed"; exit 1
         fi
         let i=i+1
       done
