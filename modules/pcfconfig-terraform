@@ -1767,6 +1767,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
+echo "9999 TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "9999 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -1781,13 +1784,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1 
       fi
 
-      TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
-      TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
-      TLS_ROOT_CERT=$($OM $OM_LOGIN curl --path /api/v0/certificate_authorities| jq '.certificate_authorities[].cert_pem')
+      TLS_CERTIFICATE_STRING=$(jq '.certificate' $TLS_TEMP_CERT)
+      TLS_PRIVATE_KEY_STRING=$(jq '.key' $TLS_TEMP_CERT)
+      TLS_ROOT_CERT_STRING=$($OM $OM_LOGIN curl --path /api/v0/certificate_authorities| jq '.certificate_authorities[].cert_pem')
 
-      echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
-      echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
-      echo "routing_custom_ca_certificates: $TLS_ROOT_CERT" >> $VARFILE
+      echo "container_service_pas_tls_cert_pem: $TLS_CERTIFICATE_STRING" >> $VARFILE
+      echo "container_service_pas_tls_private_key_pem: $TLS_PRIVATE_KEY_STRING" >> $VARFILE
+      echo "routing_custom_ca_certificates: $TLS_ROOT_CERT_STRING" >> $VARFILE
 
       echo "skip_cert_verify: false" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
@@ -1802,13 +1805,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         exit 1
       fi
 
-      TLS_CERTIFICATE=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
-      TLS_PRIVATE_KEY=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
-      TLS_ROOT_CERT=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
+      TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
+      TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
+      TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
-      echo "container_service_pas_tls_cert_pem: \"$TLS_CERTIFICATE\"" >> $VARFILE
-      echo "container_service_pas_tls_private_key_pem: \"$TLS_PRIVATE_KEY\"" >> $VARFILE
-      echo "routing_custom_ca_certificates: \"$TLS_ROOT_CERT\"" >> $VARFILE
+      echo "container_service_pas_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+      echo "container_service_pas_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
+      echo "routing_custom_ca_certificates: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     fi
 
@@ -2048,12 +2051,12 @@ EOF
       #  exit 1
       #fi
 
-      TLS_CERTIFICATE=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
-      TLS_PRIVATE_KEY=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
-      TLS_ROOT_CERT=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
+      TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
+      TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
+      TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
-      echo "container_service_pks_tls_cert_pem: \"$TLS_CERTIFICATE\"" >> $VARFILE
-      echo "container_service_pks_tls_private_key_pem: \"$TLS_PRIVATE_KEY\"" >> $VARFILE
+      echo "container_service_pks_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+      echo "container_service_pks_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
     fi
 
     $JQ -r '"pks_api_hostname: " + .modules[].outputs.domain.value' \
