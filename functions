@@ -306,7 +306,6 @@ installJumpHost() {
       messagePrint " - Verify NIC" "AdminNic"
     fi
 
-#ssssssss
     nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
     if [ "$nam" != "$JUMP_HOST" ]; then
       messagePrint " - Creating VM" "$JUMP_HOST"
@@ -351,7 +350,6 @@ installJumpHost() {
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
-#ssssssss
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
@@ -579,7 +577,6 @@ installJumpHost() {
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
               --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
               --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST},{Key=type,Value=pcfjump}]" > /dev/null 2>&1
-#ssssssss
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
@@ -841,8 +838,12 @@ echo "2222 ins:$ins"
   if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then PCFMODE=pas; else PCFMODE=pks; fi
 
   $SSH_COMMAND -n "[ -d $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE ] && \
-        cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve"
-exit
+        cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then 
+    messagePrint " - Terraform destroy on environment" "succeeded"
+  else
+    messagePrint " - Terraform destroy on environment" "failed"
+  fi
 } 
 
 route53deleteHostedZone() {
