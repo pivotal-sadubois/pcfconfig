@@ -307,7 +307,6 @@ echo "deployPCFremote gaga2"
   terraform apply -auto-approve >> /tmp/$$_log 2>&1; ret=$?
   tail -20 /tmp/$$_log
   echo "-----------------------------------------------------------------------------------------------------------"
-echo "deployPCFremote gaga3 RET:$ret"
   if [ $ret -ne 0 ]; then
     echo "ERROR: Problem with teraform apply"
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
@@ -318,7 +317,6 @@ echo "deployPCFremote gaga3 RET:$ret"
 else
   messagePrint "pcfconfig-terraform already done" "skipping"
 fi
-echo "deployPCFremote gaga4"
 
 # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
 if [ "$(getPCFconfigState $PCFCONFIG_OPSMAN_STATE)" != "completed" ]; then 
@@ -455,11 +453,6 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_STATE "started"
-
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
-exit
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then 
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS --pivnet-token "$PCF_PIVNET_TOKEN" \
