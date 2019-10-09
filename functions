@@ -306,6 +306,7 @@ installJumpHost() {
       messagePrint " - Verify NIC" "AdminNic"
     fi
 
+#ssssssss
     nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
     if [ "$nam" != "$JUMP_HOST" ]; then
       messagePrint " - Creating VM" "$JUMP_HOST"
@@ -350,6 +351,7 @@ installJumpHost() {
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
+#ssssssss
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
@@ -577,7 +579,7 @@ installJumpHost() {
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
               --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
               --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST},{Key=type,Value=pcfjump}]" > /dev/null 2>&1
-#gaga
+#ssssssss
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
@@ -766,6 +768,36 @@ installJumpHost() {
   echo "# --- JUMP HOST ACCESS ---"
   echo "$SSH_COMMAND"
 }
+
+startJumpHost() {
+  JUMP_HOST=$1
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+a=1
+echo 1111
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+         Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+a=1
+echo "2222 ins:$ins"
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    stt=$(az group exists --name Admin)
+    if [ "$stt" == "true" ]; then
+      stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
+      if [ "${stt}" != "VM running" ]; then
+        az vm start --resource-group Admin --name $JUMP_HOST
+      fi
+a=1
+    fi
+a=1
+echo 3333
+  fi
+
+} 
 
 route53deleteHostedZone() {
   ZONE_ID=$1
