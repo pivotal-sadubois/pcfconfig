@@ -1612,14 +1612,14 @@ cleanAWSenv() {
   done
 
   # --- DELETE EBS VOLUMES
-  TMPAWS=/tmp/$$_aws.json
+  TMPAWS=/tmp/$$_vol_aws.json
   aws --region $AWS_LOCATION ec2 describe-volumes > $TMPAWS
   i=0; tot=$(jq -r ".Volumes[$i].VolumeId" 2>/dev/null $TMPAWS | egrep -c "^vol-")
 
   while [ $i -lt $tot ]; do
     stt=$(jq -r ".Volumes[$i].State" 2>/dev/null $TMPAWS)
     vid=$(jq -r ".Volumes[$i].VolumeId" 2>/dev/null $TMPAWS)
-    cnt=$(jq -r ".Volumes[0].Tags[].Value" $TMPAWS | egrep -c "p-bosh|bosh-init") 
+    cnt=$(jq -r ".Volumes[$i].Tags[].Value" $TMPAWS 2>/dev/null| egrep -c "p-bosh|bosh-init") 
 
     if [ $cnt -gt 0 ]; then 
       if [ "$stt" == "available" ]; then 
@@ -1640,7 +1640,6 @@ cleanAWSenv() {
     let i=i+1
   done
   rm -f $SECGRP
-
 }
 
 cleanGCPenv() {
