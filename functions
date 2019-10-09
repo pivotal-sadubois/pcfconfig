@@ -189,7 +189,7 @@ execCmd() {
 
   echo -e "     => ${bold}$1${normal}\c"; read x
   echo "     -----------------------------------------------------------------------------------------------------------"
-  eval "$1" | sed -e '/^$/d' -e 's/^/     /g'
+  eval "$1" 2>&1 | sed -e '/^$/d' -e 's/^/     /g'
   #$1 | sed -e '/^$/d' -e 's/^/     /g'
   echo "     -----------------------------------------------------------------------------------------------------------"
   echo ""
@@ -737,7 +737,16 @@ installJumpHost() {
       echo "Generate Certificate for PAS Domains ($domain)"  
       $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
                    -m sadubois@pivotal.io --agree-tos -n --expand"
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+        exit 1
+      fi
     fi
+
+    # --- GET A COPY OF THE CERTIFICATES BACK ---
+    [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
+    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
 
     # --- CLEANUP ---
     ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | jq -r ".HostedZones[] | select(.Name | \

@@ -33,7 +33,7 @@ fi
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
   #apt-get install awscli -y > /dev/null 2>&1
-  sudo pip3 install --upgrade --user awscli
+  sudo -H pip3 install --upgrade awscli
 fi
 
 if [ ! -x /usr/bin/cf ]; then 

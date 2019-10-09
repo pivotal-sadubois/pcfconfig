@@ -6,11 +6,8 @@
 # Description ..: PCF Installation and Configuration Utility
 # ############################################################################################
 
-export PCFDEPLOY=$(basename $0)
-export PCFPATH=$(dirname $0)
-if [ "$PCFPATH" == "." ]; then 
-  export PCFPATH=$(pwd)
-fi
+export PCFHOME=$(cd "$PWD/$(dirname $0)"; pwd)
+export PCFPATH=$(cd "$PWD/$(dirname $0)"; pwd)
 
 . $PCFPATH/functions
 
