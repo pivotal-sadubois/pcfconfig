@@ -1743,7 +1743,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         echo "-----------------------------------------------------------------------------------------------------------"
         SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
         #ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+echo "ssh -q $$SSH_OPTIONS -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"sudo /tmp/om-install.sh\""
         ssh -q $$SSH_OPTIONS -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+echo "RET:$ret"
         if [ ${ret} -eq 0 ]; then break; fi
         if [ ${ret} -ne 0 -a $i -eq 3 ]; then
           echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
