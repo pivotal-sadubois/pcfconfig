@@ -1409,7 +1409,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     echo "client_secret: $AZURE_SECRET"                 >> $VARFILE
   fi
 
-#ooooooooooo
   # --- ADD TRUSTED CERTIFICATES ---
   CA=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $HOME/pcfconfig/certificates/ca.pem)
   echo "trusted_certificates: \"$CA\"" >> $VARFILE
@@ -1742,7 +1741,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       i=1
       while [ $i -le 3 ]; then 
         echo "-----------------------------------------------------------------------------------------------------------"
-        ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+        SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+        #ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+        ssh -q $$SSH_OPTIONS -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?
+#oooooooooooo
 
         if [ ${ret} -ne 0 -a $i -eq 3 ]; then
           echo "ERROR: executing remote-script: /tmp/om-install.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
