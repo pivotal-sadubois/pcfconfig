@@ -28,6 +28,10 @@ if [ -f $PIDFILE ]; then
   if [ "$stt" == "" ]; then 
     echo "$0 NOT RUNNING, RESTARTING"
     #nohup $COMMAND $ARGS >> $LOGFILE 2>&1 &
+    
+    # --- RESET LOGFILE ---
+    echo > $LOGFILE
+
     $COMMAND $ARGS >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
   fi
