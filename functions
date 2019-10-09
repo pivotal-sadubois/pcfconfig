@@ -773,6 +773,25 @@ startJumpHost() {
   JUMP_HOST=$1
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
+    if [ $cnt -gt 0 ]; then
+      stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
+      if [ "${stt}" != "RUNNING" ]; then
+        gcloud compute instances start $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
+        gcloud compute config-ssh > /dev/null 2>&1
+      fi
+    fi
+
+    prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+
+    SSH_USER=$(whoami)
+    SSH_HOME=/home/$(whoami)
+    SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
+
 a=1
 echo 1111
   fi
@@ -780,7 +799,24 @@ echo 1111
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
          Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
-a=1
+
+    if [ "${ins}" != "" ]; then
+      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+          jq -r ".Reservations[].Instances[].State.Name")
+
+      if [ "${stt}" == "stopped" ]; then
+        aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
+        sleep 30
+      fi
+    fi
+
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$JUMP_HOST
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
 echo "2222 ins:$ins"
   fi
 
@@ -791,12 +827,22 @@ echo "2222 ins:$ins"
       if [ "${stt}" != "VM running" ]; then
         az vm start --resource-group Admin --name $JUMP_HOST
       fi
-a=1
     fi
-a=1
-echo 3333
+
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$pip
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
+  if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then PCFMODE=pas; else PCFMODE=pks; fi
+
+  $SSH_COMMAND -n "[ -d $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE ] && \
+        cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve"
+exit
 } 
 
 route53deleteHostedZone() {
