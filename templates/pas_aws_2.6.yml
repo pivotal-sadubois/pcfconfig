@@ -323,48 +323,35 @@ resource-config:
     instance_type:
       id: automatic
     internet_connected: false
-  clock_global:
+    max_in_flight: 1
+  blobstore:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: false
+    max_in_flight: 1
+  compute:
     instances: automatic
     instance_type:
       id: automatic
     internet_connected: false
-  cloud_controller:
+    max_in_flight: 4%
+  control:
     instances: automatic
     instance_type:
       id: automatic
     internet_connected: false
-  cloud_controller_worker:
+    max_in_flight: 1
+  database:
     instances: automatic
+    persistent_disk:
+      size_mb: automatic
     instance_type:
       id: automatic
     internet_connected: false
-  credhub:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  diego_brain:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: true
-    elb_names:
-    - ((ssh_target_group))
-  diego_cell:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  diego_database:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  doppler:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
+    max_in_flight: 1
   ha_proxy:
     instances: automatic
     instance_type:
@@ -380,37 +367,8 @@ resource-config:
     instance_type:
       id: automatic
     internet_connected: false
-  loggregator_trafficcontroller:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  mysql:
-    instances: automatic
-    persistent_disk:
-      size_mb: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
   mysql_monitor:
     instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  mysql_proxy:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  nats:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  nfs_server:
-    instances: automatic
-    persistent_disk:
-      size_mb: automatic
     instance_type:
       id: automatic
     internet_connected: false
@@ -427,16 +385,6 @@ resource-config:
     elb_names:
     - ((web_target_group_80))
     - ((web_target_group_443))
-  syslog_adapter:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  syslog_scheduler:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
   tcp_router:
     instances: 0
     persistent_disk:
@@ -446,11 +394,6 @@ resource-config:
     internet_connected: true
     elb_names:
     - alb:default-tg-1024
-  uaa:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
 errand-config:
   deploy-autoscaler:
     post-deploy-state: true
