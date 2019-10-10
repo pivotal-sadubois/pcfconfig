@@ -2658,9 +2658,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       # SLEEP AS CRACE PERIOD 
       sleep 240
 
-echo "API_HOST_NAME:$API_HOST_NAME"
-exit 1
-
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
       echo "echo '# Connecting to ${API_HOST_NAME}'"                                                          >  $TMP_SCRIPT
