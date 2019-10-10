@@ -1886,8 +1886,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
       echo "ERROR: Configuring Product with"
-#      echo "       => $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} \\"
-#      echo "          --vars-file $VARFILE failed"; exit 1 
+      echo "       => $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} \\"
+      echo "          --vars-file $VARFILE failed"; exit 1 
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
