@@ -300,7 +300,6 @@ echo "deployPCFremote gaga1"
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
-echo "deployPCFremote gaga2"
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/$$_log 2>&1
   terraform plan -out=plan >> /tmp/$$_log 2>&1
@@ -457,12 +456,12 @@ else
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then 
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS --pivnet-token "$PCF_PIVNET_TOKEN" \
         --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT \
-        --stemcell-version "$PCF_TILE_PKS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
+        --stemcell-version "$PCF_TILE_PAS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
         --pas-template $PCF_TILE_PAS_CONFIG --deployment $TF_DEPLOYMENT \
         --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
     else
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS --pivnet-token "$PCF_PIVNET_TOKEN" \
-        --stemcell-version "$PCF_TILE_PKS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
+        --stemcell-version "$PCF_TILE_PAS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
         --pas-template $PCF_TILE_PAS_CONFIG --deployment $TF_DEPLOYMENT \
         --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT
     fi
