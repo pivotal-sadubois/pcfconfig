@@ -1651,7 +1651,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     fi
 
     echo "Looking for PAS Product Image ($PAS_VERSION)"
-    if [ "$PCF_TILE_PAS_SLUG" -eq 1 ]; then
+    if [ "$PCF_TILE_PAS_SLUG" == "srt" ]; then
       PIVNET_SLUG=elastic-runtime
       PIVNET_SLUG_SHORT=srt
       PIVNET_SLUG_NAME="Small Footprint PAS"
