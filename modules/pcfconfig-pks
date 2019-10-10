@@ -2025,7 +2025,6 @@ exit 1
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
       API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
-      TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
       TLS_TEMP_CERT=/tmp/$$_cert
@@ -2221,7 +2220,7 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
         #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
         #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
         messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
-        messagePrint " - Updating Zone Record:" "$API_HOST_NAME" 
+        messagePrint " - 1Updating Zone Record:" "$API_HOST_NAME" 
 
 #pppp
         if [ "${ZONE_ID}" != "" ]; then 
