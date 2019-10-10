@@ -1494,6 +1494,7 @@ echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSM
       echo "ERROR: Updating OpsManager via API failed"; exit 1
     fi
 
+#ppppppppppp
     if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
       messagePrint "Configure Security Groups" ""
       messagePrint "Security Group:" "web-lb-security-groups"
@@ -2656,6 +2657,9 @@ echo "debug6: USER:$USER PASS:$PASS"
 
       # SLEEP AS CRACE PERIOD 
       sleep 240
+
+echo "API_HOST_NAME:$API_HOST_NAME"
+exit 1
 
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
