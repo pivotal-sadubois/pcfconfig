@@ -1971,17 +1971,17 @@ EOF
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
     if [ "${PCF_DEPLOYMENT_CLOUDID}" == "gcp" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
 
-    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_PAS_STEMCELL_TYPE)
+    STEMCELL_GLOB=$(getProductSlug $PCF_TILE_STEMCELL_VERSION "$SLUG_STR" $PCF_TILE_STEMCELL_TYPE)
 
 #xxxx
     echo "Uploading Stemcell for PAS"
     messagePrint " - Staging Stemcell Version:" "$PCF_TILE_STEMCELL_VERSION"
-    messagePrint " - Staging Stemcell Type:" "$PCF_TILE_PAS_STEMCELL_TYPE"
+    messagePrint " - Staging Stemcell Type:" "$PCF_TILE_STEMCELL_TYPE"
     messagePrint " - Staging Stemcell Description:" "$SLUG_STR $PCF_TILE_STEMCELL_VERSION"
     messagePrint " - Staging Stemcell Glob:" "$STEMCELL_GLOB"
 
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_PAS_STEMCELL_TYPE \
+    $OM $OM_LOGIN download-product --output-directory=/tmp --pivnet-product-slug $PCF_TILE_STEMCELL_TYPE \
       --pivnet-file-glob ${STEMCELL_GLOB} --pivnet-api-token  "$PIVNET_TOKEN" --product-version ${PCF_TILE_STEMCELL_VERSION}
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB}
@@ -1990,6 +1990,7 @@ EOF
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PAS"
+exit 1
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN --request-timeout=60 apply-changes
