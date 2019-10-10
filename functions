@@ -746,6 +746,10 @@ installJumpHost() {
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
     $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "ERROR: failed to copy certificates"
+  echo "$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
+fi
 
     # --- CLEANUP ---
     ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | jq -r ".HostedZones[] | select(.Name | \
@@ -814,7 +818,6 @@ echo 1111
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
-echo "2222 ins:$ins"
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
@@ -834,17 +837,57 @@ echo "2222 ins:$ins"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
-
-  if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then PCFMODE=pas; else PCFMODE=pks; fi
-
-  $SSH_COMMAND -n "[ -d $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE ] && \
-        cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve" > /dev/null 2>&1
-  if [ $? -eq 0 ]; then 
-    messagePrint " - Terraform destroy on environment" "succeeded"
-  else
-    messagePrint " - Terraform destroy on environment" "failed"
-  fi
 } 
+
+#ffffffffff
+cleanupEnvironment() {
+  env="$1"
+  loc="$2"
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    export ENV_NAME=$env
+    export AWS_LOCATION=$loc
+
+    # --- DELETE INSTANCES ---
+    SECGRP=/tmp/$$_aws_routing_table.json
+    aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
+    tot=$(grep -c "InstanceId" $SECGRP); i=0; let tot=tot-1
+    while [ $i -le $tot ]; do
+      gid=$(jq -r ".Reservations[$i].Instances[].InstanceId" 2>/dev/null $SECGRP)
+  
+      cnt=$(jq -r ".Reservations[$i].Instances[].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}|p-bosh")
+      if [ $cnt -gt 0 ]; then
+        cnt=$(jq -r ".Reservations[$i].Instances[].State.Name" 2>/dev/null $SECGRP | egrep -c "terminated")
+        if [ $cnt -eq 0 ]; then
+          messagePrint " - Terminate Instance:" "$gid"
+          #aws --region $AWS_LOCATION ec2 terminate-instances --instance-ids $gid > /dev/null 2>&1
+a=1
+          if [ $? -ne 0 ]; then
+            echo "ERROR: failled to Terminage Instance: $gid"
+            echo "aws --region $AWS_LOCATION ec2 terminate-instances  --instance-ids $gid"
+            exit 1
+          fi
+        fi
+      fi
+  
+      let i=i+1
+    done
+
+exit
+    if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then PCFMODE=pas; else PCFMODE=pks; fi
+    $SSH_COMMAND -n "[ -d $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE ] && \
+          cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      messagePrint " - Terraform destroy on environment" "succeeded"
+    else
+      messagePrint " - Terraform destroy on environment" "failed"
+    fi
+
+    cleanAWSenv
+
+  fi
+
+}
 
 route53deleteHostedZone() {
   ZONE_ID=$1
