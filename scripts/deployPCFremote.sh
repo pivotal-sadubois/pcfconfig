@@ -12,6 +12,7 @@ fi
 
 envFile=$1
 
+export PCFCONFIG_BASE=$(basename)
 export PCFPATH=$HOME/pcfconfig
 
 # --- SOURCE FUNCTIONS---
