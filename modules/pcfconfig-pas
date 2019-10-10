@@ -114,6 +114,9 @@ while [ "$1" != "" ]; do
   shift
 done
 
+echo "PAS_SRT:$PAS_SRT"
+exit 1
+
 # --- COMPATIBLITE VALUES ---
 PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
 PCF_PIVNET_TOKEN=$PIVNET_TOKEN
