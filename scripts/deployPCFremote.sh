@@ -483,8 +483,8 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "started"
-    ${PCFPATH}/modules/pcfconfig-pas-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS --pas-admin-user $PAS_ADMIN_USER \
-         --pas-admin-pass $PAS_ADMIN_PASS --pas-admin-mail $PAS_ADMIN_MAIL --deployment $TF_DEPLOYMENT 
+    ${PCFPATH}/modules/pcfconfig-pas-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS --pas-admin-user $PCF_TILE_PAS_ADMIN_USER \
+         --pas-admin-pass $PCF_TILE_PAS_ADMIN_PASS --pas-admin-mail $PCF_TILE_PAS_ADMIN_EMAIL --deployment $TF_DEPLOYMENT 
 
     if [ $? -ne 0 ]; then
       setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "failed"
@@ -500,8 +500,8 @@ else
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
   ${PCFPATH}/modules/pcfconfig-pas-debug -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
-       --pas-admin-user $PAS_ADMIN_USER --pas-admin-pass $PAS_ADMIN_PASS \
-       --pas-admin-mail $PAS_ADMIN_MAIL --deployment $TF_DEPLOYMENT 
+       --pas-admin-user $PCF_TILE_PAS_ADMIN_USER --pas-admin-pass $PCF_TILE_PAS_ADMIN_PASS \
+       --pas-admin-mail $PCF_TILE_PAS_ADMIN_EMAIL --deployment $TF_DEPLOYMENT 
 
 fi
 
