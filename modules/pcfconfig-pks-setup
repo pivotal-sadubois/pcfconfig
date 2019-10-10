@@ -1768,6 +1768,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
+      API_HOST_NAME=api.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX}.,*.apps.${DNS_PREFIX}.${DNS_SUFFIX}.,*.${DNS_SUFFIX}.,${DNS_SUFFIX}.,${DNS_PREFIX}.${DNS_SUFFIX}"
       TLS_HOST_NAME="*.sys.${DNS_PREFIX}.${DNS_SUFFIX},*.apps.${DNS_PREFIX}.${DNS_SUFFIX},*.${DNS_SUFFIX},${DNS_SUFFIX},${DNS_PREFIX}.${DNS_SUFFIX}"
 
@@ -1791,6 +1792,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "skip_cert_verify: false" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     else
+#gagapas
+      TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
+      API_HOST_NAME=api.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
       dif=$((openssl x509 -in $TLS_CERTIFICATE -noout -modulus; openssl rsa -in $TLS_PRIVATE_KEY -noout -modulus) | uniq -c | awk '{ print $1 }')
       if [ "$dif" == "" ]; then dif=0; fi
@@ -2019,6 +2023,7 @@ exit 1
     messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
+      API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
@@ -2036,6 +2041,9 @@ exit 1
       echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
       echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
     else
+#gagapks
+      API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+      TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
       verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
 
@@ -2182,6 +2190,7 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
       messagePrint " - Subnet-3:" "$SUB3"
       messagePrint " - Security Group:" "$SECG"
 
+#steve
       aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "elb-api-lb" > /dev/null 2>&1; ret=$?
       if [ ${ret} -gt 0 ]; then
         aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "elb-api-lb" --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
@@ -2212,11 +2221,11 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
         #RECORD_ID=$(aws route53 list-resource-record-sets --hosted-zone-id "${ZONE_ID}" \
         #    --query "ResourceRecordSets[?Name == '${TLS_HOST_NAME}.']" | jq -r '.[].AliasTarget.HostedZoneId')
         messagePrint " - DNS Zone (${AWS_DNS_PREFIX}.${AWS_DNS_SUFFIX}:" "zone managed by route53"
-        messagePrint " - Updating Zone Record:" "$TLS_HOST_NAME" 
+        messagePrint " - Updating Zone Record:" "$API_HOST_NAME" 
 
 #pppp
         if [ "${ZONE_ID}" != "" ]; then 
-    cat << EOF | sed -e "s/FQHN/$TLS_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+    cat << EOF | sed -e "s/FQHN/$API_HOST_NAME/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
             "Comment": "CREATE/DELETE/UPSERT a record ",
             "Changes": [{
@@ -2235,6 +2244,11 @@ EOF
 
           echo "-----------------------------------------------------------------------------------------------------------"
           aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Updating DNS record"
+            echo "       aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" --change-batch file:///tmp/$$_zone_record"
+            exit 1
+          fi
           echo "-----------------------------------------------------------------------------------------------------------"
 
           cp /tmp/$$_zone_record /tmp/aws_zone_record
@@ -2481,7 +2495,7 @@ echo "debug6: USER:$USER PASS:$PASS"
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
-  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  #API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
@@ -2550,13 +2564,13 @@ echo "debug6: USER:$USER PASS:$PASS"
 
 
   # --- CHEKING DNS ---
-  echo "Validating PKS API gateway ($TLS_HOST_NAME)"
-  nslookup -timeout=10 $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+  echo "Validating PKS API gateway ($API_HOST_NAME)"
+  nslookup -timeout=10 $API_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -ne 0 ]; then
     i=1; ret="failed"; dns_google_stat="failed"
      while [ $i -lt 10 -a ${ret} == "failed" ]; do
       sleep 10
-      nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+      nslookup $API_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
       if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
       messagePrint "   => Verify DNS lookup Google (8.8.8.8)" "$dns_google_stat"
       let i=i+1
@@ -2569,13 +2583,13 @@ echo "debug6: USER:$USER PASS:$PASS"
   i=1; ret="failed"; dns_google_stat="failed"
    while [ $i -lt 30 -a ${ret} == "failed" ]; do
     sleep 10
-    nslookup $TLS_HOST_NAME > /dev/null 2>&1; ret=$?
+    nslookup $API_HOST_NAME > /dev/null 2>&1; ret=$?
     if [ $ret -eq 0 ]; then dns_google_stat="successful"; fi
     messagePrint "   => Verify DNS lookup localhost ($localdns)" "$dns_google_stat"
     let i=i+1
   done
 
-  nslookup $TLS_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
+  nslookup $API_HOST_NAME 8.8.8.8 > /dev/null 2>&1; ret=$?
   if [ $ret -eq 0 ]; then 
     # --- HACK - OPEN FW PORT 8443/9021 ON PKS VM ---
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
@@ -2615,7 +2629,7 @@ echo "debug6: USER:$USER PASS:$PASS"
         messagePrint " - Verify PKS LB Security Group for API Rule" "port 9021 is open"
       fi
 
-      #echo "Open Network Ports (8443/9021) for $TLS_HOST_NAME on PKS VM"
+      #echo "Open Network Ports (8443/9021) for $API_HOST_NAME on PKS VM"
       #pksvm=$(az vm list --query "[?starts_with(to_string(tags.deployment), 'pivotal-container')]|[?location == '$AZURE_REGION']" | \
       #       jq -r '.[].name' | head -1)
       #if [ "${pksvm}" != "" ]; then
@@ -2631,7 +2645,7 @@ echo "debug6: USER:$USER PASS:$PASS"
     ##############################################################################################
 
     # --- CHECK IF AUTHENTIFICATION HAS ALREADY BEEN CONFIGURED ---
-    pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
+    pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
     if [ $ret -ne 0 ]; then 
       echo "Creating PKS Authentification"
       messagePrint " - PKS Administration User:" "$PKS_ADMIN_USER"
@@ -2644,9 +2658,9 @@ echo "debug6: USER:$USER PASS:$PASS"
 
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
-      echo "echo '# Connecting to ${TLS_HOST_NAME}'"                                                          >  $TMP_SCRIPT
-      #echo "uaac target ${TLS_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
-      echo "uaac target ${TLS_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
+      echo "echo '# Connecting to ${API_HOST_NAME}'"                                                          >  $TMP_SCRIPT
+      #echo "uaac target ${API_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
+      echo "uaac target ${API_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
       echo "if [ \$? -ne 0 ]; then"                                                                           >> $TMP_SCRIPT
       echo "  exit 1"                                                                                         >> $TMP_SCRIPT
       echo "fi"                                                                                               >> $TMP_SCRIPT
@@ -2680,7 +2694,7 @@ echo "debug6: USER:$USER PASS:$PASS"
         exit 1
       fi
 
-      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
+      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
       if [ $ret -ne 0 ]; then
         echo "ERROR: Accessing API gateway $OPS_MANAGER_DNS failed"; exit 1
       fi
@@ -2933,8 +2947,8 @@ EOF
     #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
     #echo ""
     #echo "# --- PKS LOGIN ---"
-    #echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
-    #echo "pks login -u admin -p ${admin_sec} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+    #echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+    #echo "pks login -u admin -p ${admin_sec} -a ${API_HOST_NAME} --skip-ssl-validation"
 
     ##############################################################################################
     #################################### CREATE PKS CLUSTERS #####################################
@@ -2942,7 +2956,7 @@ EOF
 
 
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
-      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
+      pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: login to pks failled"; exit 1
       fi
@@ -3191,7 +3205,7 @@ EOF
     date +%s 
   else
     echo ""
-    echo "ERROR: API Host: $TLS_HOST_NAME can not be resolved by DNS"; exit 1
+    echo "ERROR: API Host: $API_HOST_NAME can not be resolved by DNS"; exit 1
   fi
 
   exit 0
@@ -3238,7 +3252,7 @@ echo "debug7: USER:$USER PASS:$PASS"
   ######################################## DEBUG INFOS #########################################
   ##############################################################################################
   TMP_OPSMAN="$(pwd)/opsman.pem"
-  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  #API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER WEB ACCESS"
@@ -3275,7 +3289,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   ######################################## DEBUG INFOS #########################################
   ##############################################################################################
   TMP_OPSMAN="$(pwd)/opsman.pem"
-  TLS_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  #API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
@@ -3283,12 +3297,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
   echo "# PKS ACCESS CREDENTIALS"
-  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation"
+  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
   echo ""
 
   i=1
   while [ $i -lt 10 ]; do
-    pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${TLS_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
+    pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
     if [ $? -eq 0 ]; then break; fi
     let i=i+1; sleep 10
   done
