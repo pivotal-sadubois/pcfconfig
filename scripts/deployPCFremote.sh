@@ -31,6 +31,7 @@ else
 fi
  
 DEBUG=0
+PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
 if [ $DEBUG -gt 0 ]; then 
