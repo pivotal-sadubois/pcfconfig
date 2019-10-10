@@ -937,7 +937,7 @@ route53createHostedZone() {
   NAME_SERVERS=$(aws route53 get-hosted-zone --id $ZONE_ID | jq -r '.DelegationSet.NameServers[]')
 
   # --- CREATE ZONE ---
-  route53setNSrecord $zone pcfsdu.com "$NAME_SERVERS"
+  route53setNSrecord $zone "$AWS_HOSTED_DNS_DOMAIN" "$NAME_SERVERS"
 }
 
 #route53setNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
