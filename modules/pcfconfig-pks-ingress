@@ -114,6 +114,10 @@ while [ "$1" != "" ]; do
   shift
 done
 
+
+echo "PAS_SRT:$PAS_SRT"
+exit 1
+
 # --- COMPATIBLITE VALUES ---
 PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
 PCF_PIVNET_TOKEN=$PIVNET_TOKEN
@@ -1659,6 +1663,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       PIVNET_SLUG_SHORT=cf
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
+
+echo "PAS_SRT:$PAS_SRT"
+
+exit 1
 
     PIVNET_GLOB=$(getProductSlug $PAS_VERSION "$PIVNET_SLUG_NAME" elastic-runtime)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
