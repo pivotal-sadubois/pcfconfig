@@ -116,6 +116,8 @@ done
 
 echo "PCF_TILE_STEMCELL_TYPE$:$PCF_TILE_STEMCELL_TYPE"
 echo "PCF_TILE_STEMCELL_VERSION$:$PCF_TILE_STEMCELL_VERSION"
+echo "PCF_TILE_PKS_CONFIG:$PCF_TILE_PKS_CONFIG"
+exit 1
 
 # --- COMPATIBLITE VALUES ---
 PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
@@ -1765,6 +1767,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
 
     PAS_TEMPLATE=$PCF_TILE_PKS_CONFIG
+
+echo "PCF_TILE_PKS_CONFIG:$PCF_TILE_PKS_CONFIG"
+echo "gaga PAS_TEMPLATE:$PAS_TEMPLATE"
+exit 1
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
