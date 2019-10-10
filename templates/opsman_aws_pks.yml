@@ -146,3 +146,9 @@ network-assignment:
   singleton_availability_zone: 
     name: eu-central-1c
 
+vmextensions-configuration:
+- name: vm_ext_adam
+  cloud_properties:
+    tags:
+    - awspks
+
