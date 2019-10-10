@@ -1765,7 +1765,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG}"
-exit 1
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
