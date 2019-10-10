@@ -1764,7 +1764,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     PAS_TEMPLATE=$PCF_TILE_PAS_CONFIG
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
-    messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
+    messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG}"
 exit 1
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
@@ -1881,7 +1881,7 @@ exit 1
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then
-      echo "ERROR: Configuring Product with --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE failed"; exit 1 
+      echo "ERROR: Configuring Product with --config $PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG} --vars-file $VARFILE failed"; exit 1 
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 
