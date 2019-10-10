@@ -1767,14 +1767,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     VARFILE=./pas_vars.yml; rm -rf $VARFILE; touch $VARFILE
     if [ "$PAS_SRT" -eq 1 ]; then PAS_PRODUCT="pas-srt"; else PAS_PRODUCT="pas"; fi
 
-    PAS_TEMPLATE=$PCF_TILE_PKS_CONFIG
-
-echo "PCF_TILE_PKS_CONFIG:$PCF_TILE_PKS_CONFIG"
-echo "gaga PAS_TEMPLATE:$PAS_TEMPLATE"
-exit 1
+    PAS_TEMPLATE=$PCF_TILE_PAS_CONFIG
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
+exit 1
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
