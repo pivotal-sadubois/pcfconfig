@@ -2451,10 +2451,10 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-ingress" ]; then
 fi
 
 
+#gaga
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-echo "debug6: USER:$USER PASS:$PASS"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
@@ -2497,7 +2497,7 @@ echo "debug6: USER:$USER PASS:$PASS"
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
-  #API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
   TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
