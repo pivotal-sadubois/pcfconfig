@@ -16,12 +16,12 @@ else
   echo "ERROR: can ont find ${DIRNAME}/../../functions"; exit 1
 fi
 
-kubectl get namespace monitoring > /dev/null 2>&1
-if [ $? -eq 0 ]; then 
-  echo "ERROR: Namespace 'monitoring' already exist"
-  echo "       => kubectl delete namespace monitoring"
-  exit 1
-fi
+#kubectl get namespace monitoring > /dev/null 2>&1
+#if [ $? -eq 0 ]; then 
+#  echo "ERROR: Namespace 'monitoring' already exist"
+#  echo "       => kubectl delete namespace monitoring"
+#  exit 1
+#fi
 
 # Created by /usr/local/bin/figlet
 clear

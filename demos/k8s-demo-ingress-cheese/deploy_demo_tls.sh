@@ -39,7 +39,16 @@ echo '                                                                          
 showK8sEnvironment
 
 # --- LOAD CLOUD ENVIRONMENT ---
-[ -f ~/.pcfconfig/env ] && . ~/.pcfconfig/env
+dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
+
+if [ -d ../../certificates/$dom -a "$dom" != "" ]; then 
+  TLS_CERTIFICATE=../../certificates/$dom/fullchain.pem 
+  TLS_PRIVATE_KEY=../../certificates/$dom/privkey.pem 
+fi
+
+#pks get-credentials cl1 > /dev/null 2>&1
+#uid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"cl1\")].context.user}")
+#tok=$(kubectl describe secret $(kubectl get secret | grep $uid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
 # --- CHECK IF CERTIFICATE HAS BEEN DEFINED ---
 if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" ]; then 
@@ -70,42 +79,42 @@ cat ${DIRNAME}/template_cheese-ingress_tls.yml | sed -e "s/DOMAIN/$PKS_APPATH/g"
 echo " tls.crt: \"$cert\"" >> /tmp/cheese-ingress_tls.yml
 echo " tls.key: \"$pkey\"" >> /tmp/cheese-ingress_tls.yml
 
-echo " 1.) Create seperate namespace to host the Ingress Cheese Demo"
-command "kubectl create namespace cheese"
+prtHead "Create seperate namespace to host the Ingress Cheese Demo"
+execCmd "kubectl create namespace cheese"
 
-echo " 2.) Create the deployment for stilton-cheese"
-command "kubectl create deployment stilton-cheese --image=errm/cheese:stilton -n cheese"
+prtHead "Create the deployment for stilton-cheese"
+execCmd "kubectl create deployment stilton-cheese --image=errm/cheese:stilton -n cheese"
 
-echo " 3.) Create the deployment for stilton-cheese"
-command "kubectl create deployment cheddar-cheese --image=errm/cheese:cheddar -n cheese"
+prtHead "Create the deployment for stilton-cheese"
+execCmd "kubectl create deployment cheddar-cheese --image=errm/cheese:cheddar -n cheese"
 
-echo " 4.) Verify Deployment for stilton and cheddar cheese"
-command "kubectl get deployment,pods -n cheese"
+prtHead "Verify Deployment for stilton and cheddar cheese"
+execCmd "kubectl get deployment,pods -n cheese"
 
-echo " 5.) Create service type NodePort on port 80 for both deployments"
-command "kubectl expose deployment stilton-cheese --type=NodePort --port=80 -n cheese"
+prtHead "Create service type NodePort on port 80 for both deployments"
+execCmd "kubectl expose deployment stilton-cheese --type=NodePort --port=80 -n cheese"
 
-echo " 6.) Create service type NodePort on port 80 for both deployments"
-command "kubectl expose deployment cheddar-cheese --type=NodePort --port=80 -n cheese"
+prtHead "Create service type NodePort on port 80 for both deployments"
+execCmd "kubectl expose deployment cheddar-cheese --type=NodePort --port=80 -n cheese"
 
-echo " 7.) Verify services of cheddar-cheese and stilton-cheese"
-command "kubectl get svc -n cheese"
+prtHead "Verify services of cheddar-cheese and stilton-cheese"
+execCmd "kubectl get svc -n cheese"
 
-echo " 8.) Describe services cheddar-cheese and stilton-cheese"
-command "kubectl describe svc cheddar-cheese -n cheese"
-command "kubectl describe svc stilton-cheese -n cheese"
+prtHead "Describe services cheddar-cheese and stilton-cheese"
+execCmd "kubectl describe svc cheddar-cheese -n cheese"
+execCmd "kubectl describe svc stilton-cheese -n cheese"
 
-echo " 9.) Review ingress configuration file (/tmp/cheese-ingress_tls.yml)"
-command "more /tmp/cheese-ingress_tls.yml"
+prtHead "Review ingress configuration file (/tmp/cheese-ingress_tls.yml)"
+execCmd "more /tmp/cheese-ingress_tls.yml"
 
-echo "10.) Create ingress routing cheddar-cheese and stilton-cheese service"
-command "kubectl create -f /tmp/cheese-ingress_tls.yml -n cheese"
-command "kubectl get ingress -n cheese"
-command "kubectl describe ingress -n cheese"
+prtHead "Create ingress routing cheddar-cheese and stilton-cheese service"
+execCmd "kubectl create -f /tmp/cheese-ingress_tls.yml -n cheese"
+execCmd "kubectl get ingress -n cheese"
+execCmd "kubectl describe ingress -n cheese"
 
-echo "11.) Open WebBrowser and verify the deployment"
-echo "     => https://cheddar-cheese.apps-cl1.azpks.pcfsdu.com"
-echo "     => https://stilton-cheese.apps-cl1.azpks.pcfsdu.com"
+prtHead "Open WebBrowser and verify the deployment"
+echo "     => https://cheddar-cheese.$PKS_APPATH"
+echo "     => https://stilton-cheese.$PKS_APPATH"
 echo ""
 
 exit 0

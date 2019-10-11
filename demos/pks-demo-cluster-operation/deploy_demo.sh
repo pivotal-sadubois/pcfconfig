@@ -34,10 +34,25 @@ echo '                                                                          
 
 showK8sEnvironment
 
+userid=sadubois
 api=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1/api.pks/g') 
 
 prtHead "Login into PKS environment"
 execCmd "pks login -u sadubois -p pivotal -a $api --skip-ssl-validation"
+
+pks get-credentials cl1 > /dev/null 2>&1
+uid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"cl1\")].context.user}")
+tok=$(kubectl describe secret $(kubectl get secret | grep $uid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+
+# --- START KUBCTL PROXY ---
+kubectl proxy > /dev/null 2>&1 &
+
+prtHead "To start Kubernetes Dashboard"
+prtText "-----------------------------------------------------------------------------------------------------------"
+prtText "=> kubectl proxy"
+prtText "=> WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+prtText "=> Token..: $tok"
+prtText "-----------------------------------------------------------------------------------------------------------"; read x
 
 prtHead "Show PKS Clusters"
 execCmd "pks clusters"
@@ -45,8 +60,8 @@ execCmd "pks clusters"
 prtHead "Show details of PKS Cluster cl1"
 execCmd "pks cluster cl1"
 
-#prtHead "Resize the Cluster (cl1)"
-#execCmd "pks resize cl1 --num-nodes 4 --non-interactive"
+prtHead "Resize the Cluster (cl1)"
+execCmd "pks resize cl1 --num-nodes 4 --non-interactive"
 
 prtHead "Show details of PKS Cluster cl1"
 execCmd "pks cluster cl1"

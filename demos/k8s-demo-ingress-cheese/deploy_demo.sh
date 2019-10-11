@@ -16,6 +16,9 @@ else
   echo "ERROR: can ont find ${DIRNAME}/../../functions"; exit 1
 fi
 
+# --- LOAD CLOUD ENVIRONMENT ---
+dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
+
 kubectl get namespace cheese > /dev/null 2>&1
 if [ $? -eq 0 ]; then 
   echo "ERROR: Namespace 'cheese' already exist"
@@ -49,42 +52,42 @@ showK8sEnvironment
 # GENERATE INGRES FILES
 cat ${DIRNAME}/template_cheese-ingress.yml | sed "s/DOMAIN/$PKS_APPATH/g" > /tmp/cheese-ingress.yml
 
-echo " 1.) Create seperate namespace to host the Ingress Cheese Demo"
-command "kubectl create namespace cheese" 
+prtHead " 1.) Create seperate namespace to host the Ingress Cheese Demo"
+execCmd "kubectl create namespace cheese" 
 
-echo " 2.) Create the deployment for stilton-cheese"
-command "kubectl create deployment stilton-cheese --image=errm/cheese:stilton -n cheese"
+prtHead " 2.) Create the deployment for stilton-cheese"
+execCmd "kubectl create deployment stilton-cheese --image=errm/cheese:stilton -n cheese"
 
-echo " 3.) Create the deployment for stilton-cheese"
-command "kubectl create deployment cheddar-cheese --image=errm/cheese:cheddar -n cheese"
+prtHead " 3.) Create the deployment for stilton-cheese"
+execCmd "kubectl create deployment cheddar-cheese --image=errm/cheese:cheddar -n cheese"
 
-echo " 4.) Verify Deployment for stilton and cheddar cheese"
-command "kubectl get deployment,pods -n cheese"
+prtHead " 4.) Verify Deployment for stilton and cheddar cheese"
+execCmd "kubectl get deployment,pods -n cheese"
 
-echo " 5.) Create service type NodePort on port 80 for both deployments"
-command "kubectl expose deployment stilton-cheese --type=NodePort --port=80 -n cheese"
+prtHead " 5.) Create service type NodePort on port 80 for both deployments"
+execCmd "kubectl expose deployment stilton-cheese --type=NodePort --port=80 -n cheese"
 
-echo " 6.) Create service type NodePort on port 80 for both deployments"
-command "kubectl expose deployment cheddar-cheese --type=NodePort --port=80 -n cheese"
+prtHead " 6.) Create service type NodePort on port 80 for both deployments"
+execCmd "kubectl expose deployment cheddar-cheese --type=NodePort --port=80 -n cheese"
 
-echo " 7.) Verify services of cheddar-cheese and stilton-cheese"
-command "kubectl get svc -n cheese"
+prtHead " 7.) Verify services of cheddar-cheese and stilton-cheese"
+execCmd "kubectl get svc -n cheese"
 
-echo " 8.) Describe services cheddar-cheese and stilton-cheese"
-command "kubectl describe svc cheddar-cheese -n cheese"
-command "kubectl describe svc stilton-cheese -n cheese"
+prtHead " 8.) Describe services cheddar-cheese and stilton-cheese"
+execCmd "kubectl describe svc cheddar-cheese -n cheese"
+execCmd "kubectl describe svc stilton-cheese -n cheese"
 
-echo " 9.) Review ingress configuration file (/tmp/cheese-ingress.yml)"
-command "more /tmp/cheese-ingress.yml"
+prtHead " 9.) Review ingress configuration file (/tmp/cheese-ingress.yml)"
+execCmd "more /tmp/cheese-ingress.yml"
 
-echo "10.) Create ingress routing cheddar-cheese and stilton-cheese service"
-command "kubectl create -f /tmp/cheese-ingress.yml -n cheese"
-command "kubectl get ingress -n cheese"
-command "kubectl describe ingress -n cheese"
+prtHead "10.) Create ingress routing cheddar-cheese and stilton-cheese service"
+execCmd "kubectl create -f /tmp/cheese-ingress.yml -n cheese"
+execCmd "kubectl get ingress -n cheese"
+execCmd "kubectl describe ingress -n cheese"
 
-echo "10.) Open WebBrowser and verify the deployment"
-echo "     => http://cheddar-cheese.apps-cl1.azpks.pcfsdu.com"
-echo "     => http://stilton-cheese.apps-cl1.azpks.pcfsdu.com"
-echo ""
+prtHead "10.) Open WebBrowser and verify the deployment"
+prtText "     => http://cheddar-cheese.apps-cl1.$dom"
+prtText "     => http://stilton-cheese.apps-cl1.$dom"
+prtText ""
 
 exit 0
