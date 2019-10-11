@@ -261,6 +261,21 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 fi
 
+##############################################################################################
+########################### CLEANUP IF OPSMAN IS NOT RUNNING  ################################
+##############################################################################################
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  if [ -f ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate ]; then 
+    AWS_OPSMAN_INSTANCE_ID=$(cat terraform.tfstate | \
+         jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' | grep -v null)
+
+echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID"
+  fi
+fi
+
+exit 1
+
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
 PCFCONFIG_OPSMAN_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-opsman"

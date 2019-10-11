@@ -145,6 +145,5 @@ network-assignment:
 vmextensions-configuration:
 - name: vm_ext_adam
   cloud_properties:
-    tags:
-    - awspas
+    key_name: "awspas"
 
