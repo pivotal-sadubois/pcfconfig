@@ -276,7 +276,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     if [ "${ins}" != "" ]; then 
       echo "Verify recent Deployment"
       messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-      messagePrint "Remove old Terraform Lock files" 
+      messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+
+      rm -f ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
     fi
   fi
 fi
