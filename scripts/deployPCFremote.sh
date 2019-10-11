@@ -269,12 +269,15 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
 echo "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate"
 ls -la ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/
+ls -la ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
 
   if [ -f ${TF_STATE} ]; then 
     AWS_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' $TF_STATE | \
                            grep -v null)
+echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID"
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
           jq -r ".Reservations[].Instances[].InstanceId" | head -1) 
+echo "INS:$ins"
     if [ "${ins}" != "" ]; then 
       echo "Verify recent Deployment"
       messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
