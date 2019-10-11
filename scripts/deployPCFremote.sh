@@ -274,13 +274,22 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
                            grep -v null)
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
           jq -r ".Reservations[].Instances[].InstanceId" | head -1) 
-    if [ "${ins}" == "" ]; then 
+    if [ "${ins}" != "" ]; then 
+      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+          jq -r ".Reservations[].Instances[].State.Name")
+      if [ "${stt}" == "terminated" ]; then
+        messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+        messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+
+        rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+      else
+        messagePrint "Found current OpsManager" "$ins"
+      fi
+    else
       messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
       messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
-    else
-      messagePrint "Found current OpsManager" "$ins"
     fi
   fi
 fi
