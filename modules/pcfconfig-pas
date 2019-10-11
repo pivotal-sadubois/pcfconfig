@@ -1076,6 +1076,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   #checkPKStools
   #checkCloudCLI
 
+#gagadu
+#  if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
+#    if [ "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}/" = "aws" ]; then
+#    AWS_INSTANCE_ID=$(cat terraform.tfstate | jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' | grep -v null) 
+#  fi
+
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
 
   # --- DOWNLOAD TERRAFORM ---
