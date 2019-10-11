@@ -281,13 +281,10 @@ ls -la ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/
       messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
       messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
-      rm -f ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
     fi
   fi
 fi
-
-
-exit 1
 
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
