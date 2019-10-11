@@ -271,8 +271,15 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   if [ -f ${TF_STATE} ]; then 
     AWS_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' $TF_STATE | \
                            grep -v null)
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
+          jq -r ".Reservations[].Instances[].InstanceId" | head -1) 
 
-echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID"
+echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID INS:$ins"
+AWS_OPSMAN_INSTANCE_ID=i-02b31f6d690595f5f
+
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
+          jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID INS:$ins"
   fi
 fi
 
