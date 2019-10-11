@@ -273,17 +273,14 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
                            grep -v null)
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
           jq -r ".Reservations[].Instances[].InstanceId" | head -1) 
-
-echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID INS:$ins"
-AWS_OPSMAN_INSTANCE_ID=i-02b31f6d690595f5f
-
-    ins=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $AWS_OPSMAN_INSTANCE_ID | \
-          jq -r ".Reservations[].Instances[].InstanceId" | head -1)
-echo "AWS_OPSMAN_INSTANCE_ID:$AWS_OPSMAN_INSTANCE_ID INS:$ins"
+    if [ "${ins}" != "" ]; then 
+      echo "Verify recent Deployment"
+      messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+      messagePrint "Remove old Terraform Lock files" 
+    fi
   fi
 fi
 
-exit 1
 
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
