@@ -267,39 +267,28 @@ fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
-RG=true
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
     if [ -f ${TF_STATE} ]; then
       echo "Verify recent Deployment"
       AZ_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."azurerm_virtual_machine.ops_manager_vm".primary.attributes.name' $TF_STATE | \
           grep -v null)
-      echo "AZ_OPSMAN_INSTANCE_ID:$AZ_OPSMAN_INSTANCE_ID"
-AZ_OPSMAN_INSTANCE_ID=jump-azpks.pcfsdu.com
-      echo "AZ_OPSMAN_INSTANCE_ID:$AZ_OPSMAN_INSTANCE_ID"
 
       VM_STAT=$(az vm get-instance-view --name $AZ_OPSMAN_INSTANCE_ID -g Admin --query instanceView.statuses[1] | \
                 jq -r '.displayStatus')
-echo "VM_STAT:$VM_STAT"
       if [ "$VM_STAT" != "VM running" ]; then 
         messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
         messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
-        #rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+        rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
       fi
     fi
   else
     messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
     messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
-    #rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+    rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
-
-echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-  # az vm show -g Admin --name azpks-ops-manager-vm
-  # az vm show -g Admin --name jump-azpks.pcfsdu.com
-
-exit 1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -315,16 +304,16 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
           jq -r ".Reservations[].Instances[].State.Name")
       if [ "${stt}" == "terminated" ]; then
-        messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-        messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+        messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+        messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
         rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
       else
         messagePrint "Found current OpsManager" "$ins"
       fi
     else
-      messagePrint "Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-      messagePrint "Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+      messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+      messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
     fi
