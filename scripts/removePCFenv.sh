@@ -59,6 +59,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 
   done
   
+echo "AWS_LOCATION:$AWS_LOCATION"
+echo "ENV_NAME:$ENV_NAME"
 
   exit
 fi
