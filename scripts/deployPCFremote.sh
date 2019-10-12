@@ -266,7 +266,9 @@ fi
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-  if [ $(az group exists --name $AZ_OPSMAN_INSTANCE_ID) == "true" ]; then
+  RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
+echo "RG:$RG"
+  if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
     if [ -f ${TF_STATE} ]; then
       echo "Verify recent Deployment"
@@ -278,6 +280,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
 
 echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
   # az vm show -g Admin --name azpks-ops-manager-vm
+
+exit 1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
