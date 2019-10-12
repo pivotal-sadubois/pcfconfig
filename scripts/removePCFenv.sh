@@ -48,7 +48,7 @@ echo "--------------------------------------------------------------------------
 #checkOpsMantools
 
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
-SSH_OPSMAN="ssh -qi $TF_PATH ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+SSH_OPSMAN="ssh -qi /tmp/opsman.pem ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 
 echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
