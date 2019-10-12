@@ -665,8 +665,8 @@ echo "gaga2 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
       $TF output > /dev/null 2>&1; ret=$?
       if [ $ret -eq 0 ]; then 
         OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
-echo "gaga3 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
+echo "gaga3 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
         OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
         DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
