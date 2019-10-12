@@ -147,7 +147,7 @@ network-assignment:
     name: eu-central-1c
 
 vmextensions-configuration:
-- name: vm_ext_adam
+- name: vm_tags
   cloud_properties:
     tags:
     - awspks

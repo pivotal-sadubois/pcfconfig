@@ -329,7 +329,7 @@ resource-config:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   blobstore:
     instances: automatic
     persistent_disk:
@@ -338,14 +338,14 @@ resource-config:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   compute:
     instances: automatic
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   control:
     instances: automatic
     instance_type:
@@ -355,7 +355,7 @@ resource-config:
     - ((ssh_target_group))
     additional_vm_extensions:
     - ssh-lb-security-groups
-    - vm_ext_adam2
+    - vm_tags
   database:
     instances: automatic
     persistent_disk:
@@ -364,42 +364,42 @@ resource-config:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   ha_proxy:
     instances: automatic
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   istio_control:
     instances: 0
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   istio_router:
     instances: 0
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   mysql_monitor:
     instances: automatic
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   route_syncer:
     instances: 0
     instance_type:
       id: automatic
     internet_connected: false
     additional_vm_extensions:
-    - vm_ext_adam2
+    - vm_tags
   router:
     instances: automatic
     instance_type:
@@ -410,7 +410,7 @@ resource-config:
     - ((web_target_group_443))
     additional_vm_extensions:
     - web-lb-security-groups
-    - vm_ext_adam2
+    - vm_tags
   tcp_router:
     instances: 0
     persistent_disk:
@@ -431,7 +431,7 @@ resource-config:
     - alb:awspas-tg-1033
     additional_vm_extensions:
     - tcp-lb-security-groups
-    - vm_ext_adam2
+    - vm_tags
 errand-config:
   deploy-autoscaler:
     post-deploy-state: true
