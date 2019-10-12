@@ -53,13 +53,13 @@ echo "SSH_OPSMAN:$SSH_OPSMAN"
 
 echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-echo "$SSH_OPSMAN -n sh /tmp/debug.sh"
   vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
-echo "VMS:$vms"
   for ins in $vms; do
     messagePrint " - Terminate Instance:" "$ins"
-    #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
+    aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
+
+  #aws ec2 --region $AWS_REGION describe-instances
 
   exit
 fi
