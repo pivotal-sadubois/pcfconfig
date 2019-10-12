@@ -267,7 +267,7 @@ fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
-echo "RG:$RG"
+RG=true
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
     if [ -f ${TF_STATE} ]; then
