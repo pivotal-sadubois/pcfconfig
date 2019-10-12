@@ -331,6 +331,7 @@ PCFCONFIG_PKS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraformi
 PCFCONFIG_PAS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-setup"
 PCFCONFIG_PKS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-debug"
 PCFCONFIG_PAS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-debug"
+PCFCONFIG_PKS_HARBOR="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-harbor"
 
 # --- INITIALIZE STATE FILES ---
 #touch $PCFCONFIG_TF_STATE $PCFCONFIG_OPSMAN_STATE $PCFCONFIG_PKS_STATE $PCFCONFIG_PAS_STATE
@@ -347,7 +348,6 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
                                         --install-mode delete --no-ask \
                                         --tf-template $PCF_TERRAFORMS_TEMPLATE_VERSION \
                                         --aws-route53 $AWS_HOSTED_ZONE_ID
-echo "deployPCFremote gaga1"
   if [ $? -ne 0 ]; then 
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
     echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
@@ -475,6 +475,14 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
   else
     messagePrint "pcfconfig-pks-setup already done" "skipping"
   fi
+
+#gaga
+if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
+  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+  if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then 
+    ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
+  fi
+fi
 
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
