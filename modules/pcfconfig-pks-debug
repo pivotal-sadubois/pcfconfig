@@ -1596,8 +1596,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   # --- USE OPS-MANAGER AS JUMPHOST ---
+#xxxxxxx
   if [ $OPS_UPLOAD -eq 1 ]; then 
-    TMP_OPSMAN=/tmp/$$_opsman; TMP_OPSMAN_PUB=/tmp/$$_opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+    TMP_OPSMAN=/tmp/opsman.pem; TMP_OPSMAN_PUB=/tmp/opsman.pub; TMP_SCRIPT=/tmp/opsman.sh
     $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
     touch $TMP_SCRIPT
@@ -2375,7 +2376,7 @@ echo "debug4: USER:$USER PASS:$PASS"
     echo "ERROR: Can not connect to $OPS_MANAGER_URL"; exit 1
   fi
 
-  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   touch $TMP_SCRIPT
@@ -2505,7 +2506,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
   fi
 
   API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
-  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/$$_opsman.sh
+  TMP_OPSMAN=./opsman.pem; TMP_OPSMAN_PUB=./opsman.pub; TMP_SCRIPT=/tmp/opsman.sh
   $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   $JQ -r '.modules[].outputs.ops_manager_ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
   touch $TMP_SCRIPT
