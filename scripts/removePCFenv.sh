@@ -49,12 +49,16 @@ echo "--------------------------------------------------------------------------
 
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 SSH_OPSMAN="ssh -qi /tmp/opsman.pem ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+echo "SSH_OPSMAN:$SSH_OPSMAN"
 
 echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-echo "$SSH_OPSMAN -n ls -la /tmp/"
-  $SSH_OPSMAN -n "ls -la /tmp/"
-  $SSH_OPSMAN -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
+  vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
+  for vm in $vms; do
+    echo "VM:$vm"
+
+  done
+  
 
   exit
 fi
