@@ -47,12 +47,28 @@ echo "--------------------------------------------------------------------------
 #checkCloudCLI
 #checkOpsMantools
 
-#if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
+echo "TF_PATH:$TF_PATH"
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  echo gaga
 
-  TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
+  SSH_OPSMAN="ssh -qi $TF_PATH ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+echo "$SSH_OPSMAN"
 
+  $SSH_OPSMAN -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
+
+  exit
+fi
+
+
+
+
+#ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
 
 ##############################################################################################
 ###################################### SSL VERIFICATION ######################################
 ##############################################################################################
+
+
+
 
