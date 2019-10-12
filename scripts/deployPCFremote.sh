@@ -265,6 +265,21 @@ fi
 ########################### CLEANUP IF OPSMAN IS NOT RUNNING  ################################
 ##############################################################################################
 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  if [ $(az group exists --name $AZ_OPSMAN_INSTANCE_ID) == "true" ]; then
+    TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
+    if [ -f ${TF_STATE} ]; then
+      echo "Verify recent Deployment"
+      AZ_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."azurerm_virtual_machine.ops_manager_vm".primary.attributes.name' $TF_STATE | \
+          grep -v null)
+    echo "AZ_OPSMAN_INSTANCE_ID:$AZ_OPSMAN_INSTANCE_ID"
+    fi
+  fi
+
+echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
+  # az vm show -g Admin --name azpks-ops-manager-vm
+fi
+
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
 
