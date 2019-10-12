@@ -48,13 +48,11 @@ echo "--------------------------------------------------------------------------
 #checkOpsMantools
 
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
-echo "TF_PATH:$TF_PATH"
+SSH_OPSMAN="ssh -qi $TF_PATH ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  echo gaga
 
-  SSH_OPSMAN="ssh -qi $TF_PATH ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-echo "$SSH_OPSMAN"
-
+  $SSH_OPSMAN -n "ls -la /tmp/"
   $SSH_OPSMAN -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
 
   exit
