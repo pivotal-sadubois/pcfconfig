@@ -469,6 +469,7 @@ checkEnvironment() {
       $TF output > /dev/null 2>&1; ret=$?
       if [ $ret -eq 0 ]; then
         OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
+echo "gaga1 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
         OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
         DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
@@ -479,6 +480,7 @@ checkEnvironment() {
         DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
       else
         OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
+echo "gaga2 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
@@ -663,6 +665,7 @@ checkEnvironment() {
       $TF output > /dev/null 2>&1; ret=$?
       if [ $ret -eq 0 ]; then 
         OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
+echo "gaga3 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
         OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
         OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
@@ -675,6 +678,7 @@ checkEnvironment() {
       else
         OPS_MANAGER_INSTANCE=$($JQ -r '.modules[].outputs.ops_manager_iam_instance_profile_name.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
+echo "gaga4 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
@@ -1596,7 +1600,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   # --- USE OPS-MANAGER AS JUMPHOST ---
-#xxxxxxx
   if [ $OPS_UPLOAD -eq 1 ]; then 
     TMP_OPSMAN=/tmp/opsman.pem; TMP_OPSMAN_PUB=/tmp/opsman.pub; TMP_SCRIPT=/tmp/opsman.sh
     $JQ -r '.modules[].outputs.ssh_private_key.value' $TERRAFORM_TFSTATE | grep -v null >> $TMP_OPSMAN
@@ -1616,6 +1619,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       ssh-keygen -f "$HOME/.ssh/known_hosts" -R $OPS_MANAGER_DNS  > /dev/null 2>&1
     fi
 
+#xxxxxxx
     scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
     if [ ${ret} -ne 0 ]; then 
       echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
