@@ -889,6 +889,14 @@ startJumpHost() {
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
+
+  # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
+  messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
+  ret=1
+  while [ $ret -ne 0 ]; do
+    $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
+    [ $ret -ne 0 ] && sleep 10
+  done
 } 
 
 #ffffffffff
