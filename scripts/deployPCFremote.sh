@@ -190,8 +190,11 @@ echo gaga52
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
+echo gaga55
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
+echo gaga56
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
+echo "PRJ:$PRJ"
     if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
       echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
       cat $GCP_SERVICE_ACCOUNT                               >> $TF_VARFILE
@@ -201,10 +204,12 @@ echo gaga52
       echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
       exit 1
     fi
+echo gaga57
   else
     echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
   fi
 fi
+echo gaga6
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   # --- GET AVAILABILITY ZONE FOR LOCATION ---
