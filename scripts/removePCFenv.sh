@@ -62,6 +62,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   vms=$(aws ec2 --region $AWS_REGION describe-instances | \
         jq -r ".Reservations[].Instances[] | select(.KeyName == \"$PCF_DEPLOYMENT_ENV_NAME-ops-manager-key\").InstanceId")
 
+  for ins in $vms; do
     messagePrint " - Terminate Instance:" "$ins"
     #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
