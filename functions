@@ -356,8 +356,10 @@ installJumpHost() {
     messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
 echo gaga1
+hostname
+echo gaga11
     IMAGE_FAMILY="ubuntu-1804-lts"
-    INSTANCE_NAME="pcfjump":w
+    INSTANCE_NAME="pcfjump"
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
     INSTANCE_TYPE="n1-standard-8"
     INSTANCE_TYPE="n1-standard-1"
