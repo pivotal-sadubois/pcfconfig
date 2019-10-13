@@ -356,7 +356,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
     exit 1
   fi
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then exit 1; fi
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
 
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
