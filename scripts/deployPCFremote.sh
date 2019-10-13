@@ -31,7 +31,7 @@ else
   TF_TILE_OPTION="--pas-tfvars"
 fi
  
-DEBUG=0
+DEBUG=$DEPLOY_PCF_DEBUG
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
