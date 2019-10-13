@@ -1643,8 +1643,10 @@ echo "gaga1 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
 echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
     fi
 
+#getProductSlug 1.5.0 pivotal-container-service"
+
     echo "Looking for PKS Product Image ($PCF_TILE_PKS_VERSION)"
-    PIVNET_GLOB=$(getProductSlug $PCF_TILE_PKS_BUNDLE "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
+    PIVNET_GLOB=$(getProductSlug $PCF_TILE_PKS_VERSION "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
