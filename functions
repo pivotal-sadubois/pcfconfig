@@ -331,6 +331,7 @@ installJumpHost() {
       if [ "${stt}" != "VM running" ]; then 
         messagePrint " - Starting VM" "$JUMP_HOST"
         az vm start --resource-group Admin --name $JUMP_HOST
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
 
@@ -380,6 +381,7 @@ installJumpHost() {
         messagePrint " - Starting VM" "$INSTANCE_NAME"
         gcloud compute instances start $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
         gcloud compute config-ssh > /dev/null 2>&1
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
 
@@ -613,6 +615,7 @@ installJumpHost() {
       if [ "${stt}" == "stopped" ]; then
         messagePrint " - Starting Instance: $ins" "this can take several minutes"
         aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
         sleep 30
       fi
 
@@ -638,7 +641,6 @@ installJumpHost() {
   fi
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
-  messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
   ret=1
   while [ $ret -ne 0 ]; do
     $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
@@ -824,6 +826,7 @@ startJumpHost() {
         messagePrint " - Starting GCP Jump Server" "$JUMP_HOST"
         gcloud compute instances start $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
         gcloud compute config-ssh > /dev/null 2>&1
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
 
@@ -848,7 +851,7 @@ startJumpHost() {
       if [ "${stt}" == "stopped" ]; then
         messagePrint " - Starting AWS Jump Server" "$JUMP_HOST"
         aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
-        sleep 30
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
 
       ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
@@ -878,6 +881,7 @@ startJumpHost() {
       if [ "${stt}" != "VM running" ]; then
         messagePrint " - Starting Azure Jump Server" "$JUMP_HOST"
         az vm start --resource-group Admin --name $JUMP_HOST
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
 
@@ -891,7 +895,6 @@ startJumpHost() {
   fi
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
-  messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
   ret=1
   while [ $ret -ne 0 ]; do
     $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
