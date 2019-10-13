@@ -34,7 +34,7 @@ listDeployments() {
 }
 
 usage() {
-  echo "USAGE: $PCFDEPLOY [oprions] <deployment.cfg>"
+  echo "USAGE: $0 [oprions] <deployment.cfg>"
   echo "                   --clean/-c   # Clean previous installation and stop"
   echo "                   --debug/-d   # Enable debugging"
   echo "                                # the jump server"
@@ -47,7 +47,7 @@ export DEPLOY_PCF_CLEAN=0
 PCFMODE=""
 
 echo ""
-echo "PCF Deployment Utility ($PCFDEPLOY)"
+echo "PCF Deployment Utility ($0)"
 echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
 
