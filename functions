@@ -719,32 +719,33 @@ installJumpHost() {
   fi
 
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
+stt="nok"
   if [ "${stt}" != "ok" ]; then 
     domain=$(echo "$JUMP_HOST" | sed 's/jump-//g') 
     route53createHostedZone $domain
 
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
-    typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
-    if [ $typ -ne 0 ]; then
-      echo "Generate Certificate for PKS Domains ($domain)"  
-      $SSH_COMMAND -n "echo \"certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain'\"" 
-      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
-                   -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
-      if [ $? -ne 0 ]; then 
-        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
-        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
-        exit 1
-      fi
-    else
-      echo "Generate Certificate for PAS Domains ($domain)"  
-      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
-                   -m sadubois@pivotal.io --agree-tos -n --expand"
-      if [ $? -ne 0 ]; then 
-        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
-        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
-        exit 1
-      fi
-    fi
+#    typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
+#    if [ $typ -ne 0 ]; then
+#      echo "Generate Certificate for PKS Domains ($domain)"  
+#      $SSH_COMMAND -n "echo \"certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain'\"" 
+#      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
+#                   -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
+#      if [ $? -ne 0 ]; then 
+#        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+#        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+#        exit 1
+#      fi
+#    else
+#      echo "Generate Certificate for PAS Domains ($domain)"  
+#      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
+#                   -m sadubois@pivotal.io --agree-tos -n --expand"
+#      if [ $? -ne 0 ]; then 
+#        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+#        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+#        exit 1
+#      fi
+#    fi
 
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
