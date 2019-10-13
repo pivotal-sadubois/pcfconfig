@@ -74,14 +74,14 @@ if [ ! -f ${PCFPATH}/deployments/${DEPLOY_PCF_DEPLOYMENT} ]; then
 fi
 
 
-cnt=$(egrep -c "^PCF_DEPLOYMENT_CLOUD=" ${PCFPATH}/deployments/$DEPLOYMENT)
+cnt=$(egrep -c "^PCF_DEPLOYMENT_CLOUD=" ${PCFPATH}/deployments/$DEPLOY_PCF_DEPLOYMENT)
 if [ $cnt -eq 0 ]; then
   echo "ERROR: $pcf_deployment is not a correct PCFCONFIG deployment configuration file"
   exit 1
 else
   missing_variables=0
 
-  .  ${PCFPATH}/deployments/${DEPLOYMENT}
+  .  ${PCFPATH}/deployments/${DEPLOY_PCF_DEPLOYMENT}
   if [ $? -ne 0 ]; then 
     echo "ERROR: in ${PCFPATH}/deployments/${DEPLOY_PCF_DEPLOYMENT}"
     exit 1
@@ -92,13 +92,13 @@ else
     . ~/.pcfconfig
   fi
 
-  echo "Deployment Settings"
+  messageTitle "Deployment Settings"
   messagePrint " - Cloud Provider"           "$PCF_DEPLOYMENT_CLOUD"
   messagePrint " - Environment Name"         "$PCF_DEPLOYMENT_ENV_NAME"
   messagePrint " - Deployment Description"   "$PCF_DEPLOYMENT_DESCRIPTION"
   messagePrint " - Debug Information"        "$PCF_DEPLOYMENT_DEBUG"
 
-  echo "Operation Manager Configuration"
+  messageTitle "Operation Manager Configuration"
   messagePrint " - OpsManager Version"       "$PCF_OPSMANAGER_VERSION"
   messagePrint " - OM Configuration File"    "$PCF_OPSMANAGER_CONFIG"
   messagePrint " - Administrator User"       "$PCF_OPSMANAGER_ADMIN_USER"
@@ -123,7 +123,7 @@ else
         echo "  PCF_TILE_PKS_ADMIN_EMAIL      (required) PKS Administrator Email"
       fi
     else
-      echo "Pivotal Container Platform (PKS)"
+      messageTitle "Pivotal Container Platform (PKS)"
       messagePrint " - PKS Version"                   "$PCF_TILE_PKS_VERSION"
       messagePrint " - PKS Product SLUG"              "$PCF_TILE_PKS_SLUG"
       messagePrint " - OM Configuration File"         "$PCF_TILE_PKS_CONFIG"
@@ -155,7 +155,7 @@ else
         echo "  PCF_TILE_PAS_ADMIN_EMAIL      (required) CF Administrator Email"
       fi
     else
-      echo "Pivotal Container Platform (PAS)"
+      messageTitle "Pivotal Container Platform (PAS)"
       messagePrint " - PAS Version"                   "$PCF_TILE_PAS_VERSION"
       messagePrint " - PAS Product SLUG"              "$PCF_TILE_PAS_SLUG"
       messagePrint " - OM Configuration File"         "$PCF_TILE_PAS_CONFIG"
@@ -181,7 +181,7 @@ fi
 if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   [ -f ~/.pcfconfig ] && . ~/.pcfconfig
 
-  echo "Cleaning up environment ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  messageTitle "Cleaning up environment ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
   startJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
@@ -191,6 +191,8 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com 
 
   $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/removePCFenv.sh ] && \$HOME/pcfconfig/scripts/removePCFenv.sh $envFile"
+
+  stopJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
   exit
 else
   # --- VERIFY CLI TOOLS ---

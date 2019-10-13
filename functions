@@ -772,6 +772,24 @@ fi
   echo "$SSH_COMMAND"
 }
 
+stopJumpHost() {
+  JUMP_HOST=$1
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+         Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+
+    if [ "${ins}" != "" ]; then
+      stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+          jq -r ".Reservations[].Instances[].State.Name")
+
+      if [ "${stt}" == "running" ]; then
+        aws ec2 --region=$AWS_REGION stop-instances --instance-ids $ins > /dev/null 2>&1
+      fi
+    fi
+  fi
+}
+
 startJumpHost() {
   JUMP_HOST=$1
 
@@ -2204,7 +2222,7 @@ verifyCertificate () {
     echo "                                                                          *.apps.cl3.${dom}"
     echo ""
   else
-    echo "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+    messageTitle "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
 
     for n in $TLS_CERTIFICATE $TLS_FULLCHAIN; do
       cnt=$(grep -c "BEGIN CERTIFICATE" $n) 
@@ -2455,7 +2473,7 @@ checkCloudAccess() {
         echo "                                     westeurope, northeurope, switzerlandnorth etc."
       fi
     else
-      echo "Azure Access Credentials"
+      messageTitle "Azure Access Credentials"
       messagePrint " - Azure SubscriptionId"         "$AZURE_SUBSCRIPTION_ID"
       messagePrint " - Azure TennantId"              "$AZURE_TENANT_ID"
       messagePrint " - Azure ClientId"               "$AZURE_CLIENT_ID"
