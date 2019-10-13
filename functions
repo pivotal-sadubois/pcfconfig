@@ -2879,13 +2879,18 @@ messagePrint() {
   msg="$1"
   stt="$2"
   cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
-  dat=$(date "+%Y%m%d-%H%M%S") 
+  dat=$(date "+%Y%m%d-%H:%M:%S") 
 
   str=""
   while [ $cnt -lt 58 ]; do
     str="${str}."
     let cnt=cnt+1
   done
-  echo "${dat} ${msg} ${str}: ${stt}"
+
+  if [ "${DEGUG}" -eq 1 ]; then 
+    echo "[${dat}] ${msg} ${str}: ${stt}"
+  else
+    echo "${msg} ${str}: ${stt}"
+  fi
 }
 
