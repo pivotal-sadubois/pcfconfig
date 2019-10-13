@@ -35,13 +35,15 @@ listDeployments() {
 
 usage() {
   echo "USAGE: $PCFDEPLOY [oprions] <deployment.cfg>"
-  echo "                   --cleanup    # Cleanup previous installation and stop"
+  echo "                   --clean/-c   # Clean previous installation and stop"
+  echo "                   --debug/-d   # Enable debugging"
   echo "                                # the jump server"
 }
 
 LIST_DEPLOYMENTS=0
 USAGE=0
-CLEANUP=0
+export DEPLOY_PCF_DEBUG=0
+export DEPLOY_PCF_CLEAN=0
 PCFMODE=""
 
 echo ""
@@ -49,26 +51,31 @@ echo "PCF Deployment Utility ($PCFDEPLOY)"
 echo "by Sacha Dubois, Pivotal Inc,"
 echo "-----------------------------------------------------------------------------------------------------------"
 
+
 while [ "$1" != "" ]; do
-  if [ "$1" == "--cleanup" ]; then 
-    CLEANUP=1
-  else 
-    cnt=$(echo "$1" | egrep -c "^\-") 
-    [ $cnt -eq 0 ] && DEPLOYMENT=$1
-  fi
+  case $1 in
+    -c)      DEPLOY_PCF_CLEAN=1;;
+    --clean) DEPLOY_PCF_CLEAN=1;;
+    -d)      DEPLOY_PCF_DEBUG=1;;
+    --debug) DEPLOY_PCF_DEBUG=1;;
+    *.cfg)   DEPLOY_PCF_DEPLOYMENT=$1;;
+  esac
   shift
 done
 
-if [ "${DEPLOYMENT}" == "" ]; then
+exit
+
+if [ "${DEPLOY_PCF_DEPLOYMENT}" == "" ]; then
   listDeployments
   usage; exit 0
 fi
 
 # --- VERIFY DEPLOYMENT ---
-if [ ! -f ${PCFPATH}/deployments/${DEPLOYMENT} ]; then 
+if [ ! -f ${PCFPATH}/deployments/${DEPLOY_PCF_DEPLOYMENT} ]; then 
   echo "ERROR: Deployment file $pcf_deployment can not be found in ${PCFPATH}/deployments"
   exit 1
 fi
+
 
 cnt=$(egrep -c "^PCF_DEPLOYMENT_CLOUD=" ${PCFPATH}/deployments/$DEPLOYMENT)
 if [ $cnt -eq 0 ]; then
@@ -79,7 +86,7 @@ else
 
   .  ${PCFPATH}/deployments/${DEPLOYMENT}
   if [ $? -ne 0 ]; then 
-    echo "ERROR: in ${PCFPATH}/deployments/${DEPLOYMENT}"
+    echo "ERROR: in ${PCFPATH}/deployments/${DEPLOY_PCF_DEPLOYMENT}"
     exit 1
   fi
 
@@ -174,23 +181,35 @@ else
   fi
 fi
 
-# --- VERIFY CLI TOOLS ---
-write_line
-checkCloudCLI
-write_line
+if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
+  [ -f ~/.pcfconfig ] && . ~/.pcfconfig
 
-checkCloudAccess
-installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  echo "Cleaning up environment ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  startJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
-createENVfile $DEPLOYMENT /tmp/deployPCFenv
-$SCP_COMMAND /tmp/deployPCFenv ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
+  #cleanupEnvironment "${PCF_DEPLOYMENT_ENV_NAME}" "${AWS_REGION}"
 
-$SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/deployPCFwrapper.sh ] && \$HOME/pcfconfig/scripts/deployPCFwrapper.sh $envFile"
-$SSH_COMMAND -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+  #OPSMAN
+  #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com 
 
-exit 1
-$SSH_COMMAND -n "~/pcfconfig/pcfconfig.sh $ARGS"
-$SSH_COMMAND -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+  $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/removePCFenv.sh ] && \$HOME/pcfconfig/scripts/removePCFenv.sh $envFile"
+  exit
+else
+  # --- VERIFY CLI TOOLS ---
+  write_line
+  checkCloudCLI
+  write_line
 
+  checkCloudAccess
+  installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
+  createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  $SCP_COMMAND /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+               ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
 
+  $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/deployPCFwrapper.sh ] && \$HOME/pcfconfig/scripts/deployPCFwrapper.sh $envFile"
+  $SSH_COMMAND -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+fi
+
+exit 0
