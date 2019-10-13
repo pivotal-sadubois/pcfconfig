@@ -1896,6 +1896,21 @@ cleanGCPenv() {
     gcloud compute forwarding-rules delete $nam --region=$zon -q >/dev/null 2>&1
   done
 
+  # --filter="region:($GCP_REGION)"  NOT-WORKING
+  for n in $(gcloud compute url-maps list 2>/dev/null | \
+      egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up GCP url-maps:" "$n"
+    #gcloud compute url-maps delete $n -q --region $GCP_REGION 2>/dev/null
+    gcloud compute url-maps delete $n -q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR deleting url-maps $n"
+      echo "      => gcloud compute url-maps delete $n -q"
+      exit 1
+    fi
+  done
+
+#gaga
   # --- DELETE BACKEND SERVICE ---
   # --filter="region:($GCP_REGION)
   for n in $(gcloud compute backend-services list 2>/dev/null | \
