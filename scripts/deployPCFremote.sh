@@ -35,6 +35,8 @@ DEBUG=$DEPLOY_PCF_DEBUG
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
+if [ "$DEPLOY_PCF_DEBUG" -eq 0 ]; then DEBUG_FLAG="--debug"; else DEBUG_FLAG=""; fi
+
 if [ $DEBUG -gt 0 ]; then 
   echo "PCF_PIVNET_TOKEN:$PCF_PIVNET_TOKEN"
   echo "AWS_HOSTED_ZONE_ID:$AWS_HOSTED_ZONE_ID"
@@ -347,7 +349,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
                                         --directory-prefix cf-terraform \
                                         --install-mode delete --no-ask \
                                         --tf-template $PCF_TERRAFORMS_TEMPLATE_VERSION \
-                                        --aws-route53 $AWS_HOSTED_ZONE_ID
+                                        --aws-route53 $AWS_HOSTED_ZONE_ID $DEBUG_FLAG
   if [ $? -ne 0 ]; then 
     setPCFconfigState $PCFCONFIG_TF_STATE "failed"
     echo "ERROR: Problem with pcfconfig-terraform occured"; exit 1
@@ -386,7 +388,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_OPSMAN_STATE)" != "completed" ]; then
 
   setPCFconfigState $PCFCONFIG_OPSMAN_STATE "started"
   ${PCFPATH}/modules/pcfconfig-opsman -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
-       --deployment $TF_DEPLOYMENT \
+       --deployment $TF_DEPLOYMENT $DEBUG_FLAG \
        -dp $PCF_OPSMANAGER_DECRYPTION_KEY --aws-route53 $AWS_HOSTED_ZONE_ID --opsman-template $PCF_OPSMANAGER_CONFIG
 
   if [ $? -ne 0 ]; then
@@ -411,13 +413,13 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
         --pivnet-token "$PCF_PIVNET_TOKEN" --pks-template $PCF_TILE_PKS_CONFIG \
         --stemcell-version "$PCF_TILE_PKS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
         --pks-version $PCF_TILE_PKS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID \
-        --deployment $TF_DEPLOYMENT \
+        --deployment $TF_DEPLOYMENT $DEBUG_FLAG \
         --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
     else
       ${PCFPATH}/modules/pcfconfig-pks -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" --pks-template $PCF_TILE_PKS_CONFIG \
         --stemcell-version "$PCF_TILE_PKS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
-        --deployment $TF_DEPLOYMENT \
+        --deployment $TF_DEPLOYMENT $DEBUG_FLAG \
         --pks-version $PCF_TILE_PKS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID
     fi
   
@@ -456,7 +458,7 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
 
     setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "started"
     ${PCFPATH}/modules/pcfconfig-pks-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
-         --deployment $TF_DEPLOYMENT \
+         --deployment $TF_DEPLOYMENT $DEBUG_FLAG \
          --pks-admin-user $PCF_TILE_PKS_ADMIN_USER  --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS \
          --pks-admin-mail $PCF_TILE_PKS_ADMIN_EMAIL --aws-route53 $AWS_HOSTED_ZONE_ID \
          --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
@@ -509,7 +511,7 @@ fi
   ${PCFPATH}/modules/pcfconfig-pks-debug --pks-admin-user $PCF_TILE_PKS_ADMIN_USER \
        --pks-admin-pass $PCF_TILE_PKS_ADMIN_PASS --deployment $TF_DEPLOYMENT \
        --pks-admin-mail $PCF_TILE_PKS_ADMIN_EMAIL --aws-route53 $AWS_HOSTED_ZONE_ID \
-       --pks-cluster-1-name $PKS_CLUSTER_1_NAME \
+       --pks-cluster-1-name $PKS_CLUSTER_1_NAME $DEBUG_FLAG \
        --pks-cluster-1-plan $PKS_CLUSTER_1_PLAN \
        --pks-cluster-2-name $PKS_CLUSTER_2_NAME \
        --pks-cluster-2-plan $PKS_CLUSTER_2_PLAN \
@@ -526,7 +528,7 @@ else
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then 
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS --pivnet-token "$PCF_PIVNET_TOKEN" \
-        --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT \
+        --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT $DEBUG_FLAG \
         --stemcell-version "$PCF_TILE_PAS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PAS_STEMCELL_TYPE" \
         --pas-template $PCF_TILE_PAS_CONFIG --deployment $TF_DEPLOYMENT --pas-slug $PCF_TILE_PAS_SLUG \
         --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
@@ -534,7 +536,7 @@ else
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS --pivnet-token "$PCF_PIVNET_TOKEN" \
         --stemcell-version "$PCF_TILE_PAS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PAS_STEMCELL_TYPE" \
         --pas-template $PCF_TILE_PAS_CONFIG --deployment $TF_DEPLOYMENT --pas-slug $PCF_TILE_PAS_SLUG \
-        --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT
+        --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT $DEBUG_FLAG
     fi
 
     if [ $? -ne 0 ]; then
@@ -552,7 +554,8 @@ else
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PAS_AUTH_STATE "started"
-    ${PCFPATH}/modules/pcfconfig-pas-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS --pas-admin-user $PCF_TILE_PAS_ADMIN_USER \
+    ${PCFPATH}/modules/pcfconfig-pas-setup -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
+         --pas-admin-user $PCF_TILE_PAS_ADMIN_USER $DEBUG_FLAG \
          --pas-admin-pass $PCF_TILE_PAS_ADMIN_PASS --pas-admin-mail $PCF_TILE_PAS_ADMIN_EMAIL --deployment $TF_DEPLOYMENT 
 
     if [ $? -ne 0 ]; then
@@ -570,7 +573,7 @@ else
 
   ${PCFPATH}/modules/pcfconfig-pas-debug -u $PCF_OPSMANAGER_ADMIN_USER -p $PCF_OPSMANAGER_ADMIN_PASS \
        --pas-admin-user $PCF_TILE_PAS_ADMIN_USER --pas-admin-pass $PCF_TILE_PAS_ADMIN_PASS \
-       --pas-admin-mail $PCF_TILE_PAS_ADMIN_EMAIL --deployment $TF_DEPLOYMENT 
+       --pas-admin-mail $PCF_TILE_PAS_ADMIN_EMAIL --deployment $TF_DEPLOYMENT $DEBUG_FLAG
 
 fi
 
