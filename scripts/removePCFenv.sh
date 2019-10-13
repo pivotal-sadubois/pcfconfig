@@ -51,6 +51,7 @@ TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 SSH_OPSMAN="ssh -qi /tmp/opsman.pem ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  messageTitle "Stopping VM instances" 
   vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
   for ins in $vms; do
     messagePrint " - Terminate Instance:" "$ins"
@@ -64,16 +65,29 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     messagePrint " - Terminate Instance:" "$ins"
     #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
+
+  messageTitle "Cleanup AWS Environment (Terraform Destroy)" 
 fi
+  
+##############################################################################################
+##################################### TERRAFORM DESTROY ######################################
+##############################################################################################
 
+echo "cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}"
+exit
+  cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
+  messageTitle "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
+  terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+  tail -20 /tmp/$$_log
+  messageTitle "-----------------------------------------------------------------------------------------------------------"
 
+  if [ $ret -ne 0 ]; then
+    echo "ERROR: Problem with teraform destroy"
+  fi
 
 
 #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
 
-##############################################################################################
-###################################### SSL VERIFICATION ######################################
-##############################################################################################
 
 
 
