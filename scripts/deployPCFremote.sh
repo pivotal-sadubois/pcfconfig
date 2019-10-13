@@ -81,16 +81,13 @@ TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
 TLS_ROOT_CERT=$HOME/pcfconfig/certificates/ca.pem
 TLS_ROOT_CA=""
 
-echo gaga1
 verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
                   "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$TLS_ROOT_CA"
-echo gaga2
 
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-echo "gaga1 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
@@ -122,7 +119,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
   fi
 fi
-echo gaga2
 
 ##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
@@ -131,7 +127,6 @@ echo gaga2
 # --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
 TF_VARFILE="/tmp/terraform_${TF_DEPLOYMENT}.tfvars"; rm -f $TF_VARFILE; touch $TF_VARFILE
 
-echo gaga3
 # --- REGION FIX ---
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
   cnt=$(echo "$GCP_REGION" | grep -c "europe")
@@ -146,7 +141,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   SEARCH_REG="$AWS_REGION"
 fi 
 
-echo gaga4
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
   cnt=$(echo "$AZURE_REGION" | egrep -c "europe")
   if [ $cnt -gt 0 ]; then SEARCH_REG="west_europe"; fi
@@ -156,9 +150,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
 fi
 
-echo gaga5
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-echo gaga51
   list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
   GCP_AZ1=$(echo $list | awk '{ print $1 }')
   GCP_AZ2=$(echo $list | awk '{ print $2 }')
@@ -174,7 +166,6 @@ echo gaga51
   echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
-echo gaga52
 
   if [ "$TLS_FULLCHAIN" != "" ]; then 
     cat $TLS_FULLCHAIN >> $TF_VARFILE
@@ -190,11 +181,8 @@ echo gaga52
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
-echo "gaga55 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
-echo gaga56
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
-echo "PRJ:$PRJ"
     if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
       echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
       cat $GCP_SERVICE_ACCOUNT                               >> $TF_VARFILE
@@ -204,12 +192,10 @@ echo "PRJ:$PRJ"
       echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
       exit 1
     fi
-echo gaga57
   else
     echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
   fi
 fi
-echo gaga6
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   # --- GET AVAILABILITY ZONE FOR LOCATION ---
