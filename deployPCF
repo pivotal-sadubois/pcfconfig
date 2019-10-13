@@ -181,9 +181,13 @@ fi
 if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   [ -f ~/.pcfconfig ] && . ~/.pcfconfig
 
+echo gaga1
   messageTitle "Cleaning up environment ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+echo gaga2
   startJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+echo gaga3
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+echo gaga4
 
   #cleanupEnvironment "${PCF_DEPLOYMENT_ENV_NAME}" "${AWS_REGION}"
 
@@ -191,6 +195,7 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com 
 
   $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/removePCFenv.sh ] && \$HOME/pcfconfig/scripts/removePCFenv.sh $envFile"
+echo gaga5
 
   stopJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
   exit
