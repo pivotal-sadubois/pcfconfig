@@ -48,7 +48,7 @@ createENVfile() {
   echo "PCF_TILE_PAS_ADMIN_EMAIL=$PCF_TILE_PAS_ADMIN_EMAIL"                      >> $envFile
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-    echo "GCP_SERVICE_ACCOUNT=\"$GCP_SERVICE_ACCOUNT\""                          >> $envFile
+    echo "GCP_SERVICE_ACCOUNT=/tmp/$(basename $GCP_SERVICE_ACCOUNT)"             >> $envFile
     echo "GCP_REGION=\"$GCP_REGION\""                                            >> $envFile
     echo "GCP_PROJECT=\"$GCP_PROJECT\""                                          >> $envFile
 
