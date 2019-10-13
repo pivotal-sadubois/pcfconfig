@@ -272,7 +272,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
     if [ -f ${TF_STATE} ]; then
-      echo "Verify recent Deployment"
+      messageTitle "Verify recent Deployment"
       AZ_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."azurerm_virtual_machine.ops_manager_vm".primary.attributes.name' $TF_STATE | \
           grep -v null)
 
@@ -358,10 +358,10 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
 
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
-  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
-    cp main.tf main.tf.orig
-    sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
-  fi
+  #if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
+  #  cp main.tf main.tf.orig
+  #  sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
+  #fi
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
