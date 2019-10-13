@@ -362,11 +362,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
 
   #https://github.com/terraform-providers/terraform-provider-azurerm/tags
   # 0.51.0 / 1.33.1 Not working since 13.10.2019
-  #if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
-  #  cp main.tf main.tf.orig
-  #  #sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
-  #  sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.0"/}' main.tf
-  #fi
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
+    cp main.tf main.tf.orig
+    sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
+  fi
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
