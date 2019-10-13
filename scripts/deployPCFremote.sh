@@ -358,10 +358,11 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
 
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
-  #if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
-  #  cp main.tf main.tf.orig
-  #  sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
-  #fi
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
+    cp main.tf main.tf.orig
+    #sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
+    sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.0"/}' main.tf
+  fi
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
