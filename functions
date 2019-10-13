@@ -793,9 +793,6 @@ startJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
-
-a=1
-echo 1111
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -885,7 +882,6 @@ exit
     fi
 
     cleanAWSenv
-
   fi
 
 }
@@ -2883,12 +2879,13 @@ messagePrint() {
   msg="$1"
   stt="$2"
   cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
+  dat=$(date "+%Y%m%d-%H%M%S") 
 
   str=""
   while [ $cnt -lt 58 ]; do
     str="${str}."
     let cnt=cnt+1
   done
-  echo "${msg} ${str}: ${stt}"
+  echo "${dat} ${msg} ${str}: ${stt}"
 }
 
