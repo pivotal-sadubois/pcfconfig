@@ -795,7 +795,7 @@ stopJumpHost() {
           jq -r ".Reservations[].Instances[].State.Name")
 
       if [ "${stt}" == "running" ]; then
-        messagePrint " - Stopping Azure Jump Server" "$JUMP_HOST"
+        messagePrint " - Stopping AWS Jump Server" "$JUMP_HOST"
         aws ec2 --region=$AWS_REGION stop-instances --instance-ids $ins > /dev/null 2>&1
       fi
     fi

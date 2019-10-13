@@ -50,13 +50,16 @@ echo "--------------------------------------------------------------------------
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 SSH_OPSMAN="ssh -qi /tmp/opsman.pem ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 
+echo gaga1
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  messageTitle "Stopping VM instances" 
+echo gaga11
+  messageTitle "Destroying VM instances" 
   vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
   for ins in $vms; do
     messagePrint " - Terminate Instance:" "$ins"
     #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
+echo gaga2
 
   # --- TERMINATE REMAINING VMS IF NOT FOUND BY ABOVE COMMAND ---
   vms=$(aws ec2 --region $AWS_REGION describe-instances | \
@@ -65,6 +68,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     messagePrint " - Terminate Instance:" "$ins"
     #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
+echo gaga3
 
   messageTitle "Cleanup AWS Environment (Terraform Destroy)" 
 fi
@@ -73,9 +77,10 @@ fi
 ##################################### TERRAFORM DESTROY ######################################
 ##############################################################################################
 
-echo "cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}"
+echo gaga10
+echo "$TF_PATH"
+  cd $TF_PATH
 exit
-  cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
   messageTitle "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
   tail -20 /tmp/$$_log
