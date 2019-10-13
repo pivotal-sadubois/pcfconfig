@@ -2407,7 +2407,7 @@ checkCloudAccess() {
         echo "                                     eu-north-1, eu-west-3, eu-central-1 etc."
       fi
     else
-      echo "Azure Access Credentials"
+      messageTitle "Azure Access Credentials"
       messagePrint " - AWS AccwssKey"                "$AWS_ACCESS_KEY"
       messagePrint " - AWS SecretKey"                "$AWS_SECRET_KEY"
       messagePrint " - AWS Region"                   "$AWS_REGION"
@@ -2507,7 +2507,7 @@ checkCloudAccess() {
     #  echo "                                  => https://console.aws.amazon.com/route53 -> hosted Zones -> Zone ID"
     #fi
   else
-    echo "Supporting services access (Pivotal Network, AWS Route53)"
+    messageTitle "Supporting services access (Pivotal Network, AWS Route53)"
     messagePrint " - Pivotal Network Token"           "$PCF_PIVNET_TOKEN"
     messagePrint " - AWS Route53 Hosted DNS Domain"   "$AWS_HOSTED_DNS_DOMAIN"
 
@@ -2876,6 +2876,17 @@ wait_loop() {
   echo -e "\n"
 }
 
+messageTitle() {
+  msg="$*"
+  dat=$(date "+%Y%m%d-%H:%M:%S") 
+
+  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 ]; then
+    echo "[${dat}] ${msg}"
+  else
+    echo "${msg} ${str}"
+  fi
+} 
+
 messagePrint() {
   msg="$1"
   stt="$2"
@@ -2888,7 +2899,7 @@ messagePrint() {
     let cnt=cnt+1
   done
 
-  if [ "${DEGUG}" -eq 1 ]; then 
+  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 ]; then 
     echo "[${dat}] ${msg} ${str}: ${stt}"
   else
     echo "${msg} ${str}: ${stt}"
