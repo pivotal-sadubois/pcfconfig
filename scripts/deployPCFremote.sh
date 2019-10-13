@@ -90,8 +90,8 @@ echo gaga2
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-echo gaga1
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
+echo "gaga1 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
     cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
@@ -190,7 +190,7 @@ echo gaga52
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
-echo gaga55
+echo "gaga55 GCP_SERVICE_ACCOUNT"
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
 echo gaga56
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
