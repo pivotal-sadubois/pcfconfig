@@ -798,7 +798,7 @@ startJumpHost() {
     if [ $cnt -gt 0 ]; then
       stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
       if [ "${stt}" != "RUNNING" ]; then
-        messageTitle "Starting GCP Jump Server (JUMP_HOST)"
+        messagePrint "Starting GCP Jump Server" "JUMP_HOST"
         gcloud compute instances start $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
         gcloud compute config-ssh > /dev/null 2>&1
       fi
@@ -824,7 +824,7 @@ startJumpHost() {
           jq -r ".Reservations[].Instances[].State.Name")
 
       if [ "${stt}" == "stopped" ]; then
-        messageTitle "Starting AWS Jump Server (JUMP_HOST)"
+        messagePrint "Starting AWS Jump Server" "JUMP_HOST"
         aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
         sleep 30
       fi
@@ -844,7 +844,7 @@ startJumpHost() {
     if [ "$stt" == "true" ]; then
       stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
       if [ "${stt}" != "VM running" ]; then
-        messageTitle "Starting Azure Jump Server (JUMP_HOST)"
+        messagePrint "Starting Azure Jump Server" "JUMP_HOST"
         az vm start --resource-group Admin --name $JUMP_HOST
       fi
     fi
