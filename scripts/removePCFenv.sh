@@ -79,23 +79,13 @@ fi
 ##################################### TERRAFORM DESTROY ######################################
 ##############################################################################################
 
-echo gaga10
-echo "$TF_PATH"
-  cd $TF_PATH
-exit
-  messageTitle "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
-  terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
-  tail -20 /tmp/$$_log
-  messageTitle "-----------------------------------------------------------------------------------------------------------"
+cd $TF_PATH
+messageTitle "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
+terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+tail -20 /tmp/$$_log
+messageTitle "-----------------------------------------------------------------------------------------------------------"
 
-  if [ $ret -ne 0 ]; then
-    echo "ERROR: Problem with teraform destroy"
-  fi
-
-
-#ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com -n "sh /tmp/debug.sh" | grep running | awk '{ print $(NF-2) }'
-
-
-
-
+if [ $ret -ne 0 ]; then
+  echo "ERROR: Problem with teraform destroy"
+fi
 
