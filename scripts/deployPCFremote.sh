@@ -88,6 +88,7 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
+echo gaga1
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
@@ -119,6 +120,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
   fi
 fi
+echo gaga2
 
 ##############################################################################################
 ######################################## MAIN PROGRAMM #######################################
@@ -127,6 +129,7 @@ fi
 # --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
 TF_VARFILE="/tmp/terraform_${TF_DEPLOYMENT}.tfvars"; rm -f $TF_VARFILE; touch $TF_VARFILE
 
+echo gaga3
 # --- REGION FIX ---
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
   cnt=$(echo "$GCP_REGION" | grep -c "europe")
@@ -141,6 +144,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   SEARCH_REG="$AWS_REGION"
 fi 
 
+echo gaga4
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
   cnt=$(echo "$AZURE_REGION" | egrep -c "europe")
   if [ $cnt -gt 0 ]; then SEARCH_REG="west_europe"; fi
@@ -150,7 +154,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
 fi
 
+echo gaga5
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+echo gaga51
   list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
   GCP_AZ1=$(echo $list | awk '{ print $1 }')
   GCP_AZ2=$(echo $list | awk '{ print $2 }')
@@ -166,6 +172,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+echo gaga52
 
   if [ "$TLS_FULLCHAIN" != "" ]; then 
     cat $TLS_FULLCHAIN >> $TF_VARFILE
