@@ -850,6 +850,16 @@ startJumpHost() {
         aws ec2 --region=$AWS_REGION start-instances --instance-ids $ins > /dev/null 2>&1
         sleep 30
       fi
+
+      ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
+           Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
+      pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
+           jq -r ".Reservations[].Instances[].PublicIpAddress")
+
+      # --- UPDATE DNS DOMAIN ---
+      messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+      route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
     fi
 
     SSH_USER=ubuntu
