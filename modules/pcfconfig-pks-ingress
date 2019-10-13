@@ -469,7 +469,6 @@ checkEnvironment() {
       $TF output > /dev/null 2>&1; ret=$?
       if [ $ret -eq 0 ]; then
         OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
-echo "gaga1 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
         OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
         DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
@@ -480,7 +479,6 @@ echo "gaga1 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         DNS4=$(echo $DNS_SERVERS | awk '{ print $4 }')
       else
         OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
-echo "gaga2 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
@@ -666,7 +664,6 @@ echo "gaga2 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
       if [ $ret -eq 0 ]; then 
         OPS_MANAGER_INSTANCE=$($TF output | egrep "^ops_manager_iam_instance_profile_name" | awk '{ print $NF }')
         OPS_MANAGER_DNS=$($TF output | egrep "^ops_manager_dns" | awk '{ print $NF }')
-echo "gaga3 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($TF output | egrep "^ops_manager_public_ip" | awk '{ print $NF }')
         OPS_MANAGER_PRIVATE_IP=$($TF output | egrep "ops_manager_private_ip" | awk '{ print $NF }')
         DNS_SERVERS=$(terraform output | sed -n '/^env_dns_zone_name_servers/,/]/p' | \
@@ -678,7 +675,6 @@ echo "gaga3 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
       else
         OPS_MANAGER_INSTANCE=$($JQ -r '.modules[].outputs.ops_manager_iam_instance_profile_name.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_DNS=$($JQ -r '.modules[].outputs.dns.value' $TERRAFORM_TFSTATE | grep -v null)
-echo "gaga4 OPS_MANAGER_DNS:$OPS_MANAGER_DNS"
         OPS_MANAGER_PUBLIC_IP=$($JQ -r '.modules[].outputs.public_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         OPS_MANAGER_PRIVATE_IP=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
         DNS_SERVERS=$($JQ -r '.modules[].outputs.ops_manager_private_ip.value' $TERRAFORM_TFSTATE | grep -v null)
@@ -1638,10 +1634,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
+#gaga12
     PIVNET_SLUG=pivotal-container-service
     PIVNET_SLUG_NAME="Pivotal Container Service"
+echo "gaga1 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
     if [ "${PCF_TILE_PKS_VERSION}" == "" ]; then
       PCF_TILE_PKS_VERSION=$(getProductVersion $PCF_TILE_PKS_BUNDLE "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
+echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
     fi
 
     echo "Looking for PKS Product Image ($PCF_TILE_PKS_VERSION)"
@@ -1649,9 +1648,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
-#kkkkkk
     messagePrint " - PKS Product Version requested" "$PCF_TILE_PKS_VERSION"
-    messagePrint " - PIVNET Product SLAG" "$PIVNET_SLUG"
+    messagePrint " - PIVNET Product Name" "$PIVNET_SLUG_NAME"
+    messagePrint " - PIVNET Product SLUG" "$PIVNET_SLUG"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
     PXS_VERSION=$PKS_VERSION
@@ -1673,16 +1672,19 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
 
+#gaga12
     PIVNET_GLOB=$(getProductSlug $PAS_VERSION "$PIVNET_SLUG_NAME" elastic-runtime)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
     # --- LOOK ID FILE IS ALREADY DOWNLOADED ---
     messagePrint " - PAS Product Version requested" "$PAS_VERSION"
     messagePrint " - PIVNET Product Name" "$PIVNET_SLUG_NAME"
+    messagePrint " - PIVNET Product SLUG" "$PIVNET_SLUG"
     messagePrint " - PIVNET Product GLOB" "$PIVNET_GLOB"
 
     PXS_VERSION=$PAS_VERSION
   fi
+exit 1
 
   # --- VERIFY IF PKS PRODUCT TILE HAS BEEN UPDLOADED ALREADY --- 
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
@@ -1710,6 +1712,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
+#gaga
       messagePrint " - Verify download and caching options" "ops-manager"
       echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                                  >  $TMP_SCRIPT
       echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                       >> $TMP_SCRIPT
