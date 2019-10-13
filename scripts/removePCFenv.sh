@@ -48,15 +48,20 @@ echo "--------------------------------------------------------------------------
 #checkOpsMantools
 
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
-SSH_OPSMAN="ssh -qi /tmp/opsman.pem ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+OPSMAN_PRIVATE_KEY=$TF_PATH//opsman.pem
+SSH_OPSMAN="ssh -qi $OPSMAN_PRIVATE_KEY ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   messageTitle "Destroying VM instances" 
-  vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
-  for ins in $vms; do
-    messagePrint " - Terminate Instance:" "$ins"
-    #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
-  done
+
+  # --- MAKE SURE OPSMANAGER IS RUNNING ---
+  #ops=$(aws ec2 --region $AWS_REGION describe-instances | \
+  #      jq -r ".Reservations[].Instances[] | select(.KeyName == \"$PCF_DEPLOYMENT_ENV_NAME-ops-manager-key\").InstanceId")
+  #vms=$($SSH_OPSMAN -n "sh /tmp/debug.sh 2>/dev/null" | grep running | awk '{ print $(NF-2) }' | egrep "^i-") 
+  #for ins in $vms; do
+  #  messagePrint " - Terminate Instance:" "$ins"
+  #  #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
+  #done
 
   # --- TERMINATE REMAINING VMS IF NOT FOUND BY ABOVE COMMAND ---
   vms=$(aws ec2 --region $AWS_REGION describe-instances | \
