@@ -29,8 +29,13 @@ if [ -f $PIDFILE ]; then
     echo "$0 NOT RUNNING, RESTARTING"
     #nohup $COMMAND $ARGS >> $LOGFILE 2>&1 &
     
-    # --- RESET LOGFILE ---
-    echo > $LOGFILE
+    # --- ROTATE LOGFILE ---
+    [ -f /tmp/pcfconfig.log.4 ] && mv /tmp/pcfconfig.log.4 /tmp/pcfconfig.log.5
+    [ -f /tmp/pcfconfig.log.3 ] && mv /tmp/pcfconfig.log.3 /tmp/pcfconfig.log.4
+    [ -f /tmp/pcfconfig.log.2 ] && mv /tmp/pcfconfig.log.2 /tmp/pcfconfig.log.3
+    [ -f /tmp/pcfconfig.log.1 ] && mv /tmp/pcfconfig.log.1 /tmp/pcfconfig.log.2
+    [ -f /tmp/pcfconfig.log   ] && mv /tmp/pcfconfig.log   /tmp/pcfconfig.log.1
+    echo "Logfile: /tmp/pcfconfig.log rotated to /tmp/pcfconfig.log.1" > $LOGFILE
 
     $COMMAND $ARGS >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
