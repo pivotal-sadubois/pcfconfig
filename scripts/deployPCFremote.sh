@@ -88,7 +88,7 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
     cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
@@ -483,7 +483,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     messagePrint "pcfconfig-pks-setup already done" "skipping"
   fi
 
-#gaga
 if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then 
