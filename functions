@@ -2856,7 +2856,7 @@ checkCloudCLI() {
 }
 
 write_line() {
-  echo "----------------------------------------------------------------------------------------------------------------"
+  messageTitle "----------------------------------------------------------------------------------------------------------------"
 }
 
 wait_loop() {
@@ -2898,8 +2898,12 @@ messagePrint() {
     str="${str}."
     let cnt=cnt+1
   done
+  
+  # --- INIZIALIZE VALUES IF EMPTY --- ---
+  [ "$DEPLOY_PCF_DEBUG" == "" ] && DEPLOY_PCF_DEBUG=0
+  [ "$DEBUG" == "" ] && DEBUG=0
 
-  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 ]; then 
+  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 -o "${DEBUG} -eq 1 ]; then 
     echo "[${dat}] ${msg} ${str}: ${stt}"
   else
     echo "${msg} ${str}: ${stt}"
