@@ -190,7 +190,7 @@ echo gaga52
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
-echo "gaga55 GCP_SERVICE_ACCOUNT"
+echo "gaga55 GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
 echo gaga56
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
