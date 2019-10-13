@@ -845,6 +845,7 @@ startJumpHost() {
     if [ "${ins}" != "" ]; then
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
           jq -r ".Reservations[].Instances[].State.Name")
+echo "gaga STT:$stt"
 
       if [ "${stt}" == "stopped" ]; then
         messagePrint " - Starting AWS Jump Server" "$JUMP_HOST"
