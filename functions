@@ -355,9 +355,6 @@ installJumpHost() {
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
-echo gaga1
-hostname
-echo gaga11
     IMAGE_FAMILY="ubuntu-1804-lts"
     INSTANCE_NAME="pcfjump"
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
@@ -365,11 +362,8 @@ echo gaga11
     INSTANCE_TYPE="n1-standard-1"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
-echo gaga2
     cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
-echo "gaga2 CNT:$cnt"
     if [ $cnt -eq 0 ]; then
-echo gaga3
       messagePrint " - Creating VM" "$INSTANCE_NAME"
 
       gcloud compute instances create $INSTANCE_NAME \
@@ -379,9 +373,7 @@ echo gaga3
         --maintenance-policy=TERMINATE \
         --machine-type=$INSTANCE_TYPE > /dev/null 2>&1
       gcloud compute config-ssh > /dev/null 2>&1
-echo gaga4
     else
-echo gaga5
       messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
 
       stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
@@ -391,9 +383,7 @@ echo gaga5
         gcloud compute config-ssh > /dev/null 2>&1
         messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
-echo gaga6
     fi
-echo gaga8
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
 
@@ -759,10 +749,10 @@ stt="nok"
 
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
-    #$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
-echo "    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
-    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain 
+    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
 if [ $? -ne 0 ]; then
+    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain 
+echo "    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
   echo "ERROR: failed to copy certificates"
   echo "$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
 fi
