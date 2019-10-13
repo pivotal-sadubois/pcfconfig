@@ -355,6 +355,7 @@ installJumpHost() {
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
 
+echo gaga1
     IMAGE_FAMILY="ubuntu-1804-lts"
     INSTANCE_NAME="pcfjump":w
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
@@ -362,8 +363,11 @@ installJumpHost() {
     INSTANCE_TYPE="n1-standard-1"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
+echo gaga2
     cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
+echo "gaga2 CNT:$cnt"
     if [ $cnt -eq 0 ]; then
+echo gaga3
       messagePrint " - Creating VM" "$INSTANCE_NAME"
 
       gcloud compute instances create $INSTANCE_NAME \
@@ -373,7 +377,9 @@ installJumpHost() {
         --maintenance-policy=TERMINATE \
         --machine-type=$INSTANCE_TYPE > /dev/null 2>&1
       gcloud compute config-ssh > /dev/null 2>&1
+echo gaga4
     else
+echo gaga5
       messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
 
       stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
@@ -383,7 +389,9 @@ installJumpHost() {
         gcloud compute config-ssh > /dev/null 2>&1
         messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
+echo gaga6
     fi
+echo gaga8
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
 
