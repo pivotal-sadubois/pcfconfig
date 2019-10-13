@@ -749,6 +749,7 @@ installJumpHost() {
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
     #$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
+echo "    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
     $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain 
 if [ $? -ne 0 ]; then
   echo "ERROR: failed to copy certificates"
