@@ -372,8 +372,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/$$_log 2>&1
   terraform plan -out="plan" >> /tmp/$$_log 2>&1
-  terraform apply "plan" -auto-approve >> /tmp/$$_log 2>&1; ret=$?
-  tail -20 /tmp/$$_log
+  terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
+  tail -20 /tmp/terraform.log
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then
     echo "ERROR: Problem with teraform apply"
