@@ -272,7 +272,7 @@ fi
 ########################### CLEANUP IF OPSMAN IS NOT RUNNING  ################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure1" ]; then
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
