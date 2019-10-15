@@ -2983,7 +2983,7 @@ messagePrint() {
   # --- INIZIALIZE VALUES IF EMPTY --- ---
   [ "$DEBUG" == "" ] && DEBUG=0
 
-  if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" -eq 1 ]; then 
+  if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" == "1" ]; then 
     echo "[${dat}] ${msg} ${str}: ${stt}"
   else
     echo "${msg} ${str}: ${stt}"
