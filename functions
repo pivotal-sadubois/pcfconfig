@@ -35,7 +35,7 @@ createENVfile() {
 
   cat ${PCFPATH}/deployments/$dep | sed -e '/^$/d' -e '/^#/d' -e 's/#.*$//g' > $envFile
 
-  echo "DEPLOY_PCF_DEBUG=$DEPLOY_PCF_DEBUG"                                      >> $envFile
+  echo "PCF_DEPLOYMENT_DEBUG=$PCF_DEPLOYMENT_DEBUG"                              >> $envFile
   echo "AWS_HOSTED_ZONE_ID=$AWS_HOSTED_ZONE_ID"                                  >> $envFile
   echo "AWS_HOSTED_DNS_DOMAIN=$AWS_HOSTED_DNS_DOMAIN"                            >> $envFile
   echo "PCF_PIVNET_TOKEN=$PCF_PIVNET_TOKEN"                                      >> $envFile
@@ -2961,7 +2961,7 @@ messageTitle() {
   msg="$*"
   dat=$(date "+%Y%m%d-%H:%M:%S") 
 
-  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 ]; then
+  if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" -eq 1 ]; then
     echo "[${dat}] ${msg}"
   else
     echo "${msg}"
@@ -2981,10 +2981,9 @@ messagePrint() {
   done
   
   # --- INIZIALIZE VALUES IF EMPTY --- ---
-  [ "$DEPLOY_PCF_DEBUG" == "" ] && DEPLOY_PCF_DEBUG=0
   [ "$DEBUG" == "" ] && DEBUG=0
 
-  if [ "${DEPLOY_PCF_DEBUG}" -eq 1 -o "${DEBUG}" -eq 1 ]; then 
+  if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" -eq 1 ]; then 
     echo "[${dat}] ${msg} ${str}: ${stt}"
   else
     echo "${msg} ${str}: ${stt}"
