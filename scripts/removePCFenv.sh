@@ -58,7 +58,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   #fi
 
   # --- DELETE HOSTED ZONE ---
-  domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+  domain="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 echo "DOMAIN:$domain"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
             jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
