@@ -305,9 +305,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
-
-    messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
-    az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
   fi
 fi
 
