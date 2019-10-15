@@ -30,9 +30,13 @@ else
   PCF_VERSION=$iPCF_TILE_PAS_VERSION
   TF_TILE_OPTION="--pas-tfvars"
 fi
+
+if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" ]; then
+  DEBUG=1
+else
+  DEBUG=0
+fi
  
-DEBUG=$DEPLOY_PCF_DEBUG
-DEBUG=$PCF_DEPLOYMENT_DEBUG
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
