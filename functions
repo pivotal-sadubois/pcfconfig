@@ -764,9 +764,9 @@ fi
       route53deleteHostedZone $ZONE_ID
     fi
 
-    $SSH_COMMAND -n "sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
-    $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
-    $SSH_COMMAND -n "sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
+    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
+    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
+    $SSH_COMMAND -n "[ -d /etc/letsencrypt/archive ] && sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
     $SSH_COMMAND -n "[ -d /etc/letsencrypt/live/$domain ] && cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates"
     echo "----------------------------------------------------------------------------------------------------------------"
   fi
@@ -887,6 +887,13 @@ startJumpHost() {
       fi
     fi
 
+    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+
+    # --- UPDATE DNS DOMAIN ---
+    messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+    messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+    route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+
     SSH_USER=ubuntu
     SSH_HOME=/home/ubuntu
     SSH_HOST=$pip
@@ -895,6 +902,7 @@ startJumpHost() {
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
+echo "$SSH_COMMAND -n id"
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
   ret=1
@@ -1910,7 +1918,6 @@ cleanGCPenv() {
     fi
   done
 
-#gaga
   # --- DELETE BACKEND SERVICE ---
   # --filter="region:($GCP_REGION)
   for n in $(gcloud compute backend-services list 2>/dev/null | \
