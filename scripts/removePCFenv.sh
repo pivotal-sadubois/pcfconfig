@@ -51,12 +51,6 @@ OPSMAN_PRIVATE_KEY=$TF_PATH//opsman.pem
 SSH_OPSMAN="ssh -qi $OPSMAN_PRIVATE_KEY ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-  RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
-  if [ "$RG" == "true" ]; then
-    messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
-    az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
-  fi
-
   # --- DELETE HOSTED ZONE ---
   domain="$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
@@ -110,3 +104,10 @@ else
   fi
 fi
 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
+  if [ "$RG" == "true" ]; then
+    messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
+    az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
+  fi
+fi
