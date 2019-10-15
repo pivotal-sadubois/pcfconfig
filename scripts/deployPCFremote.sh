@@ -32,10 +32,11 @@ else
 fi
  
 DEBUG=$DEPLOY_PCF_DEBUG
+DEBUG=$PCF_DEPLOYMENT_DEBUG
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
-if [ "$DEPLOY_PCF_DEBUG" -eq 0 ]; then DEBUG_FLAG="--debug"; else DEBUG_FLAG=""; fi
+if [ "$PCF_DEPLOYMENT_DEBUG" == "true" ]; then DEBUG_FLAG="--debug"; else DEBUG_FLAG=""; fi
 
 if [ $DEBUG -gt 0 ]; then 
   echo "PCF_PIVNET_TOKEN:$PCF_PIVNET_TOKEN"

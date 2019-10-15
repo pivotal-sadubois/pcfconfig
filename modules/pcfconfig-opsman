@@ -1686,7 +1686,6 @@ echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
 
     PXS_VERSION=$PAS_VERSION
   fi
-exit 1
 
   # --- VERIFY IF PKS PRODUCT TILE HAS BEEN UPDLOADED ALREADY --- 
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
