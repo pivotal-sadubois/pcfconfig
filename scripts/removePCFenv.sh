@@ -63,7 +63,8 @@ echo "DOMAIN:$domain"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
             jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
 
-echo "gaga ZONE_ID:$ZONE_ID"
+echo "gaga1 ZONE_ID:$ZONE_ID"
+exit 1
   if [ "${ZONE_ID}" != "" ]; then
     messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
 echo "route53deleteHostedZone $ZONE_ID"
