@@ -309,8 +309,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
     az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
   fi
-
-exit 1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
