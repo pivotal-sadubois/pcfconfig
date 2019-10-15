@@ -902,7 +902,6 @@ startJumpHost() {
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
-echo "$SSH_COMMAND -n id"
 
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
   ret=1
@@ -969,6 +968,7 @@ route53deleteHostedZone() {
     read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
 
      if [ $type != "NS" -a $type != "SOA" ]; then
+echo gaga10
         aws route53 change-resource-record-sets \
           --hosted-zone-id $ZONE_ID \
           --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":
@@ -1048,6 +1048,7 @@ route53setNSrecord () {
   echo "}}]"                                                 >> $TMPROUTE53
   echo "}"                                                   >> $TMPROUTE53
 
+echo gaga11
   aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
       --change-batch file://${TMPROUTE53} > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -1085,6 +1086,7 @@ cat << EOF | sed -e "s/FQHN/$hnm/g" -e "s/IPADDR/$ipa/g" > /tmp/$$_zone_record
 }
 EOF
 
+echo gaga13
    aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
    if [ $? -ne 0 ]; then 
      echo "ERROR: failed to set DNS for $hnm"
@@ -1108,6 +1110,7 @@ cleanRoute53() {
           read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
   
            if [ $type != "NS" -a $type != "SOA" ]; then
+echo gaga14
               aws route53 change-resource-record-sets \
                 --hosted-zone-id $zone \
                 --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":

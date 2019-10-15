@@ -547,6 +547,7 @@ checkEnvironment() {
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
+echo gaga3
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then
@@ -755,6 +756,7 @@ checkEnvironment() {
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 echo "xxxx aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
+echo gaga4
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
@@ -956,6 +958,7 @@ echo "xxxx aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOK
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
+echo gaga5
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then
@@ -1976,6 +1979,7 @@ echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
 EOF
 
             echo "-----------------------------------------------------------------------------------------------------------"
+echo gaga6
             aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
             echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -2261,6 +2265,7 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
 EOF
 
           echo "-----------------------------------------------------------------------------------------------------------"
+echo gaga8
           aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
           if [ $? -ne 0 ]; then
             echo "ERROR: Updating DNS record"
@@ -2350,7 +2355,6 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-setup" ]; then
   checkEnvironment
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-echo "debug4: USER:$USER PASS:$PASS"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
@@ -2931,6 +2935,7 @@ EOF
 
 
             echo "-----------------------------------------------------------------------------------------------------------"
+echo gaga1
             aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record
             echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -3444,6 +3449,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 EOF
 
 
+echo gaga2
         aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
           echo "ERROR: failed to add DNS for $ZONE"
