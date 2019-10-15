@@ -1,4 +1,3 @@
-#!/bin/bash
 # ############################################################################################
 # File: ........: removePCFenv.sh
 # Language .....: bash
@@ -50,6 +49,25 @@ echo "--------------------------------------------------------------------------
 TF_PATH=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 OPSMAN_PRIVATE_KEY=$TF_PATH//opsman.pem
 SSH_OPSMAN="ssh -qi $OPSMAN_PRIVATE_KEY ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  if [ "$RG" == "true" ]; then
+    messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
+    az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
+  fi
+
+  # --- DELETE HOSTED ZONE ---
+  domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
+            jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
+
+echo "gaga ZONE_ID:$ZONE_ID"
+  if [ "${ZONE_ID}" != "" ]; then
+    messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
+echo "route53deleteHostedZone $ZONE_ID"
+    route53deleteHostedZone $ZONE_ID
+  fi
+fi 
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   messageTitle "Destroying VM instances" 
