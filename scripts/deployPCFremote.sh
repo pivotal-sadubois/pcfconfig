@@ -94,6 +94,22 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+
+  echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
+  echo "GCP_PROJECT:$GCP_PROJECT"
+
+exit 
+
+  #export ACCOUNT_NAME=gcppas
+  #export PROJECT_ID=pa-sadubois-3
+  #gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "GCP PAS Manual"
+  #gcloud iam service-accounts keys create "gcppas.terraform.key.json" --iam-account "$ACCOUNT_NAME@${PROJECT_ID}.iam.gserviceaccount.com"
+  #gcloud projects add-iam-policy-binding ${PROJECT_ID} --member "serviceAccount:${ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" --role "roles/owner"
+  
+a=1
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
     cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
@@ -272,7 +288,7 @@ fi
 ########################### CLEANUP IF OPSMAN IS NOT RUNNING  ################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure1" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
@@ -386,6 +402,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/terraform.log 2>&1
 
+
   i=1; while [ $i -le 3 ]; do  
     terraform plan -out="plan" >> /tmp/terraform.logg 2>&1
     terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
@@ -404,6 +421,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
   else
     setPCFconfigState $PCFCONFIG_TF_STATE "completed"
   fi
+
+[ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && exit 1
 else
   messagePrint "pcfconfig-terraform already done" "skipping"
 fi
