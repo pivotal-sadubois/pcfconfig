@@ -2483,15 +2483,16 @@ checkCloudAccess() {
   missing_variables=0
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-    if [ "${GCP_SERVICE_ACCOUNT}" == "" -o "${GCP_REGION}" == "" -o "${GCP_PROJECT}" == "" ]; then 
+    #if [ "${GCP_SERVICE_ACCOUNT}" == "" -o "${GCP_REGION}" == "" -o "${GCP_PROJECT}" == "" ]; then 
+    if [ "${GCP_REGION}" == "" -o "${GCP_PROJECT}" == "" ]; then 
       missing_variables=1
       echo ""
       echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
       echo "  --------------------------------------------------------------------------------------------------------------"
 
-      if [ "${GCP_SERVICE_ACCOUNT}" == "" ]; then
-        echo "  GCP_SERVICE_ACCOUNT           (required) GCP Service Account"
-      fi
+      #if [ "${GCP_SERVICE_ACCOUNT}" == "" ]; then
+      #  echo "  GCP_SERVICE_ACCOUNT           (required) GCP Service Account"
+      #fi
 
       if [ "${GCP_PROJECT}" == "" ]; then
         echo "  GCP_PROJECT                   (required) GCP Project"
