@@ -813,6 +813,8 @@ installJumpHost() {
 stopJumpHost() {
   JUMP_HOST=$1
 
+echo jjjjjjjjjjjj
+echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     cnt=$(gcloud compute instances list --filter="name=( '$JUMP_HOST' )" 2>/dev/null | egrep -c "^$JUMP_HOST")
 echo "INSTANCE_NAME:$INSTANCE_NAME"
