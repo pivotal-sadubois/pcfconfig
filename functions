@@ -857,12 +857,9 @@ stopJumpHost() {
 startJumpHost() {
   JUMP_HOST=$1
 
-echo ooooooooooooo1
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
-echo "INSTANCE_NAME:$INSTANCE_NAME"
-echo "ZONE:$ZONE"
 
     cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
     if [ $cnt -gt 0 ]; then
@@ -884,11 +881,7 @@ echo "ZONE:$ZONE"
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
-
-echo "SSH_HOST:$SSH_HOST"
-echo "SSH_COMMAND:$SSH_COMMAND"
   fi
-echo ooooooooooooo2
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
