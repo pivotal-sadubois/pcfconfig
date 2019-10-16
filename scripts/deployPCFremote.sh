@@ -94,11 +94,12 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
   gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name "GCP PAS Manual" > /dev/null 2>&1
-  gcloud iam service-accounts keys create "/tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json" \
-         --iam-account "$ACCOUNT_NAME@${PROJECT_ID}.iam.gserviceaccount.com" > /dev/null 2>&1
-  gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-         --member "serviceAccount:${ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
+         --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
+  gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+         --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
          --role "roles/owner" > /dev/null 2>&1
 fi
 
