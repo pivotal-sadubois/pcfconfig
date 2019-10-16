@@ -814,12 +814,14 @@ stopJumpHost() {
   JUMP_HOST=$1
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-    cnt=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME' )" 2>/dev/null | egrep -c "^$INSTANCE_NAME")
+    cnt=$(gcloud compute instances list --filter="name=( '$JUMP_HOST' )" 2>/dev/null | egrep -c "^$JUMP_HOST")
+echo "INSTANCE_NAME:$INSTANCE_NAME"
+echo "cnt:$cnt"
     if [ $cnt -gt 0 ]; then
-      stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
+      stt=$(gcloud compute instances describe $JUMP_HOST --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
       if [ "${stt}" != "RUNNING" ]; then
         messagePrint " - Stopping GCP Jump Server" "$JUMP_HOST"
-        gcloud compute instances stop $INSTANCE_NAME --zone=$ZONE > /dev/null 2>&1
+        gcloud compute instances stop $JUMP_HOST --zone=$ZONE > /dev/null 2>&1
       fi
     fi
   fi
