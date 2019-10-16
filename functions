@@ -653,6 +653,8 @@ installJumpHost() {
   messagePrint " - Verify SSH Access" "success"
   messagePrint " - Update GIT repo"   "$GITPCF"
 
+echo guguseli1; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
+
   $SSH_COMMAND -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF > /dev/null 2>&1"
   $SSH_COMMAND -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull > /dev/null 2>&1"
 
@@ -672,6 +674,7 @@ installJumpHost() {
     # --- COPY THE AWS DIRECTORY ---
     $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
   fi
+echo guguseli2; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
     $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
@@ -683,6 +686,8 @@ installJumpHost() {
             --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
   fi
 
+echo guguseli3; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
+echo "XXX:$xxx"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     $SSH_COMMAND -n "az login --username $AZURE_CLIENT_ID \
        --password $AZURE_CLIENT_SECRET --service-principal --tenant $AZURE_TENANT_ID >/dev/null 2>&1"
@@ -702,6 +707,7 @@ installJumpHost() {
       exit 1
     fi
   fi
+echo guguseli4; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     $SSH_COMMAND -n "gcloud compute instances list > /dev/null 2>&1"; stt=$?
@@ -747,6 +753,7 @@ stt="nok"
 #      fi
 #    fi
 
+echo guguseli5; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
     $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
@@ -771,6 +778,7 @@ fi
     echo "----------------------------------------------------------------------------------------------------------------"
   fi
 
+echo guguseli6; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
   echo 
   echo "# --- JUMP HOST ACCESS ---"
   echo "$SSH_COMMAND"

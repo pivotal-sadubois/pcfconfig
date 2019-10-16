@@ -183,18 +183,20 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
 
   messageTitle "Cleaning up environment (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
   startJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+
+  # --- CREATE ENVIRONMENT FILE ---
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
-echo gaga4
+  $SCP_COMMAND /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+               ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
 
-  #cleanupEnvironment "${PCF_DEPLOYMENT_ENV_NAME}" "${AWS_REGION}"
-
-  #OPSMAN
-  #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com 
-
+  $SSH_COMMAND -n "[ -d \$HOME/pcfconfig ] && cd \$HOME/pcfconfig; git pull" > /dev/null 2>&1
   $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/removePCFenv.sh ] && \$HOME/pcfconfig/scripts/removePCFenv.sh $envFile"
-echo gaga5
 
   stopJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+
+  #cleanupEnvironment "${PCF_DEPLOYMENT_ENV_NAME}" "${AWS_REGION}"
+  #ssh -qi /home/ubuntu/workspace/cf-terraform-aws/terraforming-pas/opsman.pem ubuntu@pcf.awspas.pcfsdu.com 
+
   exit
 else
   # --- VERIFY CLI TOOLS ---
@@ -205,12 +207,24 @@ else
   checkCloudAccess
   installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
+  # --- CREATE ENVIRONMENT FILE ---
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    $SCP_COMMAND ${GCP_SERVICE_ACCOUNT} ${SSH_USER}@${SSH_HOST}:/tmp  > /dev/null 2>&1
+  fi
   $SCP_COMMAND /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
                ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
 
+echo hallo1; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
+
+  $SSH_COMMAND -n "[ -d \$HOME/pcfconfig ] && cd \$HOME/pcfconfig; git pull" > /dev/null 2>&1
   $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/deployPCFwrapper.sh ] && \$HOME/pcfconfig/scripts/deployPCFwrapper.sh $envFile"
-  $SSH_COMMAND -n "tail -n 1000 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+
+  while [ 1 ]; do
+    $SSH_COMMAND -n "tail -n 0 -f /tmp/pcfconfig.log --pid \$(cat /tmp/pcfconfig.pid)"
+    $($SSH_COMMAND -n "ls /proc/\$(cat /tmp/pcfconfig.pid) > /dev/null 2>&1") 
+    if [ $? -ne 0 ]; then break; fi
+  done
 fi
 
 exit 0
