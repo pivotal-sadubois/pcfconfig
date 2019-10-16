@@ -813,8 +813,6 @@ installJumpHost() {
 stopJumpHost() {
   JUMP_HOST=$1
 
-echo jjjjjjjjjjjj
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     cnt=$(gcloud compute instances list --filter="name=( '$JUMP_HOST' )" 2>/dev/null | egrep -c "^$JUMP_HOST")
 echo "INSTANCE_NAME:$INSTANCE_NAME"
@@ -845,8 +843,10 @@ echo "cnt:$cnt"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     stt=$(az group exists --name Admin)
+echo "stt:$stt"
     if [ "$stt" == "true" ]; then
       stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
+echo "stt:$stt"
       if [ "${stt}" != "VM running" ]; then
         messagePrint " - Stopping Azure Jump Server" "$JUMP_HOST"
         az vm stop --resource-group Admin --name $JUMP_HOST
