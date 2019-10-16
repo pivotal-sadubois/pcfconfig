@@ -384,9 +384,16 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
-  terraform init > /tmp/$$_log 2>&1
-  terraform plan -out="plan" >> /tmp/$$_log 2>&1
-  terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
+  terraform init > /tmp/terraform.log 2>&1
+
+  i=1; while [ $i -le 3 ]; then  
+    terraform plan -out="plan" >> /tmp/terraform.logg 2>&1
+    terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
+    if [ $ret -eq 0 ]; then break; fi
+
+    let i=i+1
+  done
+
   tail -20 /tmp/terraform.log
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then
