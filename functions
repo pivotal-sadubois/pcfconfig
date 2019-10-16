@@ -374,6 +374,10 @@ installJumpHost() {
 echo guguseli 22; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
+echo "PIP:$pip"
+echo "AIP:$aip"
+exit
 
     # --- UPDATE DNS DOMAIN ---
     messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
@@ -1055,6 +1059,18 @@ route53createHostedZone() {
 
   # --- CREATE ZONE ---
   route53setNSrecord $zone "$AWS_HOSTED_DNS_DOMAIN" "$NAME_SERVERS"
+}
+
+route53getIPaddress() {
+  env=$1
+  dom=$2
+  hst="jump-${env}.${dom}."
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${dom} | jq -r ".HostedZones[] | select(.Name | \
+            scan(\"^$dom.\")).Id")
+  ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+
+  aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID_STR --query "ResourceRecordSets[?Name == '${hst}']" | \
+  jq -r '.[].ResourceRecords[].Value'
 }
 
 #route53setNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
