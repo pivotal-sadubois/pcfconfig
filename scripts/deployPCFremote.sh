@@ -85,30 +85,21 @@ TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
 TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
 TLS_ROOT_CERT=$HOME/pcfconfig/certificates/ca.pem
 TLS_ROOT_CA=""
-echo jjjjjjjjjjjjj1
 
 verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
                   "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$TLS_ROOT_CA"
-echo jjjjjjjjjjjjj2
 
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
-
-  echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-  echo "GCP_PROJECT:$GCP_PROJECT"
-
-exit 
-
-  #export ACCOUNT_NAME=gcppas
-  #export PROJECT_ID=pa-sadubois-3
-  #gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "GCP PAS Manual"
-  #gcloud iam service-accounts keys create "gcppas.terraform.key.json" --iam-account "$ACCOUNT_NAME@${PROJECT_ID}.iam.gserviceaccount.com"
-  #gcloud projects add-iam-policy-binding ${PROJECT_ID} --member "serviceAccount:${ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" --role "roles/owner"
-  
-a=1
+  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name "GCP PAS Manual" > /dev/null 2>&1
+  gcloud iam service-accounts keys create "/tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json" \
+         --iam-account "$ACCOUNT_NAME@${PROJECT_ID}.iam.gserviceaccount.com" > /dev/null 2>&1
+  gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+         --member "serviceAccount:${ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+         --role "roles/owner" > /dev/null 2>&1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
@@ -208,7 +199,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
     if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
       echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
-      cat $GCP_SERVICE_ACCOUNT                               >> $TF_VARFILE
+      cat /tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json"  >> $TF_VARFILE
       echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
     else
       echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
