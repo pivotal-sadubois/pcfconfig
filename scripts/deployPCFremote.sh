@@ -103,3 +103,65 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
          --role "roles/owner" > /dev/null 2>&1
 fi
 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
+  # --- VERIFY GCP SERVICE ACCOUNTS ---
+  if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
+    cnt=$(gcloud iam service-accounts list | grep -c " pcfconfig@" | grep -v "EMAIL")
+    if [ $cnt -eq 0 ]; then
+      messagePrint "Creating Servivce-Account" "pcfconfig"
+  
+      gcloud iam service-accounts create pcfconfig --display-name="pcfconfig" 2>/dev/null
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Creating Service account: pcfconfig failed"; exit 1
+      else
+        sleep 5
+      fi
+  
+      svc=$(gcloud iam service-accounts list --filter "name:pcfconfig" | grep -v "EMAIL" | awk '{ print $(NF-1) }')
+  
+      gcloud iam service-accounts add-iam-policy-binding $svc \
+        --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
+      gcloud projects add-iam-policy-binding $GCP_PROJECT \
+        --member="serviceAccount:$svc" --role="roles/owner" > /dev/null 2>&1
+    fi
+  
+    # DELETE OLD KEYS
+    svc=$(gcloud iam service-accounts list --filter "name:pcfconfig@" | grep -v "EMAIL" | head -1 | awk '{ print $(NF-1) }')
+    for n in $(gcloud iam service-accounts keys list --iam-account=$svc | awk '{ print $1 }' | grep -v KEY_ID); do
+      gcloud iam service-accounts keys delete --iam-account=$svc $n -q > /dev/null 2>&1
+    done
+  
+    gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
+  fi
+fi
+
+##############################################################################################
+######################################## MAIN PROGRAMM #######################################
+##############################################################################################
+
+# --- GENERATE TERRAFORM VARFILE (terraform.tfvars) ---
+TF_VARFILE="/tmp/terraform_${TF_DEPLOYMENT}.tfvars"; rm -f $TF_VARFILE; touch $TF_VARFILE
+
+# --- REGION FIX ---
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+  cnt=$(echo "$GCP_REGION" | grep -c "europe")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="eu"; fi
+  cnt=$(echo "$GCP_REGION" | grep -c "asia")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="asia"; fi
+  cnt=$(echo "$GCP_REGION" | egrep -c "northamerica|us")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="us"; fi
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then 
+  SEARCH_REG="$AWS_REGION"
+fi 
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
+  cnt=$(echo "$AZURE_REGION" | egrep -c "europe")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="west_europe"; fi
+  cnt=$(echo "$AZURE_REGION" | egrep -c "_us")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="east_us"; fi
+  cnt=$(echo "$AZURE_REGION" | egrep -c "_asia")
+  if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
+fi
+
