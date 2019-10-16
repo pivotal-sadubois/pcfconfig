@@ -767,6 +767,8 @@ stt="nok"
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     #route53createHostedZone $domain
 
+echo "$PCFPATH/certificate/$domain"
+echo "$PCFPATH/certificate/$domain/privkey.pem"
     if [ -d $PCFPATH/certificate/$domain -a -f $PCFPATH/certificate/$domain/privkey.pem ]; then 
       echo "Take local cached certificates for PKS Domains ($domain)"  
       $SCP_COMMAND $PCFPATH/certificate/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
