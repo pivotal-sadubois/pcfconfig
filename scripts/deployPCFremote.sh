@@ -165,3 +165,52 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
 fi
 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+  GCP_AZ1=$(echo $list | awk '{ print $1 }')
+  GCP_AZ2=$(echo $list | awk '{ print $2 }')
+  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+
+  OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
+
+  echo "env_name           = \"${PCF_DEPLOYMENT_ENV_NAME}\""                   >> $TF_VARFILE
+  echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
+  echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
+  echo "opsman_image_url   = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
+  echo "dns_suffix         = \"${AWS_HOSTED_DNS_DOMAIN}\""                     >> $TF_VARFILE
+  echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+
+  if [ "$TLS_FULLCHAIN" != "" ]; then 
+    cat $TLS_FULLCHAIN >> $TF_VARFILE
+  fi
+
+  echo "SSL_CERT"                                                              >> $TF_VARFILE
+  echo ""                                                                      >> $TF_VARFILE
+  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+
+  if [ "$TLS_PRIVATE_KEY" != "" ]; then 
+    cat $TLS_PRIVATE_KEY >> $TF_VARFILE
+  fi
+
+  echo "SSL_KEY"                                                               >> $TF_VARFILE
+
+echo "GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
+  if [ -f $GCP_SERVICE_ACCOUNT ]; then
+    PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
+echo "PRJ:$PRJ"
+    if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
+      echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
+      cat /tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json"  >> $TF_VARFILE
+      echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
+    else
+      echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
+      echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
+      exit 1
+    fi
+  else
+    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
+  fi
+fi
+
