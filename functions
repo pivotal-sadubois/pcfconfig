@@ -843,11 +843,9 @@ echo "cnt:$cnt"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     stt=$(az group exists --name Admin)
-echo "stt:$stt"
     if [ "$stt" == "true" ]; then
       stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
-echo "stt:$stt"
-      if [ "${stt}" != "VM running" ]; then
+      if [ "${stt}" == "VM running" ]; then
         messagePrint " - Stopping Azure Jump Server" "$JUMP_HOST"
         az vm stop --resource-group Admin --name $JUMP_HOST
       fi
