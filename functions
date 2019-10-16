@@ -196,12 +196,49 @@ execCmd() {
   echo ""
   if [ $? -ne 0 ]; then exit 1; fi
 }
+#ppppppp
+
+sshEnvironment() {
+  JUMP_HOST="jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$pip
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    SSH_USER=ubuntu
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$JUMP_HOST
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
+  fi
+
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    SSH_USER=$(whoami)
+    SSH_HOME=/home/$(whoami)
+    SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
+  fi
+
+}
 
 installJumpHost() {
   JUMP_HOST="$1"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-    messagePrint "Creating Azure Jump-Server" "$JUMP_HOST"
+    messagePrint "Verifing Azure Jump-Server" "$JUMP_HOST"
 
     stt=$(az group exists --name Admin)
     if [ "$stt" == "false" ]; then
@@ -334,16 +371,17 @@ installJumpHost() {
         messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
+echo guguseli 22; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
 
     # --- UPDATE DNS DOMAIN ---
-    messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+    messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
     messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
     route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+echo guguseli 33; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-    SSH_USER=ubuntu
     SSH_HOME=/home/ubuntu
     SSH_HOST=$pip
     SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
@@ -387,6 +425,7 @@ installJumpHost() {
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
 
+#ppppppp
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
     SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
@@ -649,11 +688,10 @@ installJumpHost() {
   
   GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
   PCFHOME="${SSH_HOME}/pcfconfig"
+echo gugusel40; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   messagePrint " - Verify SSH Access" "success"
   messagePrint " - Update GIT repo"   "$GITPCF"
-
-#echo guguseli1; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   $SSH_COMMAND -n "[ ! -d /home/ubuntu/pcfconfig ] && git clone $GITPCF > /dev/null 2>&1"
   $SSH_COMMAND -n "[ -d /home/ubuntu/pcfconfig ] && cd $PCFHOME; git pull > /dev/null 2>&1"
@@ -674,7 +712,7 @@ installJumpHost() {
     # --- COPY THE AWS DIRECTORY ---
     $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
   fi
-#echo guguseli2; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
+echo guguseli2; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
     $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
@@ -686,8 +724,7 @@ installJumpHost() {
             --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
   fi
 
-#echo guguseli3; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
-echo "XXX:$xxx"
+echo guguseli3; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     $SSH_COMMAND -n "az login --username $AZURE_CLIENT_ID \
        --password $AZURE_CLIENT_SECRET --service-principal --tenant $AZURE_TENANT_ID >/dev/null 2>&1"
@@ -707,7 +744,6 @@ echo "XXX:$xxx"
       exit 1
     fi
   fi
-#echo guguseli4; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     $SSH_COMMAND -n "gcloud compute instances list > /dev/null 2>&1"; stt=$?
@@ -724,11 +760,12 @@ echo "XXX:$xxx"
     fi
   fi
 
+#§gagagag
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
 stt="nok"
   if [ "${stt}" != "ok" ]; then 
-    domain=$(echo "$JUMP_HOST" | sed 's/jump-//g') 
-    route53createHostedZone $domain
+    domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    #route53createHostedZone $domain
 
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
 #    typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
