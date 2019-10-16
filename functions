@@ -196,7 +196,6 @@ execCmd() {
   echo ""
   if [ $? -ne 0 ]; then exit 1; fi
 }
-#ppppppp
 
 sshEnvironment() {
   JUMP_HOST="jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
@@ -371,27 +370,24 @@ installJumpHost() {
         messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
-echo guguseli 22; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
-echo "PIP:$pip"
-echo "AIP:$aip"
-exit
 
     # --- UPDATE DNS DOMAIN ---
-    messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
-    messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
-    route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
-echo guguseli 33; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
+    if [ "${pip}" != "${aip}" ]; then 
+      messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+      route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
 
-    sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-    SSH_HOME=/home/ubuntu
-    SSH_HOST=$pip
-    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
-    SCP_OPTIONS="-o StrictHostKeyChecking=no"
-    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
-    SCP_COMMAND="scp -r $SCP_OPTIONS"
+      sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
+      SSH_HOME=/home/ubuntu
+      SSH_HOST=$pip
+      SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+      SCP_OPTIONS="-o StrictHostKeyChecking=no"
+      SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+      SCP_COMMAND="scp -r $SCP_OPTIONS"
+    fi
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
@@ -429,7 +425,6 @@ echo guguseli 33; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T75
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
 
-#ppppppp
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
     SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
@@ -666,11 +661,15 @@ echo guguseli 33; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T75
            Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)
       pip=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
            jq -r ".Reservations[].Instances[].PublicIpAddress")
+      aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
 
       # --- UPDATE DNS DOMAIN ---
-      messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
-      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
-      route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+      if [ "${pip}" != "${aip}" ]; then
+        # --- UPDATE DNS DOMAIN ---
+        messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
+        messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
+        route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+      fi
     fi
 
     sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
@@ -692,7 +691,6 @@ echo guguseli 33; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T75
   
   GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
   PCFHOME="${SSH_HOME}/pcfconfig"
-echo gugusel40; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   messagePrint " - Verify SSH Access" "success"
   messagePrint " - Update GIT repo"   "$GITPCF"
@@ -716,7 +714,6 @@ echo gugusel40; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571
     # --- COPY THE AWS DIRECTORY ---
     $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
   fi
-echo guguseli2; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
     $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
@@ -728,7 +725,6 @@ echo guguseli2; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571
             --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
   fi
 
-echo guguseli3; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     $SSH_COMMAND -n "az login --username $AZURE_CLIENT_ID \
        --password $AZURE_CLIENT_SECRET --service-principal --tenant $AZURE_TENANT_ID >/dev/null 2>&1"
@@ -764,12 +760,16 @@ echo guguseli3; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571
     fi
   fi
 
-#§gagagag
+#ppppppppp
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
 stt="nok"
   if [ "${stt}" != "ok" ]; then 
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     #route53createHostedZone $domain
+
+echo "PCFHOME:$PCFHOME"
+echo "PCFPATH:$PCFPATH"
+exit
 
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
 #    typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
@@ -794,7 +794,6 @@ stt="nok"
 #      fi
 #    fi
 
-#echo guguseli5; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
     # --- GET A COPY OF THE CERTIFICATES BACK ---
     [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
     $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
@@ -819,7 +818,6 @@ fi
     echo "----------------------------------------------------------------------------------------------------------------"
   fi
 
-echo guguseli1; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
   echo 
   echo "# --- JUMP HOST ACCESS ---"
   echo "$SSH_COMMAND"
