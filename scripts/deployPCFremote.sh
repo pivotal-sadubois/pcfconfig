@@ -93,15 +93,15 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-#if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
-#  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-#  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name "GCP PAS Manual" > /dev/null 2>&1
-#  gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
-#         --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
-#  gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-#         --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
-#         --role "roles/owner" > /dev/null 2>&1
-#fi
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
+  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name "GCP PAS Manual" > /dev/null 2>&1
+  gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
+         --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
+  gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+         --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
+         --role "roles/owner" > /dev/null 2>&1
+fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
@@ -205,7 +205,7 @@ echo "PRJ:$PRJ"
       cat /tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json"  >> $TF_VARFILE
       echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
     else
-      echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
+      echo "ERROR: 1Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
       echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
       exit 1
     fi
