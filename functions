@@ -762,63 +762,47 @@ installJumpHost() {
 
 #ppppppppp
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
-stt="nok"
   if [ "${stt}" != "ok" ]; then 
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     #route53createHostedZone $domain
 
-echo "$PCFPATH/certificate/$domain"
-echo "$PCFPATH/certificate/$domain/privkey.pem"
     if [ -d $PCFPATH/certificate/$domain -a -f $PCFPATH/certificate/$domain/privkey.pem ]; then 
       echo "Take local cached certificates for PKS Domains ($domain)"  
       $SCP_COMMAND $PCFPATH/certificate/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+    else
+      echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
+      typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
+      if [ $typ -ne 0 ]; then
+        echo "Generate Certificate for PKS Domains ($domain)"  
+        $SSH_COMMAND -n "echo \"certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain'\"" 
+        $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
+                     -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
+        if [ $? -ne 0 ]; then 
+          echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+          echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+            exit 1
+        fi
+      else
+        echo "Generate Certificate for PAS Domains ($domain)"  
+        $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
+                     -m sadubois@pivotal.io --agree-tos -n --expand"
+        if [ $? -ne 0 ]; then 
+          echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
+          echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
+          exit 1
+        fi
+      fi
+
+      # --- GET A COPY OF THE CERTIFICATES BACK ---
+      [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
+      $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
+
+      $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
+      $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
+      $SSH_COMMAND -n "[ -d /etc/letsencrypt/archive ] && sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
+      $SSH_COMMAND -n "[ -d /etc/letsencrypt/live/$domain ] && cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates"
+      echo "----------------------------------------------------------------------------------------------------------------"
     fi
-
-    echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
-#    typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
-#    if [ $typ -ne 0 ]; then
-#      echo "Generate Certificate for PKS Domains ($domain)"  
-#      $SSH_COMMAND -n "echo \"certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain'\"" 
-#      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.api.$domain' -d '*.apps-cl1.$domain' \
-#                   -d '*.apps-cl2.$domain' -d '*.apps-cl3.$domain' -m sadubois@pivotal.io --agree-tos -n --expand"
-#      if [ $? -ne 0 ]; then 
-#        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
-#        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
-#        exit 1
-#      fi
-#    else
-#      echo "Generate Certificate for PAS Domains ($domain)"  
-#      $SSH_COMMAND -n "sudo certbot certonly --dns-route53 -d '*.$domain' -d '*.apps.$domain' -d '*.sys.$domain' \
-#                   -m sadubois@pivotal.io --agree-tos -n --expand"
-#      if [ $? -ne 0 ]; then 
-#        echo "ERROR: failed to generate certificate. There are probably to many cert requests happends and a limit reached"
-#        echo "       Try it again after some hours or search *.$domain in https://crt.sh/"
-#        exit 1
-#      fi
-#    fi
-
-    # --- GET A COPY OF THE CERTIFICATES BACK ---
-    [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
-    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain 
-echo "    $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
-  echo "ERROR: failed to copy certificates"
-  echo "$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain"
-fi
-
-    # --- CLEANUP ---
-    #ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | jq -r ".HostedZones[] | select(.Name | \
-    #          scan(\"^$domain.\")).Id")
-    #if [ "${ZONE_ID}" != "" ]; then
-    #  route53deleteHostedZone $ZONE_ID
-    #fi
-
-    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
-    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
-    $SSH_COMMAND -n "[ -d /etc/letsencrypt/archive ] && sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
-    $SSH_COMMAND -n "[ -d /etc/letsencrypt/live/$domain ] && cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates"
-    echo "----------------------------------------------------------------------------------------------------------------"
   fi
 
   echo 
