@@ -196,8 +196,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
+echo "GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
     PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
+echo "PRJ:$PRJ"
     if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
       echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
       cat /tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json"  >> $TF_VARFILE
