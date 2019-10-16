@@ -391,6 +391,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
     terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
     if [ $ret -eq 0 ]; then break; fi
 
+    sleep 120
     let i=i+1
   done
 
