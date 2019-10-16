@@ -178,6 +178,8 @@ else
   fi
 fi
 
+sshEnvironment
+
 if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   [ -f ~/.pcfconfig ] && . ~/.pcfconfig
 
@@ -199,13 +201,17 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
 
   exit
 else
-  # --- VERIFY CLI TOOLS ---
-  write_line
-  checkCloudCLI
-  write_line
+  jst=$($SSH_COMMAND -n hostname) 
+  if [ "${jst}" != "jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}" ]; then 
+    # --- VERIFY CLI TOOLS ---
+    write_line
+    checkCloudCLI
+    write_line
 
-  checkCloudAccess
-  installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+    # --- CHECK CLOUD AND JUMP SERVER ---
+    checkCloudAccess
+    installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  fi
 
   # --- CREATE ENVIRONMENT FILE ---
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
@@ -214,8 +220,6 @@ else
   fi
   $SCP_COMMAND /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
                ${SSH_USER}@${SSH_HOST}:/tmp > /dev/null 2>&1
-
-echo hallo1; aws route53 list-resource-record-sets --hosted-zone-id Z1X9T7571BMHB5 --query "ResourceRecordSets[?Name == 'azpks.pcfsdu.com.']"
 
   $SSH_COMMAND -n "[ -d \$HOME/pcfconfig ] && cd \$HOME/pcfconfig; git pull" > /dev/null 2>&1
   $SSH_COMMAND -n "[ -f \$HOME/pcfconfig/scripts/deployPCFwrapper.sh ] && \$HOME/pcfconfig/scripts/deployPCFwrapper.sh $envFile"
