@@ -2199,7 +2199,7 @@ cleanGCPenv() {
     fi
   done
 
-  for n in $(gcloud iam service-accounts list) 2>/dev/null | \
+  for n in $(gcloud iam service-accounts list 2>/dev/null | \
       grep -v "EMAIL" | egrep "^$ENV_NAME" | awk '{ print $(NF-1) }'); do
 
     messagePrint " - Cleaning up GCP Service Account:" "$n"
