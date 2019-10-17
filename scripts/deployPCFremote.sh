@@ -380,8 +380,6 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
     exit 1
   fi
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
-
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
   #https://github.com/terraform-providers/terraform-provider-azurerm/tags
@@ -415,8 +413,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then echo "XXXXXX"; exit 1; fi
   else
     setPCFconfigState $PCFCONFIG_TF_STATE "completed"
   fi
-
-[ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && exit 1
 else
   messagePrint "pcfconfig-terraform already done" "skipping"
 fi
