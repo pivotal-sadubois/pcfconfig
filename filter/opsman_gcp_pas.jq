@@ -15,7 +15,7 @@
 
 # INFRASTRUCTURE-SUBNET
 "infrastructure_subnet_cidr: " + .modules[].outputs.infrastructure_subnet_cidr.value,
-"infrastructure_subnet_name: " + .modules[].outputs.infrastructure_subnet.value,
+"infrastructure_subnet_name: " + .modules[].outputs.infrastructure_subnet_name.value,
 "infrastructure_subnet_gateway: " + .modules[].outputs.infrastructure_subnet_gateway.value,
 
 # PKS-SUBNET
