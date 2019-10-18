@@ -79,22 +79,22 @@ checkOpsMantools
 ###################################### SSL VERIFICATION ######################################
 ##############################################################################################
 
-TLS_CERTIFICATE=$HOME/pcfconfig/certificates/cert.pem
-TLS_FULLCHAIN=$HOME/pcfconfig/certificates/fullchain.pem
-TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
-TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
-TLS_ROOT_CERT=$HOME/pcfconfig/certificates/ca.pem
-TLS_ROOT_CA=""
+PCF_TLS_CERTIFICATE=$HOME/pcfconfig/certificates/cert.pem
+PCF_TLS_FULLCHAIN=$HOME/pcfconfig/certificates/fullchain.pem
+PCF_TLS_PRIVATE_KEY=$HOME/pcfconfig/certificates/privkey.pem
+PCF_TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
+PCF_TLS_ROOT_CERT=$HOME/pcfconfig/certificates/ca.pem
+PCF_TLS_ROOT_CA=""
 
-echo "1 TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "1 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
-verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
-                  "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$TLS_ROOT_CA"
+echo "1 PCF_TLS_CERTIFICATE:$PCF_TLS_CERTIFICATE"
+echo "1 PCF_TLS_PRIVATE_KEY:$PCF_TLS_PRIVATE_KEY"
+echo "1 PCF_TLS_ROOT_CERT:$PCF_TLS_ROOT_CERT"
+verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$PCF_TLS_CERTIFICATE" "$PCF_TLS_FULLCHAIN" \
+                  "$PCF_TLS_PRIVATE_KEY" "$PCF_TLS_CHAIN" "$PCF_TLS_ROOT_CA"
 
-echo "2 TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "2 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "2 TLS_ROOT_CERT:$TLS_ROOT_CERT"
+echo "2 PCF_TLS_CERTIFICATE:$PCF_TLS_CERTIFICATE"
+echo "2 PCF_TLS_PRIVATE_KEY:$PCF_TLS_PRIVATE_KEY"
+echo "2 PCF_TLS_ROOT_CERT:$PCF_TLS_ROOT_CERT"
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
@@ -188,16 +188,16 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
 
-  if [ "$TLS_FULLCHAIN" != "" ]; then 
-    cat $TLS_FULLCHAIN >> $TF_VARFILE
+  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
   fi
 
   echo "SSL_CERT"                                                              >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
 
-  if [ "$TLS_PRIVATE_KEY" != "" ]; then 
-    cat $TLS_PRIVATE_KEY >> $TF_VARFILE
+  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
   fi
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
@@ -245,16 +245,16 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
 
-  if [ "$TLS_FULLCHAIN" != "" ]; then 
-    cat $TLS_FULLCHAIN >> $TF_VARFILE
+  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
   fi
 
   echo "SSL_CERT"                                                              >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
 
-  if [ "$TLS_PRIVATE_KEY" != "" ]; then 
-    cat $TLS_PRIVATE_KEY >> $TF_VARFILE
+  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
   fi
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
@@ -278,16 +278,16 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
 
-  if [ "$TLS_FULLCHAIN" != "" ]; then 
-    cat $TLS_FULLCHAIN >> $TF_VARFILE
+  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
   fi
 
   echo "SSL_CERT"                                                              >> $TF_VARFILE
   echo ""                                                                      >> $TF_VARFILE
   echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
 
-  if [ "$TLS_PRIVATE_KEY" != "" ]; then 
-    cat $TLS_PRIVATE_KEY >> $TF_VARFILE
+  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
   fi
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
@@ -458,18 +458,18 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PKS_STATE "started"
-echo "3 TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "3 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "3 TLS_ROOT_CERT:$TLS_ROOT_CERT"
+echo "3 PCF_TLS_CERTIFICATE:$PCF_TLS_CERTIFICATE"
+echo "3 PCF_TLS_PRIVATE_KEY:$PCF_TLS_PRIVATE_KEY"
+echo "3 PCF_TLS_ROOT_CERT:$PCF_TLS_ROOT_CERT"
 exit 1
 
-    if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then
+    if [ "${PCF_TLS_CERTIFICATE}" != "" -a "${PCF_TLS_PRIVATE_KEY}" != "" -a "${PCF_TLS_ROOT_CERT}" != "" ]; then
       ${PCFPATH}/modules/pcfconfig-pks -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" --pks-template $PCF_TILE_PKS_CONFIG \
         --stemcell-version "$PCF_TILE_PKS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PKS_STEMCELL_TYPE" \
         --pks-version $PCF_TILE_PKS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID \
         --deployment $TF_DEPLOYMENT $DEBUG_FLAG \
-        --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
+        --tls_cert $PCF_TLS_CERTIFICATE --tls_private_key $PCF_TLS_PRIVATE_KEY --tls_root_cert $PCF_TLS_ROOT_CERT
     else
       ${PCFPATH}/modules/pcfconfig-pks -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" --pks-template $PCF_TILE_PKS_CONFIG \
@@ -580,13 +580,13 @@ else
 
     setPCFconfigState $PCFCONFIG_PAS_STATE "started"
 
-    if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then 
+    if [ "${PCF_TLS_CERTIFICATE}" != "" -a "${PCF_TLS_PRIVATE_KEY}" != "" -a "${PCF_TLS_ROOT_CERT}" != "" ]; then 
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" \
         --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT $DEBUG_FLAG \
         --stemcell-version "$PCF_TILE_PAS_STEMCELL_VERSION" --stemcell-type "$PCF_TILE_PAS_STEMCELL_TYPE" \
         --pas-template $PCF_TILE_PAS_CONFIG --deployment $TF_DEPLOYMENT --pas-slug $PCF_TILE_PAS_SLUG \
-        --tls_cert $TLS_CERTIFICATE --tls_private_key $TLS_PRIVATE_KEY --tls_root_cert $TLS_ROOT_CERT
+        --tls_cert $PCF_TLS_CERTIFICATE --tls_private_key $PCF_TLS_PRIVATE_KEY --tls_root_cert $PCF_TLS_ROOT_CERT
     else
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" \
