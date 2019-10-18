@@ -1,0 +1,106 @@
+---
+properties-configuration:
+  iaas_configuration:
+    name: default
+    additional_cloud_properties:
+    project: ((project))
+    associated_service_account: ((associated_service_account))
+    default_deployment_tag: ((default_deployment_tag))
+    #auth_json: ((director_blobstore_service_account_key))
+    auth_json: ((pcfconfig_service_account))
+
+az-configuration:
+  - name: ((zone-1))
+  - name: ((zone-2))
+  - name: ((zone-3))
+#END-STAGE-1
+networks-configuration:
+  icmp_checks_enabled: false
+  networks:
+  - name: infrastructure
+    subnets:
+    - iaas_identifier: ((network_name))/((infrastructure_subnet_name))/((region))
+      cidr: ((infrastructure_subnet_cidr))
+      dns: 169.254.169.254
+      gateway: ((infrastructure_subnet_gateway))
+      reserved_ip_ranges: ((infrastructure_subnet_range))
+      availability_zone_names:
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
+  - name: pks
+    subnets:
+    - iaas_identifier: ((network_name))/((pks_subnet_name))/((region))
+      cidr: ((pks_subnet_cidr))
+      dns: 169.254.169.254
+      gateway: ((pks_subnet_gateway))
+      reserved_ip_ranges: ((pks_subnet_range))
+      availability_zone_names:
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
+  - name: services
+    subnets:
+    - iaas_identifier: ((network_name))/((services_subnet_name))/((region))
+      cidr: ((services_subnet_cidr))
+      dns: 169.254.169.254
+      gateway: ((services_subnet_gateway))
+      reserved_ip_ranges: ((services_subnet_range))
+      availability_zone_names:
+      - ((zone-1))
+      - ((zone-2))
+      - ((zone-3))
+network-assignment:
+  network:
+    name: infrastructure
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: ((zone-1))
+
+properties-configuration:
+  director_configuration:
+    blobstore_type: local
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    database_type: internal
+    director_worker_count: 5
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: false
+    keep_unreachable_vms: false
+    local_blobstore_options:
+      tls_enabled: true
+    ntp_servers_string: 169.254.169.254
+    post_deploy_enabled: false
+    resurrector_enabled: false
+    retry_bosh_deploys: false
+    skip_director_drain: false
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: true
+    trusted_certificates: ((trusted_certificates)) 
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    instances: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+  director:
+    instances: automatic
+    persistent_disk:
+      size_mb: automatic
+    instance_type:
+      id: automatic
+    internet_connected: true
+vmextensions-configuration: []
