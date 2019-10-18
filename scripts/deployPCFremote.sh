@@ -293,7 +293,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
 echo "AZ_OPSMAN_INSTANCE_ID:$AZ_OPSMAN_INSTANCE_ID"
 
       if [ "$AZ_OPSMAN_INSTANCE_ID" != "" ]; then 
-        VM_STAT=$(az vm get-instance-view --name $AZ_OPSMAN_INSTANCE_ID -g Admin --query instanceView.statuses[1] | \
+        VM_STAT=$(az vm get-instance-view --name $AZ_OPSMAN_INSTANCE_ID -g $PCF_DEPLOYMENT_ENV_NAME --query instanceView.statuses[1] | \
                   jq -r '.displayStatus')
 
 echo "VM_STAT:$VM_STAT"; exit
