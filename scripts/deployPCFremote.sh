@@ -298,6 +298,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
         if [ "$VM_STAT" != "VM running" ]; then 
           messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
           messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+exit 1
 
           rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
@@ -313,6 +314,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     echo "Verify recent Deployment"
     messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
     messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+exit 1
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
