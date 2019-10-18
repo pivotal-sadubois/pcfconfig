@@ -203,7 +203,7 @@ sshEnvironment() {
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     stt=$(az group exists --name Admin)
     if [ "$stt" == "true" ]; then
-      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
     else
       PCF_JUMP_EXIST=0
     fi
@@ -277,21 +277,21 @@ installJumpHost() {
         messagePrint " - Verify Vnet" "admin-vnet"
       fi
 
-      nam=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].name') 
-      if [ "$nam" != "AdminPublicIP" ]; then
-        messagePrint " - Creating PublicIP" "AdminPublicIP"
+      nam=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].name') 
+      if [ "$nam" != "AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME" ]; then
+        messagePrint " - Creating PublicIP" "AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME"
   
         az network public-ip create \
             --resource-group Admin \
-            --name AdminPublicIP  > /dev/null 2>&1
+            --name AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME  > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-          echo "ERROR: Creating PublicIP AdminPublicIP"
+          echo "ERROR: Creating PublicIP AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME"
           exit 1
         fi
       else
-        pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+        pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
   
-        messagePrint " - Verify PublicIP (AdminPublicIP)" "$pip"
+        messagePrint " - Verify PublicIP (AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME)" "$pip"
       fi
 
       nam=$(az network nsg list --query "[?contains(name, 'AdminSG')]" | jq -r '.[].name')
@@ -330,24 +330,26 @@ installJumpHost() {
         messagePrint " - Verify Security Group Rule" "AdminSG-RuleSSH"
       fi
 
-      nam=$(az network nic list -g Admin --query "[?contains(name, 'AdminNic')]" | \
+      nam=$(az network nic list -g Admin --query "[?contains(name, 'AdminNic_$PCF_DEPLOYMENT_ENV_NAME')]" | \
             jq -r '.[].name')
-      if [ "$nam" != "AdminNic" ]; then
-        messagePrint " - Creating Nic" "AdminNic"
+      if [ "$nam" != "AdminNic_$PCF_DEPLOYMENT_ENV_NAME" ]; then
+        messagePrint " - Creating Nic" "AdminNic_$PCF_DEPLOYMENT_ENV_NAME"
   
         az network nic create \
             --resource-group Admin \
-            --name AdminNic \
+            --name AdminNic_$PCF_DEPLOYMENT_ENV_NAME \
             --vnet-name admin-vnet \
             --subnet AdminSubnet \
-            --public-ip-address AdminPublicIP \
+            --public-ip-address AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME \
             --network-security-group AdminSG > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-          echo "ERROR: Creating NIC AdminNic"
+          echo "ERROR: Creating NIC AdminNic_$PCF_DEPLOYMENT_ENV_NAME"
+          echo "       => az network nic create --resource-group Admin --name AdminNic_$PCF_DEPLOYMENT_ENV_NAME \\"
+          echo "            --vnet-name admin-vnet --subnet AdminSubnet --public-ip-address AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME "
           exit 1
         fi
       else
-        messagePrint " - Verify NIC" "AdminNic"
+        messagePrint " - Verify NIC" "AdminNic_$PCF_DEPLOYMENT_ENV_NAME"
       fi
 
       #nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
@@ -358,14 +360,14 @@ installJumpHost() {
           --resource-group Admin \
           --name $JUMP_HOST \
           --location $AZURE_REGION \
-          --nics AdminNic \
+          --nics AdminNic_$PCF_DEPLOYMENT_ENV_NAME \
           --image UbuntuLTS \
           --admin-username ubuntu \
           --generate-ssh-keys > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating VM"
         echo "       => az vm create --resource-group Admin --name $JUMP_HOST --location $AZURE_REGION \\"
-        echo "          --nics AdminNic --image UbuntuLTS --admin-username ubuntu --generate-ssh-keys"
+        echo "          --nics AdminNic_$PCF_DEPLOYMENT_ENV_NAME --image UbuntuLTS --admin-username ubuntu --generate-ssh-keys"
         exit 1
       fi
     else
@@ -377,7 +379,7 @@ installJumpHost() {
     fi
 #pppppppp installJump Middle
 
-    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
 
     # --- UPDATE DNS DOMAIN ---
@@ -937,7 +939,7 @@ startJumpHost() {
       fi
     fi
 
-    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
 
     # --- UPDATE DNS DOMAIN ---
     messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
