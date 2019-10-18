@@ -253,103 +253,105 @@ installJumpHost() {
         echo "       => az group create --name Admin --location $AZURE_REGION"
         exit 1
       fi
-    else
-      messagePrint " - Verify Resource Group" "Admin"
     fi
+#pppppppppppp  InstallJump
 
-    nam=$(az network vnet list -g Admin --query "[?contains(name, 'admin-vnet')]" | jq -r '.[].name') 
-    if [ "$nam" != "admin-vnet" ]; then
-      messagePrint " - Creating Vnet" "admin-vnet"
+    vm_stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
+    if [ "${vm_stt}" != "" ]; then  
+      # --- VM DOES NOT EXIST, CREATINGIGT ---
+      nam=$(az network vnet list -g Admin --query "[?contains(name, 'admin-vnet')]" | jq -r '.[].name') 
+      if [ "$nam" != "admin-vnet" ]; then
+        messagePrint " - Creating Vnet" "admin-vnet"
 
-      az network vnet create \
-          --resource-group Admin \
-          --name admin-vnet \
-          --address-prefix 192.168.0.0/16 \
-          --subnet-name AdminSubnet \
-          --subnet-prefix 192.168.1.0/24 > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Creating Vnet admin-vnet"
-        exit 1
+        az network vnet create \
+            --resource-group Admin \
+            --name admin-vnet \
+            --address-prefix 192.168.0.0/16 \
+            --subnet-name AdminSubnet \
+            --subnet-prefix 192.168.1.0/24 > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating Vnet admin-vnet"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify Vnet" "admin-vnet"
       fi
-    else
-      messagePrint " - Verify Vnet" "admin-vnet"
-    fi
 
-    nam=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].name') 
-    if [ "$nam" != "AdminPublicIP" ]; then
-      messagePrint " - Creating PublicIP" "AdminPublicIP"
-
-      az network public-ip create \
-          --resource-group Admin \
-          --name AdminPublicIP  > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Creating PublicIP AdminPublicIP"
-        exit 1
+      nam=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].name') 
+      if [ "$nam" != "AdminPublicIP" ]; then
+        messagePrint " - Creating PublicIP" "AdminPublicIP"
+  
+        az network public-ip create \
+            --resource-group Admin \
+            --name AdminPublicIP  > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating PublicIP AdminPublicIP"
+          exit 1
+        fi
+      else
+        pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+  
+        messagePrint " - Verify PublicIP (AdminPublicIP)" "$pip"
       fi
-    else
-      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
 
-      messagePrint " - Verify PublicIP (AdminPublicIP)" "$pip"
-    fi
-
-    nam=$(az network nsg list --query "[?contains(name, 'AdminSG')]" | jq -r '.[].name')
-    if [ "$nam" != "AdminSG" ]; then
-      messagePrint " - Creating Security Group" "AdminSG"
-
-      az network nsg create \
-          --resource-group Admin \
-          --name AdminSG > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Creating Security Group AdminSG"
-        exit 1
+      nam=$(az network nsg list --query "[?contains(name, 'AdminSG')]" | jq -r '.[].name')
+      if [ "$nam" != "AdminSG" ]; then
+        messagePrint " - Creating Security Group" "AdminSG"
+  
+        az network nsg create \
+            --resource-group Admin \
+            --name AdminSG > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating Security Group AdminSG"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify Security Group" "AdminSG"
       fi
-    else
-      messagePrint " - Verify Security Group" "AdminSG"
-    fi
 
-    nam=$(az network nsg rule list -g Admin --nsg-name AdminSG --query "[?contains(name, 'AdminSG-RuleSSH')]" | \
-          jq -r '.[].name')
-    if [ "$nam" != "AdminSG-RuleSSH" ]; then
-      messagePrint " - Creating Security Group Rule" "AdminSG-RuleSSH"
-
-      az network nsg rule create \
-          --resource-group Admin \
-          --nsg-name AdminSG \
-          --name AdminSG-RuleSSH \
-          --protocol tcp \
-          --priority 1000 \
-          --destination-port-range 22 \
-          --access allow > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Creating Security Group Rule AdminSG-RuleSSH"
-        exit 1
+      nam=$(az network nsg rule list -g Admin --nsg-name AdminSG --query "[?contains(name, 'AdminSG-RuleSSH')]" | \
+            jq -r '.[].name')
+      if [ "$nam" != "AdminSG-RuleSSH" ]; then
+        messagePrint " - Creating Security Group Rule" "AdminSG-RuleSSH"
+  
+        az network nsg rule create \
+            --resource-group Admin \
+            --nsg-name AdminSG \
+            --name AdminSG-RuleSSH \
+            --protocol tcp \
+            --priority 1000 \
+            --destination-port-range 22 \
+            --access allow > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating Security Group Rule AdminSG-RuleSSH"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify Security Group Rule" "AdminSG-RuleSSH"
       fi
-    else
-      messagePrint " - Verify Security Group Rule" "AdminSG-RuleSSH"
-    fi
 
-    nam=$(az network nic list -g Admin --query "[?contains(name, 'AdminNic')]" | \
-          jq -r '.[].name')
-    if [ "$nam" != "AdminNic" ]; then
-      messagePrint " - Creating Nic" "AdminNic"
-
-      az network nic create \
-          --resource-group Admin \
-          --name AdminNic \
-          --vnet-name admin-vnet \
-          --subnet AdminSubnet \
-          --public-ip-address AdminPublicIP \
-          --network-security-group AdminSG > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Creating NIC AdminNic"
-        exit 1
+      nam=$(az network nic list -g Admin --query "[?contains(name, 'AdminNic')]" | \
+            jq -r '.[].name')
+      if [ "$nam" != "AdminNic" ]; then
+        messagePrint " - Creating Nic" "AdminNic"
+  
+        az network nic create \
+            --resource-group Admin \
+            --name AdminNic \
+            --vnet-name admin-vnet \
+            --subnet AdminSubnet \
+            --public-ip-address AdminPublicIP \
+            --network-security-group AdminSG > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Creating NIC AdminNic"
+          exit 1
+        fi
+      else
+        messagePrint " - Verify NIC" "AdminNic"
       fi
-    else
-      messagePrint " - Verify NIC" "AdminNic"
-    fi
 
-    nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
-    if [ "$nam" != "$JUMP_HOST" ]; then
+      #nam=$(az vm list --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].name')
+      #if [ "$nam" != "$JUMP_HOST" ]; then
       messagePrint " - Creating VM" "$JUMP_HOST"
 
       az vm create \
@@ -365,16 +367,18 @@ installJumpHost() {
         echo "       => az vm create --resource-group Admin --name $JUMP_HOST --location $AZURE_REGION \\"
         echo "          --nics AdminNic --image UbuntuLTS --admin-username ubuntu --generate-ssh-keys"
         exit 1
+      else
+        messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     else
-      stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState') 
-      messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
-      if [ "${stt}" != "VM running" ]; then 
+      #stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState') 
+      if [ "${vm_stt}" != "VM running" ]; then 
         messagePrint " - Starting VM" "$JUMP_HOST"
         az vm start --resource-group Admin --name $JUMP_HOST
         messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
       fi
     fi
+#pppppppp installJump Middle
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
@@ -386,13 +390,14 @@ installJumpHost() {
       route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
 
       sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
-      SSH_HOME=/home/ubuntu
-      SSH_HOST=$pip
-      SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
-      SCP_OPTIONS="-o StrictHostKeyChecking=no"
-      SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
-      SCP_COMMAND="scp -r $SCP_OPTIONS"
     fi
+
+    SSH_HOME=/home/ubuntu
+    SSH_HOST=$pip
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SCP_OPTIONS="-o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
+    SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
@@ -694,6 +699,7 @@ installJumpHost() {
     [ $ret -ne 0 ] && sleep 10
   done
   
+#ppppppppppppp InstallJump  End
   GITPCF="https://github.com/pivotal-sadubois/pcfconfig.git"
   PCFHOME="${SSH_HOME}/pcfconfig"
 
@@ -720,15 +726,15 @@ installJumpHost() {
     $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
   fi
 
-  if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
-    $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
-    $SCP_COMMAND $TLS_FULLCHAIN   ${SSH_USER}@${SSH_HOST}:/tmp/tls_fullchain.pem > /dev/null 2>&1
-    $SCP_COMMAND $TLS_PRIVATE_KEY ${SSH_USER}@${SSH_HOST}:/tmp/tls_private_key.pem > /dev/null 2>&1
-    $SCP_COMMAND $TLS_ROOT_CA     ${SSH_USER}@${SSH_HOST}:/tmp/tls_root_ca.pem > /dev/null 2>&1
-
-    TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem \
-            --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
-  fi
+  #if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" ]; then
+  #  $SCP_COMMAND $TLS_CERTIFICATE ${SSH_USER}@${SSH_HOST}:/tmp/tls_cert.pem > /dev/null 2>&1
+  #  $SCP_COMMAND $TLS_FULLCHAIN   ${SSH_USER}@${SSH_HOST}:/tmp/tls_fullchain.pem > /dev/null 2>&1
+  #  $SCP_COMMAND $TLS_PRIVATE_KEY ${SSH_USER}@${SSH_HOST}:/tmp/tls_private_key.pem > /dev/null 2>&1
+  #  $SCP_COMMAND $TLS_ROOT_CA     ${SSH_USER}@${SSH_HOST}:/tmp/tls_root_ca.pem > /dev/null 2>&1
+  #
+  #  TLSSTR="--tls_cert /tmp/tls_cert.pem --tls_private_key /tmp/tls_private_key.pem \
+  #          --tls_fullchain /tmp/tls_fullchain.pem --tls_root_cert /tmp/tls_root_ca.pem"
+  #fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     $SSH_COMMAND -n "az login --username $AZURE_CLIENT_ID \
@@ -765,7 +771,6 @@ installJumpHost() {
     fi
   fi
 
-#ppppppppp
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
   if [ "${stt}" != "ok" ]; then 
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
@@ -921,6 +926,7 @@ startJumpHost() {
     SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
   fi
 
+#pppppppppppp StartVM
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     stt=$(az group exists --name Admin)
     if [ "$stt" == "true" ]; then
