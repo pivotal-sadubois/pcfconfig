@@ -312,9 +312,8 @@ exit 1
     fi
   else
     echo "Verify recent Deployment"
-    messagePrint " - 2Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+    messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
     messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
-exit 1
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
