@@ -47,7 +47,7 @@ SSH_OPSMAN="ssh -qi $OPSMAN_PRIVATE_KEY ubuntu@pcf.$PCF_DEPLOYMENT_ENV_NAME.$AWS
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   # --- DELETE ALL VM's IN THE RESSOURCE GROUP ---
-  az vm delete --ids $(az vm list -g $PCF_DEPLOYMENT_ENV_NAME --query "[].id" -o tsv)
+  az vm delete --yes --ids $(az vm list -g $PCF_DEPLOYMENT_ENV_NAME --query "[].id" -o tsv)
 
 exit 1
   # --- DELETE HOSTED ZONE ---
