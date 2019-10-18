@@ -771,8 +771,7 @@ installJumpHost() {
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     #route53createHostedZone $domain
 
-#eeeeeeeeeeeeeee
-    if [ -d $PCFPATH/certificate/$domain -a -f $PCFPATH/certificate/$domain/privkey.pem ]; then 
+    if [ -d $PCFPATH/certificates/$domain -a -f $PCFPATH/certificates/$domain/privkey.pem ]; then 
       echo "Take local cached certificates for PKS Domains ($domain)"  
       $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
     else
