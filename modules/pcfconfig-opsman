@@ -1091,8 +1091,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   echo "Download Terraform Configuration"
   messagePrint " - Terraform Template Name" "$PCF_DEPLOYMENT_CLOUD Terraform Templates"
   messagePrint " - Terraform Template Version" "$TF_TEMPLATE"
-  messagePrint " - Terraform Directory Prefix" "$TF_PREFIX"
-  messagePrint " - Terraform Directory Mode" "$TF_DIR_MODE"
   messagePrint " - Terraform Instalation Directory" "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}"
 
   if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
@@ -1249,14 +1247,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
     environmentCleanUp $TF_HOME/terraforming-pks
-
-    echo "Terraform configuration completed. Change to the terraform directory:"
-    echo "=> $TF_HOME/terraforming-pks for PKS and proceed with pcfconfig-opsman" 
   else
     environmentCleanUp $TF_HOME/terraforming-pas
-
-    echo "Terraform configuration completed. Change to the terraform directory:"
-    echo "=> $TF_HOME/terraforming-pas for PAS and proceed with pcfconfig-opsman"
   fi
 
   exit 0
@@ -1360,12 +1352,27 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     cid_inf=$($JQ -r '.modules[].outputs.infrastructure_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_inf=$(echo "$cid_inf" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
-            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
-    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+#    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+#            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+#    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
     cid_svc=$($JQ -r '.modules[].outputs.services_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+
+
+    if [ "${OPSMAN_MODE}" == "pks" ]; then
+      cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+      rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+      echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
+    else
+      cid_pas=$($JQ -r '.modules[].outputs.pas_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+      rng_pas=$(echo "$cid_pas" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+      echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
+    fi
+
+#guguseli
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
