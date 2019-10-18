@@ -201,7 +201,12 @@ sshEnvironment() {
   JUMP_HOST="jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    stt=$(az group exists --name Admin)
+    if [ "$stt" == "true" ]; then
+      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP')]" | jq -r '.[].ipAddress')
+    else
+      PCF_JUMP_EXIST=0
+    fi
     SSH_USER=ubuntu
     SSH_HOME=/home/ubuntu
     SSH_HOST=$pip
@@ -763,14 +768,20 @@ installJumpHost() {
 #ppppppppp
   stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
   if [ "${stt}" != "ok" ]; then 
+echo gaga
     domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     #route53createHostedZone $domain
 
+echo "$PCFPATH/certificate/$domain"
+ls -la $PCFPATH/certificate/$domain/privkey.pem
+#eeeeeeeeeeeeeee
     if [ -d $PCFPATH/certificate/$domain -a -f $PCFPATH/certificate/$domain/privkey.pem ]; then 
       echo "Take local cached certificates for PKS Domains ($domain)"  
       $SCP_COMMAND $PCFPATH/certificate/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+exit
     else
       echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
+exit
       typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
       if [ $typ -ne 0 ]; then
         echo "Generate Certificate for PKS Domains ($domain)"  
@@ -1138,7 +1149,6 @@ cat << EOF | sed -e "s/FQHN/$hnm/g" -e "s/IPADDR/$ipa/g" > /tmp/$$_zone_record
 }
 EOF
 
-echo gaga13
    aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
    if [ $? -ne 0 ]; then 
      echo "ERROR: failed to set DNS for $hnm"

@@ -6,10 +6,12 @@
 # Description ..: PCF Installation and Configuration Utility
 # ############################################################################################
 
-export PCFHOME=$(cd "$PWD/$(dirname $0)"; pwd)
-export PCFPATH=$(cd "$PWD/$(dirname $0)"; pwd)
+export PCFHOME=$(cd "$(pwd)/$(dirname $0)"; pwd)
+export PCFPATH=$(cd "$(pwd)/$(dirname $0)"; pwd)
 
 . $PCFPATH/functions
+
+PCF_JUMP_EXIST=1
 
 listDeployments() {
   printf "%-25s %-5s %-10s %-10s %s\n" "CONFIURATION" "CLOUD" "DEPLOYMENT" "MAINTAINER" "DESCRIPTION" 
@@ -202,8 +204,7 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
 
   exit
 else
-  jst=$($SSH_COMMAND -n hostname) 
-  if [ "${jst}" != "jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}" ]; then 
+  if [ ${PCF_JUMP_EXIST} -eq 0 ]; then 
     # --- VERIFY CLI TOOLS ---
     write_line
     checkCloudCLI

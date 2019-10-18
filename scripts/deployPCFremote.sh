@@ -63,10 +63,10 @@ if [ $DEBUG -gt 0 ]; then
   echo "PRODUCT_TILE:$PRODUCT_TILE"
 fi
 
-echo ""
-echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
-echo "by Sacha Dubois, Pivotal Inc,"
-echo "-----------------------------------------------------------------------------------------------------------"
+#echo ""
+#echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
+#echo "by Sacha Dubois, Pivotal Inc,"
+#echo "-----------------------------------------------------------------------------------------------------------"
 
 [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ] && TF_DEPLOYMENT="aws"
 [ "$PCF_DEPLOYMENT_CLOUD" == "Azure" ] && TF_DEPLOYMENT="azure"

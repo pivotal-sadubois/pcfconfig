@@ -34,11 +34,6 @@ DEBUG=0
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
-echo ""
-echo "PCF Configuration Utility ($PCFCONFIG_BASE)"
-echo "by Sacha Dubois, Pivotal Inc,"
-echo "-----------------------------------------------------------------------------------------------------------"
-
 [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ] && TF_DEPLOYMENT="aws"
 [ "$PCF_DEPLOYMENT_CLOUD" == "Azure" ] && TF_DEPLOYMENT="azure"
 [ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && TF_DEPLOYMENT="gcp"
