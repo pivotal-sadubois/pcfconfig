@@ -196,20 +196,29 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 
   echo "SSL_KEY"                                                               >> $TF_VARFILE
 
+  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
   if [ -f $GCP_SERVICE_ACCOUNT ]; then
-    PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
-    if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
-      echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
-      cat /tmp/$PCF_DEPLOYMENT_ENV_NAME.terraform.key.json   >> $TF_VARFILE
-      echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
-    else
-      echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
-      echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
-      exit 1
-    fi
+    echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
+    cat $GCP_SERVICE_ACCOUNT >> $TF_VARFILE
+    echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
   else
     echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
   fi
+
+#  if [ -f $GCP_SERVICE_ACCOUNT ]; then
+#    PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
+#    if [ "${PRJ}" == "$GCP_PROJECT" ]; then 
+#      echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
+#      cat /tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json >> $TF_VARFILE
+#      echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
+#    else
+#      echo "ERROR: Project-Id ($PRJ) in Service Account ($GCP_SERVICE_ACCOUNT) does not match with"
+#      echo "       whith the Service Account provided with the option --gcp-service-account $GCP_PROJECT"
+#      exit 1
+#    fi
+#  else
+#    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
+#  fi
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
