@@ -181,7 +181,7 @@ else
   fi
 fi
 
-sshEnvironment
+#sshEnvironment
 
 if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
   [ -f ~/.pcfconfig ] && . ~/.pcfconfig
@@ -204,16 +204,14 @@ if [ $DEPLOY_PCF_CLEAN -eq 1 ]; then
 
   exit
 else
-  if [ ${PCF_JUMP_EXIST} -eq 0 ]; then 
-    # --- VERIFY CLI TOOLS ---
-    write_line
-    checkCloudCLI
-    write_line
+  # --- VERIFY CLI TOOLS ---
+  write_line
+  checkCloudCLI
+  write_line
 
-    # --- CHECK CLOUD AND JUMP SERVER ---
-    checkCloudAccess
-    installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
-  fi
+  # --- CHECK CLOUD AND JUMP SERVER ---
+  checkCloudAccess
+  installJumpHost jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
   # --- CREATE ENVIRONMENT FILE ---
   createENVfile $DEPLOY_PCF_DEPLOYMENT /tmp/deployPCFenv_${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
