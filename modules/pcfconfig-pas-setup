@@ -1736,7 +1736,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "       download-product --output-directory=/tmp --pivnet-file-glob $PIVNET_GLOB \\"                 >> $TMP_SCRIPT
       echo "       --pivnet-product-slug $PIVNET_SLUG --pivnet-api-token '${PIVNET_TOKEN}' \\"                  >> $TMP_SCRIPT
       echo "       --product-version \"${PXS_VERSION}\""                                               >> $TMP_SCRIPT
-#kkkkkk
       echo ""                                                                                                   >> $TMP_SCRIPT
       echo "    if [ \$? -eq 0 ]; then"                                                                         >> $TMP_SCRIPT
       echo "      if [ -f /tmp/$PIVNET_GLOB ]; then"                                                            >> $TMP_SCRIPT
@@ -1761,6 +1760,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
         exit 1
       fi
 
+#uuuuuuuuuuuuuuuuuuuuu
       i=1
       while [ $i -le 3 ]; do 
         echo "-----------------------------------------------------------------------------------------------------------"
@@ -1789,6 +1789,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG}"
+
+echo "kkkkk TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "kkkkk TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
 
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
