@@ -290,13 +290,11 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
       messageTitle "Verify recent Deployment"
       AZ_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."azurerm_virtual_machine.ops_manager_vm".primary.attributes.name' \
       $TF_STATE | grep -v null)
-echo "AZ_OPSMAN_INSTANCE_ID:$AZ_OPSMAN_INSTANCE_ID"
 
       if [ "$AZ_OPSMAN_INSTANCE_ID" != "" ]; then 
         VM_STAT=$(az vm get-instance-view --name $AZ_OPSMAN_INSTANCE_ID -g $PCF_DEPLOYMENT_ENV_NAME --query instanceView.statuses[1] | \
                   jq -r '.displayStatus')
 
-echo "VM_STAT:$VM_STAT"; exit
         if [ "$VM_STAT" != "VM running" ]; then 
           messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
           messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
