@@ -296,7 +296,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
                   jq -r '.displayStatus')
 
         if [ "$VM_STAT" != "VM running" ]; then 
-          messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+          messagePrint " - 1Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
           messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 exit 1
 
@@ -312,7 +312,7 @@ exit 1
     fi
   else
     echo "Verify recent Deployment"
-    messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+    messagePrint " - 2Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
     messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 exit 1
 
