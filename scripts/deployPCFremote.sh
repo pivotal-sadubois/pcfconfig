@@ -86,9 +86,15 @@ TLS_CHAIN=$HOME/pcfconfig/certificates/chain.pem
 TLS_ROOT_CERT=$HOME/pcfconfig/certificates/ca.pem
 TLS_ROOT_CA=""
 
+echo "1 TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "1 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "1 TLS_ROOT_CERT:$TLS_ROOT_CERT"
 verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$TLS_CERTIFICATE" "$TLS_FULLCHAIN" \
                   "$TLS_PRIVATE_KEY" "$TLS_CHAIN" "$TLS_ROOT_CA"
 
+echo "2 TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "2 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "2 TLS_ROOT_CERT:$TLS_ROOT_CERT"
 ##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
@@ -452,9 +458,9 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PKS_STATE "started"
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
+echo "3 TLS_CERTIFICATE:$TLS_CERTIFICATE"
+echo "3 TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
+echo "3 TLS_ROOT_CERT:$TLS_ROOT_CERT"
 exit 1
 
     if [ "${TLS_CERTIFICATE}" != "" -a "${TLS_PRIVATE_KEY}" != "" -a "${TLS_ROOT_CERT}" != "" ]; then
