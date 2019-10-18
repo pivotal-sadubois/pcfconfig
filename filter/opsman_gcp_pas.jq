@@ -19,9 +19,9 @@
 "infrastructure_subnet_gateway: " + .modules[].outputs.infrastructure_subnet_gateway.value,
 
 # PKS-SUBNET
-"pks_subnet_cidr: " + .modules[].outputs.pks_subnet_cidr.value,
-"pks_subnet_name: " + .modules[].outputs.pks_subnet_name.value,
-"pks_subnet_gateway: " + .modules[].outputs.pks_subnet_gateway.value,
+"pas_subnet_cidr: " + .modules[].outputs.pas_subnet_cidr.value,
+"pas_subnet_name: " + .modules[].outputs.pas_subnet_name.value,
+"pas_subnet_gateway: " + .modules[].outputs.pas_subnet_gateway.value,
 
 # SERVICES-SUBNET
 "services_subnet_cidr: " + .modules[].outputs.services_subnet_cidr.value,
