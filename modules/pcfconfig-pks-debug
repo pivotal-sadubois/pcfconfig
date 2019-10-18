@@ -547,7 +547,6 @@ checkEnvironment() {
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
-echo gaga3
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then
@@ -756,7 +755,6 @@ echo gaga3
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 echo "xxxx aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN --change-batch file://${TMPROUTE53}"
-echo gaga4
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
@@ -958,7 +956,6 @@ echo gaga4
           echo "# -------------------------- DEBUGGING END -------------------------------"
         fi
 
-echo gaga5
         aws route53 change-resource-record-sets --hosted-zone-id $ROUTE53_TOKEN \
             --change-batch file://${TMPROUTE53} > /dev/null 2>&1
         if [ $? -eq 0 ]; then
@@ -1352,27 +1349,27 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
     cid_inf=$($JQ -r '.modules[].outputs.infrastructure_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_inf=$(echo "$cid_inf" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-#    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
-#            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
-#    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+    cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+            sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+    rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
     cid_svc=$($JQ -r '.modules[].outputs.services_subnet_cidr.value' $TERRAFORM_TFSTATE | \
             sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
     rng_svc=$(echo "$cid_svc" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
 
 
-    if [ "${OPSMAN_MODE}" == "pks" ]; then
-      cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
-              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
-      rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-      echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
-    else
-      cid_pas=$($JQ -r '.modules[].outputs.pas_subnet_cidr.value' $TERRAFORM_TFSTATE | \
-              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
-      rng_pas=$(echo "$cid_pas" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
-      echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
-    fi
+#    if [ "${OPSMAN_MODE}" == "pks" ]; then
+#      cid_pks=$($JQ -r '.modules[].outputs.pks_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+#              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+#      rng_pks=$(echo "$cid_pks" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+#      echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
+#    else
+#      cid_pas=$($JQ -r '.modules[].outputs.pas_subnet_cidr.value' $TERRAFORM_TFSTATE | \
+#              sed -e '/: $/d' | grep -v null | sort -u | sed -e 's/\// /g' -e 's/\./ /g')
+#      rng_pas=$(echo "$cid_pas" | awk '{ printf("%d.%d.%d.%d-%d.%d.%d.%s\n",$1,$2,$3,$4,$1,$2,$3,$4+4)}')
+#      echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
+#    fi
 
-#guguseli
+#gagaduseli
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
@@ -1433,6 +1430,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
   #$JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' >> $VARFILE
   $JQ -e -f $JQ_FILTER $TERRAFORM_TFSTATE | sed -e 's/^"//g' -e 's/"$//g' -e 's/<1>/"/g' -e '/: $/d' -e '/""/d' | \
       sort -u >> $VARFILE
+echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
 
   # --- CONFIGURE AUTHENTICFICATION ---
   echo "Configure OpsManager Authentification"
@@ -1647,10 +1645,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 #gaga12
     PIVNET_SLUG=pivotal-container-service
     PIVNET_SLUG_NAME="Pivotal Container Service"
-echo "gaga1 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
     if [ "${PCF_TILE_PKS_VERSION}" == "" ]; then
       PCF_TILE_PKS_VERSION=$(getProductVersion $PCF_TILE_PKS_BUNDLE "$PIVNET_SLUG_NAME" $PIVNET_SLUG)
-echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
     fi
 
 #getProductSlug 1.5.0 pivotal-container-service"
@@ -1986,7 +1982,6 @@ echo "gaga2 PCF_TILE_PKS_VERSION:$PCF_TILE_PKS_VERSION"
 EOF
 
             echo "-----------------------------------------------------------------------------------------------------------"
-echo gaga6
             aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
             echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -2272,7 +2267,6 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
 EOF
 
           echo "-----------------------------------------------------------------------------------------------------------"
-echo gaga8
           aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_ID}" --change-batch file:///tmp/$$_zone_record
           if [ $? -ne 0 ]; then
             echo "ERROR: Updating DNS record"
@@ -2942,7 +2936,6 @@ EOF
 
 
             echo "-----------------------------------------------------------------------------------------------------------"
-echo gaga1
             aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record
             echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -3456,7 +3449,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 EOF
 
 
-echo gaga2
         aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
           echo "ERROR: failed to add DNS for $ZONE"
