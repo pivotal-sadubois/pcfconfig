@@ -73,8 +73,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     messagePrint " - Terminate Instance:" "$ins"
     gcloud compute instances delete $ins > /dev/null 2>&1
   done
-
-  sleep 10000
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
