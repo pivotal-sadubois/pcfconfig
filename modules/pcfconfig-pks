@@ -115,11 +115,6 @@ while [ "$1" != "" ]; do
   shift
 done
 
-echo "TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-echo "TLS_ROOT_CERT:$TLS_ROOT_CERT"
-exit 1
-
 # --- COMPATIBLITE VALUES ---
 PCF_DEPLOYMENT_CLOUDID=$TF_DEPLOYMENT
 PCF_PIVNET_TOKEN=$PIVNET_TOKEN
@@ -1377,7 +1372,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
 #gagaduseli
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
-    echo "pks_subnet_range: ${rng_pks}"                 >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
 
     # HANDLED NY THE FILTER SCRIPT
