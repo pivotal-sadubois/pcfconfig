@@ -71,7 +71,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 echo "GCP_REGION:$GCP_REGION"
 echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 
-  for ins in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name!=('jump-${PCF_DEPLOYMENT_ENV_NAME}')" | \
+  for ins in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name!='jump-${PCF_DEPLOYMENT_ENV_NAME}'" | \
               grep -v "NAME" | awk '{ print $1 }'); do
 echo "INS:$ins"
 
