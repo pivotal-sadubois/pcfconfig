@@ -62,6 +62,7 @@ fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   messageTitle "Destroying VM instances" 
+echo "GCP_REGION:$GCP_REGION"
 echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 
 # instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
@@ -72,6 +73,7 @@ exit 1
 exit 1
 exit 1
 exit 1
+sleep 10000
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
