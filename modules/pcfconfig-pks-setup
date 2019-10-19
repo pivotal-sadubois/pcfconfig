@@ -490,6 +490,7 @@ checkEnvironment() {
         DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
       fi
 
+echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 echo "kkkk GCP_DNS_PREFIX:$GCP_DNS_PREFIX"
       #gcloud compute instances describe gcp-ops-manager --zone europe-west3-b
       instance_status=$(gcloud compute instances list --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
@@ -1567,6 +1568,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 #  fi
 
 #kkkkkk
+echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
   if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
 echo  "GCP_DNS_SUFFIX:$GCP_DNS_SUFFIX"
     GCP_INSTANCE_OPSMAN=$(gcloud compute instances list --filter="name:${GCP_DNS_SUFFIX}-ops-manager" 2>/dev/null | \
@@ -1583,6 +1585,7 @@ echo "GCP_INSTANCE_OPSMAN:$GCP_INSTANCE_OPSMAN"
     messagePrint " - BOSH Director (Bosh/0) InstanceID" "$GCP_INSTANCE_BOSH0"
     messagePrint " - BOSH Director (Bosh/0) Zone" "$GCP_BOSH0_INSTANCE_ZONE"
     messagePrint " - BOSH Director (Bosh/0) Instance State" "$GCP_BOSH0_INSTANCE_STATE"
+exit 1
   fi
 
   if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
