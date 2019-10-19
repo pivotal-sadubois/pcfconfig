@@ -1,6 +1,3 @@
-# ############################################################################################
-# File: ........: removePCFenv.sh
-# Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: Remove PCF Installation 
 # ############################################################################################
@@ -68,10 +65,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   GCP_AZ3=$(echo $list | awk '{ print $3 }')
   GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
 
-  for ins in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name!='jump-${PCF_DEPLOYMENT_ENV_NAME}'" | \
-              grep -v "NAME" | awk '{ print $1 }'); do
+  for tmp in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name!='jump-${PCF_DEPLOYMENT_ENV_NAME}'" | \
+              grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
+
+    ins=$(echo $tmp | awk -F: '{ print $1 }')
+    reg=$(echo $tmp | awk -F: '{ print $2 }')
     messagePrint " - Terminate Instance:" "$ins"
-    gcloud compute instances delete $ins > /dev/null 2>&1
+    gcloud compute instances delete $ins --zone $reg -q > /dev/null 2>&1
   done
 fi
 
