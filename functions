@@ -254,7 +254,7 @@ installJumpHost() {
         exit 1
       fi
     fi
-#pppppppppppp  InstallJump
+#pppppppppppp  InstallJump Azure
 
     vm_stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
     if [ "${vm_stt}" == "" ]; then  
@@ -401,8 +401,9 @@ installJumpHost() {
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
+#pppppppppppp  InstallJump GCP
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-    messagePrint "Creating GCP Jump-Server" "$JUMP_HOST"
+    messagePrint "Verify GCP Jump-Server" "$JUMP_HOST"
 
     IMAGE_FAMILY="ubuntu-1804-lts"
     INSTANCE_NAME="pcfjump"
@@ -423,8 +424,7 @@ installJumpHost() {
         --machine-type=$INSTANCE_TYPE > /dev/null 2>&1
       gcloud compute config-ssh > /dev/null 2>&1
     else
-      messagePrint " - Verify VM ($JUMP_HOST)" "$stt"
-
+      #gcloud compute instances describe $INSTANCE_NAME --zone=europe-west1-b --format json
       stt=$(gcloud compute instances describe $INSTANCE_NAME --zone=$ZONE | egrep "^status:" | awk '{ print $2 }')
       if [ "${stt}" != "RUNNING" ]; then
         messagePrint " - Starting VM" "$INSTANCE_NAME"
@@ -445,6 +445,7 @@ installJumpHost() {
     SCP_COMMAND="scp -r $SCP_OPTIONS"
   fi
 
+#pppppppppppp  InstallJump AWS
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     ins=$(aws ec2 --region=$AWS_REGION describe-instances --filters "Name=instance-state-name,Values=pending,running,stopped" \
          Name=tag:Name,Values="$JUMP_HOST" | jq -r ".Reservations[].Instances[].InstanceId" | head -1)

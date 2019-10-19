@@ -490,9 +490,11 @@ checkEnvironment() {
         DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
       fi
 
+echo "kkkk GCP_DNS_PREFIX:$GCP_DNS_PREFIX"
       #gcloud compute instances describe gcp-ops-manager --zone europe-west3-b
       instance_status=$(gcloud compute instances list --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
             grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
+echo "instance_status:$instance_status"
       
       messagePrint " - Ops Manager VM Name" "${GCP_DNS_PREFIX}-ops-manager"
       messagePrint " - Ops Manager Instance" "$instance_status"
@@ -1564,9 +1566,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
 #     echo "without the -noapply option"; exit 0
 #  fi
 
+#kkkkkk
   if [ "${PCF_CLOUD_NAME}" = "gcp" ]; then
+echo  "GCP_DNS_SUFFIX:$GCP_DNS_SUFFIX"
     GCP_INSTANCE_OPSMAN=$(gcloud compute instances list --filter="name:${GCP_DNS_SUFFIX}-ops-manager" 2>/dev/null | \
        grep -v "NAME" | awk '{ print $NF }')
+echo "GCP_INSTANCE_OPSMAN:$GCP_INSTANCE_OPSMAN"
     GCP_INSTANCE_BOSH0=$(gcloud compute instances list --filter="labels:bosh-0" 2>/dev/null | \
        grep -v "NAME" | awk '{ print $1 }')
     GCP_BOSH0_INSTANCE_STATE=$(gcloud compute instances list --filter="labels:bosh-0" 2>/dev/null | \
