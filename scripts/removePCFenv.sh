@@ -68,13 +68,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   GCP_AZ3=$(echo $list | awk '{ print $3 }')
   GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
 
-echo "GCP_REGION:$GCP_REGION"
-echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
-
   for ins in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name!='jump-${PCF_DEPLOYMENT_ENV_NAME}'" | \
               grep -v "NAME" | awk '{ print $1 }'); do
-echo "INS:$ins"
-
+    messagePrint " - Terminate Instance:" "$ins"
+    gcloud compute instances delete $ins > /dev/null 2>&1
   done
 
   sleep 10000
