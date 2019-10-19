@@ -62,6 +62,12 @@ fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   messageTitle "Destroying VM instances" 
+  list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+  GCP_AZ1=$(echo $list | awk '{ print $1 }')
+  GCP_AZ2=$(echo $list | awk '{ print $2 }')
+  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+  GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
+
 echo "GCP_REGION:$GCP_REGION"
 echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 
