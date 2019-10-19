@@ -71,14 +71,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 echo "GCP_REGION:$GCP_REGION"
 echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 
-# instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
-#            grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
+ instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
+            grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
 
-exit 1
-exit 1
-exit 1
-exit 1
-exit 1
 sleep 10000
 fi
 
@@ -100,7 +95,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 
   for ins in $vms; do
     messagePrint " - Terminate Instance:" "$ins"
-    #aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
+    aws --region $AWS_REGION ec2 terminate-instances --instance-ids $ins > /dev/null 2>&1
   done
 
   messageTitle "Cleanup AWS Environment (Terraform Destroy)" 
