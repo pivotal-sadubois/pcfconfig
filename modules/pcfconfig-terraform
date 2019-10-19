@@ -2047,13 +2047,13 @@ EOF
       echo "Applying Changes to PAS"
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN --request-timeout=60 apply-changes
+        $OM $OM_LOGIN --request-timeout=90 apply-changes
         if [ $? -ne 0 ]; then
           echo "ERROR: Applying changes failed"; exit 1 
         fi
         echo "-----------------------------------------------------------------------------------------------------------"
       else
-        $OM $OM_LOGIN --request-timeout=60 apply-changes > /dev/null 2>&1
+        $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "ERROR: Applying changes failed"; exit 1 
         fi
@@ -2361,10 +2361,10 @@ EOF
       echo "Applying Changes to PKS"
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
-        $OM $OM_LOGIN --request-timeout=60 apply-changes
+        $OM $OM_LOGIN --request-timeout=90 apply-changes
         echo "-----------------------------------------------------------------------------------------------------------"
       else
-        $OM $OM_LOGIN --request-timeout=60 apply-changes > /dev/null 2>&1
+        $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
         if [ $? -ne 0 ]; then 
           echo "ERROR: Applying Changes has been failed, please try manual"
           echo "       $OM $OM_LOGIN apply-changes"; exit 1
