@@ -581,6 +581,7 @@ else
     setPCFconfigState $PCFCONFIG_PAS_STATE "started"
 
     if [ "${PCF_TLS_CERTIFICATE}" != "" -a "${PCF_TLS_PRIVATE_KEY}" != "" -a "${PCF_TLS_ROOT_CERT}" != "" ]; then 
+echo "--tls_cert $PCF_TLS_CERTIFICATE --tls_private_key $PCF_TLS_PRIVATE_KEY --tls_root_cert $PCF_TLS_ROOT_CERT"
       ${PCFPATH}/modules/pcfconfig-pas -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
         --pivnet-token "$PCF_PIVNET_TOKEN" \
         --pas-version $PCF_TILE_PAS_VERSION --aws-route53 $AWS_HOSTED_ZONE_ID $PAS_SRT $DEBUG_FLAG \
