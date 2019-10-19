@@ -88,17 +88,19 @@ fi
 ##################################### TERRAFORM DESTROY ######################################
 ##############################################################################################
 
-cd $TF_PATH
-messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
-terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
-tail -20 /tmp/$$_log
-messageTitle "-----------------------------------------------------------------------------------------------------------"
+if [ "${PCF_DEPLOYMENT_CLOUD}" != "Azure" ]; then
+  cd $TF_PATH
+  messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
+  terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+  tail -20 /tmp/$$_log
+  messageTitle "-----------------------------------------------------------------------------------------------------------"
 
-if [ $ret -ne 0 ]; then
-  echo "ERROR: Problem with teraform destroy"
-else
-  if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then 
-    rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+  if [ $ret -ne 0 ]; then
+    echo "ERROR: Problem with teraform destroy"
+  else
+    if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then 
+      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+    fi
   fi
 fi
 
