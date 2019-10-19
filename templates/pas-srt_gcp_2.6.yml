@@ -317,9 +317,9 @@ network-properties:
   network:
     name: pas-subnet
   other_availability_zones:
-  - name: eu-central-1a
+  - name: ((availability_zone_1))
   singleton_availability_zone:
-    name: eu-central-1a
+    name: ((availability_zone_1))
 resource-config:
   backup_restore:
     instances: automatic
