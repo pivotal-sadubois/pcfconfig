@@ -79,8 +79,8 @@ product-properties:
     value: 120
   .properties.cf_networking_enable_space_developer_self_service:
     value: false
-  .properties.cf_networking_internal_domain:
-    value: apps.internal
+#  .properties.cf_networking_internal_domain:
+#    value: apps.internal
   .properties.cloud_controller_completed_tasks_cutoff_age_in_days:
     value: 31
   .properties.cloud_controller_default_health_check_timeout:
@@ -108,13 +108,19 @@ product-properties:
   .properties.credhub_database:
     selected_option: internal_mysql
     value: internal_mysql
-  .properties.credhub_key_encryption_passwords:
+  .properties.credhub_internal_provider_keys:
     value:
-    - name: credhub-encryption-key
+    - name: my_encryprion_key
       primary: true
-      provider: internal
-      key:
+      key: 
         secret: "sachaduboispivotal12345"
+    #  .properties.credhub_key_encryption_passwords:
+    #    value:
+    #    - name: credhub-encryption-key
+    #      primary: true
+    #      provider: internal
+    #      key:
+    #        secret: "sachaduboispivotal12345"
   .properties.diego_database_max_open_connections:
     value: 100
   .properties.diego_log_timestamp_format:
@@ -237,8 +243,8 @@ product-properties:
 #    value: X
   .properties.syslog_drop_debug:
     value: true
-  .properties.syslog_metrics_to_syslog_enabled:
-    value: true
+#  .properties.syslog_metrics_to_syslog_enabled:
+#    value: true
   .properties.syslog_tls:
     selected_option: disabled
     value: disabled
