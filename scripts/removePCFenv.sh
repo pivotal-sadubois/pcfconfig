@@ -68,6 +68,10 @@ echo "GCP_AVAILABILITY_ZONES:$GCP_AVAILABILITY_ZONES"
 #            grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
 
 exit 1
+exit 1
+exit 1
+exit 1
+exit 1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
