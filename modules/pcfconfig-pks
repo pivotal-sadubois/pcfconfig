@@ -1841,6 +1841,21 @@ echo "kkkkk TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
       echo "skip_cert_verify: true" >> $VARFILE
     fi
 
+#holdri
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+      tg1=$($JQ -r '.modules[].outputs.web_lb_name.value' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+      tg2=$($JQ -r '.modules[].outputs.diego_ssh_lb_name.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
+
+      #echo "pas_api_lb: alb:${tg1},alb:${tg2}" >> $VARFILE
+      echo "web_lb: ${tg1}" >> $VARFILE
+      echo "diego_ssh_lb_name: ${tg2}" >> $VARFILE
+      echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
+      echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+      echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+      echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+    fi
+
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       tg1=$($JQ -r '.modules[].outputs.web_lb_name.value' $TERRAFORM_TFSTATE | grep -v null | sort -u)
       tg2=$($JQ -r '.modules[].outputs.diego_ssh_lb_name.value[1]' $TERRAFORM_TFSTATE | grep -v null | sort -u)
