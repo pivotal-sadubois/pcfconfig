@@ -335,69 +335,69 @@ resource-config:
     instance_type:
       id: automatic
     internet_connected: false
-  compute:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  control:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-    elb_names:
-    - tcp:((ssh_router_pool))
-    additional_vm_extensions: []
-  database:
-    instances: automatic
-    persistent_disk:
-      size_mb: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  ha_proxy:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  istio_control:
-    instances: 0
-    instance_type:
-      id: automatic
-    internet_connected: false
-  istio_router:
-    instances: 0
-    instance_type:
-      id: automatic
-    internet_connected: false
-  mysql_monitor:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-  route_syncer:
-    instances: 0
-    instance_type:
-      id: automatic
-    internet_connected: false
-  router:
-    instances: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-    elb_names:
-    - tcp:((ws_router_pool))
-    additional_vm_extensions: []
-  tcp_router:
-    instances: 0
-    persistent_disk:
-      size_mb: automatic
-    instance_type:
-      id: automatic
-    internet_connected: false
-    elb_names:
-    - tcp:((tcp_router_pool))
-    additional_vm_extensions: []
+#  compute:
+#    instances: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  control:
+#    instances: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#    elb_names:
+#    - tcp:((ssh_router_pool))
+#    additional_vm_extensions: []
+#  database:
+#    instances: automatic
+#    persistent_disk:
+#      size_mb: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  ha_proxy:
+#    instances: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  istio_control:
+#    instances: 0
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  istio_router:
+#    instances: 0
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  mysql_monitor:
+#    instances: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  route_syncer:
+#    instances: 0
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#  router:
+#    instances: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#    elb_names:
+#    - tcp:((ws_router_pool))
+#    additional_vm_extensions: []
+#  tcp_router:
+#    instances: 0
+#    persistent_disk:
+#      size_mb: automatic
+#    instance_type:
+#      id: automatic
+#    internet_connected: false
+#    elb_names:
+#    - tcp:((tcp_router_pool))
+#    additional_vm_extensions: []
 errand-config:
   deploy-autoscaler:
     post-deploy-state: true
