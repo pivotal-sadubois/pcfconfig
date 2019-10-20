@@ -758,9 +758,11 @@ installJumpHost() {
     fi
   fi
 
+echo bbbbbbbbbbbbbbbbbbbbb1
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     $SSH_COMMAND -n "gcloud compute instances list > /dev/null 2>&1"; stt=$?
     if [ "${stt}" -ne 0 ]; then
+echo bbbbbbbbbbbbbbbbbbbbb2
       GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }')
       GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT)
 
@@ -1903,6 +1905,22 @@ cleanAWSenv() {
 }
 
 cleanGCPenv() {
+  list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+  GCP_AZ1=$(echo $list | awk '{ print $1 }')
+  GCP_AZ2=$(echo $list | awk '{ print $2 }')
+  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+  GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
+
+  for tmp in $(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" \
+               --filter="name!='jump-${PCF_DEPLOYMENT_ENV_NAME}'" 2>/dev/null | \
+               grep -v "NAME" | awk '{ printf("%s:%s\n",$1,$2)}'); do
+
+    ins=$(echo $tmp | awk -F: '{ print $1 }')
+    reg=$(echo $tmp | awk -F: '{ print $2 }')
+    messagePrint " - Terminate Instance:" "$ins"
+    gcloud compute instances delete $ins --zone $reg -q > /dev/null 2>&1
+  done
+
   # --- DELETE IMAGES ---
   for n in $(gcloud compute images list 2>/dev/null | \
         egrep "^$ENV_NAME" | awk '{ print $1 }'); do
@@ -2255,6 +2273,8 @@ cleanGCPenv() {
   #gcloud compute backend-services list --filter="region:($GCP_REGION)"
   #gcloud compute target-tcp-proxies list
   #gcloud compute target-http-proxies list
+
+  sleep 10
 }
 
 checkOpsMantools() {
