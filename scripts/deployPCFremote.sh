@@ -98,6 +98,11 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
              egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
     gcloud iam service-accounts delete -q $n > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      echo "ERROR: Failed to delete service-account $n"
+      echo "       => gcloud iam service-accounts delete -q $n"
+      exit 1
+    fi
   done
 
   GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
