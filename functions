@@ -1109,7 +1109,6 @@ route53setNSrecord () {
   echo "}}]"                                                 >> $TMPROUTE53
   echo "}"                                                   >> $TMPROUTE53
 
-echo gaga11
   aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
       --change-batch file://${TMPROUTE53} > /dev/null 2>&1
   if [ $? -ne 0 ]; then
