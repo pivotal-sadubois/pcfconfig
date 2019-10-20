@@ -3336,7 +3336,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   ######################################## DEBUG INFOS #########################################
   ##############################################################################################
   TMP_OPSMAN="$(pwd)/opsman.pem"
-  #API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
