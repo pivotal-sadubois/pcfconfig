@@ -758,20 +758,15 @@ installJumpHost() {
     fi
   fi
 
-echo bbbbbbbbbbbbbbbbbbbbb1
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     $SSH_COMMAND -n "gcloud compute instances list > /dev/null 2>&1"; stt=$?
     if [ "${stt}" -ne 0 ]; then
-echo bbbbbbbbbbbbbbbbbbbbb2
-      GCPSVC=$(echo $GCP_SERVICE_ACCOUNT | awk -F'/' '{ print $NF }')
-      GCPPTH=$(dirname $GCP_SERVICE_ACCOUNT)
-
       echo "------------------------------------ ACTIVATE GCP_SERVICE_ACCOUNT -------------------------------------------"
-      $SCP_COMMAND $GCP_SERVICE_ACCOUNT pcfjump:/tmp/$GCPSVC > /dev/null 2>&1
       $SSH_COMMAND gcloud auth login --no-launch-browser --brief --quiet --project $GCP_PROJECT
-      $SSH_COMMAND -n "gcloud config set project $GCP_PROJECT"
-      while read -t 1 garbage; do sleep 0; done
-      $SSH_COMMAND -n "gcloud auth activate-service-account --quiet --key-file=/tmp/$GCPSVC 2>/dev/null"
+
+      #$SSH_COMMAND -n "gcloud config set project $GCP_PROJECT"
+      #while read -t 1 garbage; do sleep 0; done
+      #$SSH_COMMAND -n "gcloud auth activate-service-account --quiet --key-file=/tmp/$GCPSVC 2>/dev/null"
     fi
   fi
 
