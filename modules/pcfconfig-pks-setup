@@ -3460,13 +3460,33 @@ echo "/hostedzone/Z18AX60YL8ZV3E"
               jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' ) 
 
 echo "ALIAS:$ALIAS"
-echo "DNSLB:$DNSLB"
+echo "DNSLB:$DNSLB gaga"
 
 
 
-      if [ "${ZONE_ID}" != "" ]; then
-        ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
-        ZONE="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+      if [ "${ALIAS}" != "$DNSLB" ]; then
+        if [ "${ZONE_ID}" != "" ]; then
+          ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+          ZONE="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+
+          TMPROUTE53=/tmp/$$_tmp_route53.json
+          echo "{"                                                   >  $TMPROUTE53
+          echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+          echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+          echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+          echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+          echo "    \"Name\": \"${hnm}\","                           >> $TMPROUTE53
+          echo "    \"Type\": \"NS\","                               >> $TMPROUTE53
+          echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
+          echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
+          echo "      \"DNSName\": \"${dualstack.$DNSLB.}\","        >> $TMPROUTE53
+          echo "      \"EvaluateTargetHealth\": \"${true}\","        >> $TMPROUTE53
+          echo "    }"                                               >> $TMPROUTE53
+          echo "}}]"                                                 >> $TMPROUTE53
+          echo "}"                                                   >> $TMPROUTE53
+
+
+cat $TMPROUTE53
 
     cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
 {
@@ -3484,6 +3504,11 @@ echo "DNSLB:$DNSLB"
 }}]
 }
 EOF
+
+echo old
+cat /tmp/$$_zone_record
+
+sleep 1000
 
 
         aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
