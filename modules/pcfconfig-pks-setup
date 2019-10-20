@@ -3498,25 +3498,25 @@ echo "DNSLB:$DNSLB gaga"
 echo gaga
 sleep 10000
 
-cat $TMPROUTE53
-
-    cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
-{
-            "Comment": "CREATE/DELETE/UPSERT a record ",
-            "Changes": [{
-            "Action": "UPSERT",
-                        "ResourceRecordSet": {
-                                    "Name": "FQHN.",
-                                    "Type": "A",
-                                    "AliasTarget": {
-                                                    "HostedZoneId": "ZZID",
-                                                    "DNSName": "dualstack.AAAA.",
-                                                    "EvaluateTargetHealth": true
-                                                }
-}}]
-}
-EOF
-
+#cat $TMPROUTE53
+#
+#    cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
+#{
+#            "Comment": "CREATE/DELETE/UPSERT a record ",
+#            "Changes": [{
+#            "Action": "UPSERT",
+#                        "ResourceRecordSet": {
+#                                    "Name": "FQHN.",
+#                                    "Type": "A",
+#                                    "AliasTarget": {
+#                                                    "HostedZoneId": "ZZID",
+#                                                    "DNSName": "dualstack.AAAA.",
+#                                                    "EvaluateTargetHealth": true
+#                                                }
+#}}]
+#}
+#EOF
+#
 echo old
 cat /tmp/$$_zone_record
 
