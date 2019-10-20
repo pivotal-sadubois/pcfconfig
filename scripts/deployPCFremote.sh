@@ -98,7 +98,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
              egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
     gcloud iam service-accounts delete -q $n > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if [ $? -ne 0 ]; then
       echo "ERROR: Failed to delete service-account $n"
       echo "       => gcloud iam service-accounts delete -q $n"
       exit 1
@@ -108,7 +108,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
   gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
          --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
+  if [ $? -ne 0 ]; then
     echo "ERROR: Failed to greate service account ${PCF_DEPLOYMENT_ENV_NAME} Service Account"
     echo "       => gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \\"
     echo "          --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
@@ -117,7 +117,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 
   gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
          --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
+  if [ $? -ne 0 ]; then
     echo "ERROR: Failed to greate service-account key"
     echo "       => gcloud iam service-accounts keys create \"$GCP_SERVICE_ACCOUNT\" \\"
     echo "          --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
@@ -127,7 +127,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
          --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
          --role "roles/owner" > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
+  if [ $? -ne 0 ]; then
     echo "ERROR: Failed to bind IAM policy"
     echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
     echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
