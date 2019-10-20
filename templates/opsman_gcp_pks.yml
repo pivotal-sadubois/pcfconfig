@@ -77,7 +77,7 @@ properties-configuration:
     local_blobstore_options:
       tls_enabled: true
     ntp_servers_string: 169.254.169.254
-    post_deploy_enabled: false
+    post_deploy_enabled: true
     resurrector_enabled: false
     retry_bosh_deploys: false
     skip_director_drain: false
