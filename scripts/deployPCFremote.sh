@@ -504,10 +504,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
     setPCFconfigState $PCFCONFIG_PKS_STATE "started"
-echo "3 PCF_TLS_CERTIFICATE:$PCF_TLS_CERTIFICATE"
-echo "3 PCF_TLS_PRIVATE_KEY:$PCF_TLS_PRIVATE_KEY"
-echo "3 PCF_TLS_ROOT_CERT:$PCF_TLS_ROOT_CERT"
-exit 1
 
     if [ "${PCF_TLS_CERTIFICATE}" != "" -a "${PCF_TLS_PRIVATE_KEY}" != "" -a "${PCF_TLS_ROOT_CERT}" != "" ]; then
       ${PCFPATH}/modules/pcfconfig-pks -u $PCF_OPSMANAGER_ADMIN_USER  -p $PCF_OPSMANAGER_ADMIN_PASS \
