@@ -1789,9 +1789,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
     echo "Configuring PAS Tile (${PAS_VERSION})"
     messagePrint " - PAS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PAS_CONFIG}"
 
-echo "kkkkk TLS_CERTIFICATE:$TLS_CERTIFICATE"
-echo "kkkkk TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
-
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       API_HOST_NAME=api.pas.${DNS_PREFIX}.${DNS_SUFFIX}
@@ -1855,15 +1852,15 @@ echo "kkkkk TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
       #echo "diego_ssh_lb_name: ${tg2}" >> $VARFILE
 
       echo "ssh_router_pool: ${lb1}" >> $VARFILE
-      echo "tcp_router_pool: ${lb1}" >> $VARFILE
-      echo "ws_router_pool: ${lb1}" >> $VARFILE
+      echo "tcp_router_pool: ${lb2}" >> $VARFILE
+      echo "ws_router_pool: ${lb3}" >> $VARFILE
      
       echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-echo "gugus"; exit 1
+#echo "gugus"; exit 1
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then

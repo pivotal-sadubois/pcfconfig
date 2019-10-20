@@ -160,15 +160,20 @@ fi
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  if [ "${GCP_AVAILABILITY_ZONES}" == "" ]; then  
+    list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+    GCP_AZ1=$(echo $list | awk '{ print $1 }')
+    GCP_AZ2=$(echo $list | awk '{ print $2 }')
+    GCP_AZ3=$(echo $list | awk '{ print $3 }')
+    GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
+  fi
+
   TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
   NEW_DEPLOY=0
 
   if [ -f ${TF_STATE} ]; then
-    GCP_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' $TF_STATE | \
-                           grep -v null)
-
-    echo "GCP_OPSMAN_INSTANCE_ID:$GCP_OPSMAN_INSTANCE_ID"; GCP_OPSMAN_INSTANCE_ID=""
-
+    GCP_OPSMAN_INSTANCE_ID=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" | \
+                           egrep "^gcppas-ops-manager" | awk '{ print $NF }') 
     if [ "${GCP_OPSMAN_INSTANCE_ID}" == "" ]; then 
       NEW_DEPLOY=1
       echo "Verify recent Deployment"
