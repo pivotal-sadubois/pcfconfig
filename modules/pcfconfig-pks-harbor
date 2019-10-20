@@ -1,0 +1,22 @@
+!/bin/bash
+# ############################################################################################
+# File: ........: pcfconfig-pks-harbot
+# Language .....: bash
+# Author .......: Sacha Dubois, Pivotal
+# Description ..: PCF OpsManager Configuration Utility
+# ############################################################################################
+
+if [ "${1}" == "" ]; then
+  echo "$0 <env-file>"; exit 0
+fi
+
+envFile=$1
+
+export PCFCONFIG_BASE=$(basename $0)
+export PCFPATH=$HOME/pcfconfig
+
+# --- SOURCE FUNCTIONS---
+. ${PCFPATH}/functions
+. $envFile
+
+exit 1
