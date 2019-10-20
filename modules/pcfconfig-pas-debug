@@ -3478,7 +3478,7 @@ echo "DNSLB:$DNSLB gaga"
           echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
           echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
           echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
-          echo "      \"EvaluateTargetHealth\": \"true\""            >> $TMPROUTE53
+          echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
           echo "    }"                                               >> $TMPROUTE53
           echo "}}]"                                                 >> $TMPROUTE53
           echo "}"                                                   >> $TMPROUTE53
