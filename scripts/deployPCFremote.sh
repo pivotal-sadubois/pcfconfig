@@ -158,18 +158,21 @@ fi
 ##############################################################################################
 ########################### CLEANUP IF OPSMAN IS NOT RUNNING  ################################
 ##############################################################################################
-#gaga
+
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
   NEW_DEPLOY=0
+echo "gaga1 TF_STATE:$TF_STATE"
 
   if [ -f ${TF_STATE} ]; then
+echo gaga2
     GCP_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' $TF_STATE | \
                            grep -v null)
 
     echo "GCP_OPSMAN_INSTANCE_ID:$GCP_OPSMAN_INSTANCE_ID"; GCP_OPSMAN_INSTANCE_ID=""
 
     if [ "${GCP_OPSMAN_INSTANCE_ID}" == "" ]; then 
+echo gaga3
       NEW_DEPLOY=1
       echo "Verify recent Deployment"
       messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
@@ -184,8 +187,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   else
     NEW_DEPLOY=1
   fi
+echo gaga4
 
   if [ $NEW_DEPLOY -eq 1 ]; then
+echo gaga5
     # --- CLEANUP OLD SERVICE ACCOUNTS ---
     for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
                egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
@@ -226,6 +231,14 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
       echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
       exit 1
     fi
+
+    gcloud auth activate-service-account ${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com \
+           --key-file=$GCP_SERVICE_ACCOUNT > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to activate serbvice-account"
+      echo "       ==> gcloud auth activate-service-account ${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com \\"
+      echo "           --key-file=$GCP_SERVICE_ACCOUNT"
+      exit 1
   fi
 fi
 
@@ -357,7 +370,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 #  else
 #    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
 #  fi
-echo "xxxxxxxxx2"; gcloud iam service-accounts list
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
