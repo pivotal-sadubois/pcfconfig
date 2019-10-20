@@ -1854,13 +1854,13 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "ssh_router_pool: ${lb1}" >> $VARFILE
       echo "tcp_router_pool: ${lb2}" >> $VARFILE
       echo "ws_router_pool: ${lb3}" >> $VARFILE
+      echo "http_router_backend: ${DNS_PREFIX}-httpslb" >> $VARFILE
      
       echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-#echo "gugus"; exit 1
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
