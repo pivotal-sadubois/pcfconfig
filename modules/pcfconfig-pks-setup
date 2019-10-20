@@ -3442,7 +3442,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
-      echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
       DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
@@ -3450,20 +3449,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
-echo "ZONE_ID_STR:$ZONE_ID_STR"
-echo "DNSLB_ZONEID:$DNSLB_ZONEID"
-echo "ZONE_ID:$ZONE_ID"
-echo "/hostedzone/Z18AX60YL8ZV3E"
 
       ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
               --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
               jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' ) 
 
-echo "ALIAS:$ALIAS"
-echo "DNSLB:$DNSLB gaga"
-
-      #if [ "${ALIAS}" != "$DNSLB" ]; then
+      if [ "${ALIAS}" != "$DNSLB" ]; then
         if [ "${ZONE_ID}" != "" ]; then
+          echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
           ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
           ZONE="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
 
@@ -3493,9 +3486,8 @@ echo "DNSLB:$DNSLB gaga"
             exit 1
           fi
 
-echo gaga
-sleep 10000
-        rm -f $TMPROUTE53
+          rm -f $TMPROUTE53
+        fi
       fi
     fi
 
