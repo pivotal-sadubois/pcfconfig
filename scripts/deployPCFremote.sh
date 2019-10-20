@@ -239,6 +239,7 @@ echo gaga5
       echo "       ==> gcloud auth activate-service-account ${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com \\"
       echo "           --key-file=$GCP_SERVICE_ACCOUNT"
       exit 1
+    fi
   fi
 fi
 
