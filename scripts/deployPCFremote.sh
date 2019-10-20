@@ -203,6 +203,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   if [ $cnt -gt 0 ]; then SEARCH_REG="southeast_asia"; fi
 fi
 
+echo "xxxxxxxxx1"; gcloud iam service-accounts list
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
   GCP_AZ1=$(echo $list | awk '{ print $1 }')
@@ -257,6 +258,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 #  else
 #    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
 #  fi
+echo "xxxxxxxxx2"; gcloud iam service-accounts list
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -440,6 +442,8 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
+echo "xxxxxxxxx3"; gcloud iam service-accounts list
+exit 1
   terraform init > /tmp/terraform.log 2>&1
 
 
