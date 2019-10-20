@@ -93,7 +93,7 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$PCF_TLS_CERTIFICATE" "$PCF_TLS_F
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- CLEANUP OLD SERVICE ACCOUNTS ---
   for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
              egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
@@ -115,10 +115,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     exit 1
   fi
 
-echo "gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
-
-echo "xxxxxxxxx"; gcloud iam service-accounts list
-
   gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
          --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -138,7 +134,6 @@ echo "xxxxxxxxx"; gcloud iam service-accounts list
     echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
     exit 1
   fi
-echo "xxxxxxxxx"; gcloud iam service-accounts list
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
