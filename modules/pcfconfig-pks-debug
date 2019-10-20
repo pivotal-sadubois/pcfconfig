@@ -3455,7 +3455,12 @@ echo "DNSLB_ZONEID:$DNSLB_ZONEID"
 echo "ZONE_ID:$ZONE_ID"
 echo "/hostedzone/Z18AX60YL8ZV3E"
 
-      #als=$(aws route53 list-resource-record-sets --hosted-zone-id /hostedzone/Z18AX60YL8ZV3E --query "ResourceRecordSets[?contains(Name, 'apps-cl1.awspks.pcfsdu.com')].AliasTarget.DNSName" | jq -r '.[]'
+      ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+              --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
+              jq -r '.[]') 
+
+echo "ALIAS:$ALIAS"
+echo "DNSLB:$DNSLB"
 
 
 
