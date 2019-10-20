@@ -200,13 +200,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     gcloud projects remove-iam-policy-binding ${GCP_PROJECT} \
            --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
            --role "roles/owner" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to remove policy-binding"
-      echo "       => gcloud projects remove-iam-policy-binding ${GCP_PROJECT} \\"
-      echo "          --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
-      echo "           --role \"roles/owner\""
-      exit 1
-    fi
+    #if [ $? -ne 0 ]; then
+    #  echo "ERROR: Failed to remove policy-binding"
+    #  echo "       => gcloud projects remove-iam-policy-binding ${GCP_PROJECT} \\"
+    #  echo "          --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
+    #  echo "           --role \"roles/owner\""
+    #  exit 1
+    #fi
   
     GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
     gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
