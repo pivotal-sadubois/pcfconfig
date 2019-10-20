@@ -111,11 +111,11 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" != "Azure" ]; then
   messageTitle "-----------------------------------------------------------------------------------------------------------"
 
   if [ $ret -ne 0 ]; then
-    echo "ERROR: Problem with teraform destroy"
-  else
-    if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then 
-      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
-    fi
+    echo "ERROR: Teraform destroy failed"
+  fi
+
+  if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then 
+    rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
 fi
 
