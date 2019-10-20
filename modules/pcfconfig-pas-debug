@@ -3462,8 +3462,6 @@ echo "/hostedzone/Z18AX60YL8ZV3E"
 echo "ALIAS:$ALIAS"
 echo "DNSLB:$DNSLB gaga"
 
-
-
       #if [ "${ALIAS}" != "$DNSLB" ]; then
         if [ "${ZONE_ID}" != "" ]; then
           ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
@@ -3497,42 +3495,7 @@ echo "DNSLB:$DNSLB gaga"
 
 echo gaga
 sleep 10000
-
-#cat $TMPROUTE53
-#
-#    cat << EOF | sed -e "s/FQHN/${ZONE}/g" -e "s/AAAA/$DNSLB/g" -e "s/ZZID/$DNSLB_ZONEID/g" > /tmp/$$_zone_record
-#{
-#            "Comment": "CREATE/DELETE/UPSERT a record ",
-#            "Changes": [{
-#            "Action": "UPSERT",
-#                        "ResourceRecordSet": {
-#                                    "Name": "FQHN.",
-#                                    "Type": "A",
-#                                    "AliasTarget": {
-#                                                    "HostedZoneId": "ZZID",
-#                                                    "DNSName": "dualstack.AAAA.",
-#                                                    "EvaluateTargetHealth": true
-#                                                }
-#}}]
-#}
-#EOF
-#
-echo old
-cat /tmp/$$_zone_record
-
-sleep 1000
-
-
-        aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file:///tmp/$$_zone_record > /dev/null 2>&1
-        if [ $? -ne 0 ]; then 
-          echo "ERROR: failed to add DNS for $ZONE"
-          echo "       => aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} \\"
-          echo "          --change-batch file:///tmp/$$_zone_record"
-          exit 1
-        fi
-
-        cp /tmp/$$_zone_record /tmp/aws_zone_record
-        rm -f /tmp/$$_zone_record
+        rm -f $TMPROUTE53
       fi
     fi
 
