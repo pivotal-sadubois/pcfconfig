@@ -452,10 +452,7 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
-echo "xxxxxxxxx3"; gcloud iam service-accounts list
-exit 1
   terraform init > /tmp/terraform.log 2>&1
-
 
   i=1; while [ $i -le 3 ]; do  
     terraform plan -out="plan" >> /tmp/terraform.logg 2>&1
