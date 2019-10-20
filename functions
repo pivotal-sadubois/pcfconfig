@@ -2230,6 +2230,21 @@ cleanGCPenv() {
     gcloud iam service-accounts delete $n -q 2>/dev/null
   done
 
+  # --- CLEANUP SERVICE BINDINGS ---
+#  if [ "${GCP_PROJECT}" == "" ]; then 
+#    GCP_PROJECT=$(gcloud projects list | grep -v "PROJECT_ID" | awk '{ print $1 }')
+#  fi
+#
+#  gcloud projects get-iam-policy $GCP_PROJECT --format="json" > /tmp/$$_policy
+#  cnt=$(sed 's/\"role\"://g' /tmp/$$_policy | grep -c "role") 
+#
+#  i=0; while [ $i -le $cnt ]; do
+#    jq -r '.bindings[$i].role' /tmp/$$_policy
+#    let i=i+1
+#  done
+#
+#  rm -f /tmp/$$_policy
+
   for n in $(gcloud compute backend-services list --filter="region:($GCP_REGION)" 2>/dev/null | \
        egrep "^$ENV_NAME" | awk '{ print $1 }'); do
 
