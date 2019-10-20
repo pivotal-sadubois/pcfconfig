@@ -804,7 +804,7 @@ installJumpHost() {
 
       # --- GET A COPY OF THE CERTIFICATES BACK ---
       [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
-      $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain > /dev/null 2>&1
+      $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1
 
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
