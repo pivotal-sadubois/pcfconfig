@@ -1855,6 +1855,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "tcp_router_pool: ${lb2}" >> $VARFILE
       echo "ws_router_pool: ${lb3}" >> $VARFILE
       echo "http_router_backend: ${DNS_PREFIX}-httpslb" >> $VARFILE
+
+      #tcp:gcppas-cf-tcp
+      #tcp:gcppas-cf-ws,http:gcppas-httpslb
      
       echo "apps_domain: apps.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "system_domain: sys.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
