@@ -271,7 +271,7 @@ environmentCleanUp() {
     ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
     GCP_REGION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
 
-    messagePrint "Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
+    messagePrint "1Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
     cleanGCPenv
   fi
 }
