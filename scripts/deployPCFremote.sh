@@ -93,49 +93,6 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$PCF_TLS_CERTIFICATE" "$PCF_TLS_F
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
-  # --- CLEANUP OLD SERVICE ACCOUNTS ---
-  for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
-             egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
-    gcloud iam service-accounts delete -q $n > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to delete service-account $n"
-      echo "       => gcloud iam service-accounts delete -q $n"
-      exit 1
-    fi
-  done
-
-  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
-         --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to greate service account ${PCF_DEPLOYMENT_ENV_NAME} Service Account"
-    echo "       => gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \\"
-    echo "          --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
-    exit 1
-  fi
-
-  gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
-         --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to greate service-account key"
-    echo "       => gcloud iam service-accounts keys create \"$GCP_SERVICE_ACCOUNT\" \\"
-    echo "          --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
-    exit 1
-  fi
-
-  gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-         --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
-         --role "roles/owner" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to bind IAM policy"
-    echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
-    echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
-    echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
-    exit 1
-  fi
-fi
-
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
   # --- VERIFY GCP SERVICE ACCOUNTS ---
   if [ ! -f "${GCP_SERVICE_ACCOUNT}" ]; then 
@@ -167,9 +124,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then
     gcloud iam service-accounts keys create $GCP_SERVICE_ACCOUNT --iam-account=${svc} > /dev/null 2>&1
   fi
 fi
-
-
-
 
 ##############################################################################################
 ######################################## PREPARATION #########################################
@@ -206,49 +160,72 @@ fi
 ##############################################################################################
 #gaga
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-  ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
-  messagePrint "Cleaning up Leftover GCP Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $GCP_REGION"
-  cleanGCPenv
+  TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
+  NEW_DEPLOY=0
 
-  # --- CLEANUP OLD SERVICE ACCOUNTS ---
-  for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
-             egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
-    gcloud iam service-accounts delete -q $n > /dev/null 2>&1
+  if [ -f ${TF_STATE} ]; then
+    GCP_OPSMAN_INSTANCE_ID=$(jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' $TF_STATE | \
+                           grep -v null)
+
+    echo "GCP_OPSMAN_INSTANCE_ID:$GCP_OPSMAN_INSTANCE_ID"; GCP_OPSMAN_INSTANCE_ID=""
+
+    if [ "${GCP_OPSMAN_INSTANCE_ID}" == "" ]; then 
+      NEW_DEPLOY=1
+      echo "Verify recent Deployment"
+      messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
+      messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+
+      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+
+      ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+      messagePrint "Cleaning up Leftover GCP Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $GCP_REGION"
+      cleanGCPenv
+    fi
+  else
+    NEW_DEPLOY=1
+  fi
+
+  if [ $NEW_DEPLOY -eq 1 ]; then
+    # --- CLEANUP OLD SERVICE ACCOUNTS ---
+    for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
+               egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
+      gcloud iam service-accounts delete -q $n > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to delete service-account $n"
+        echo "       => gcloud iam service-accounts delete -q $n"
+        exit 1
+      fi
+    done
+  
+    GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
+    gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
+           --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to delete service-account $n"
-      echo "       => gcloud iam service-accounts delete -q $n"
+      echo "ERROR: Failed to greate service account ${PCF_DEPLOYMENT_ENV_NAME} Service Account"
+      echo "       => gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \\"
+      echo "          --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
       exit 1
     fi
-  done
 
-  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
-         --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to greate service account ${PCF_DEPLOYMENT_ENV_NAME} Service Account"
-    echo "       => gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \\"
-    echo "          --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
-    exit 1
-  fi
+    gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
+           --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to greate service-account key"
+      echo "       => gcloud iam service-accounts keys create \"$GCP_SERVICE_ACCOUNT\" \\"
+      echo "          --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
+      exit 1
+    fi
 
-  gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
-         --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to greate service-account key"
-    echo "       => gcloud iam service-accounts keys create \"$GCP_SERVICE_ACCOUNT\" \\"
-    echo "          --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
-    exit 1
-  fi
-
-  gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-         --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
-         --role "roles/owner" > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to bind IAM policy"
-    echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
-    echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
-    echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
-    exit 1
+    gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+           --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
+           --role "roles/owner" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to bind IAM policy"
+      echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
+      echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
+      echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
+      exit 1
+    fi
   fi
 fi
 
@@ -313,13 +290,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+
+      ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+      AWS_LOCATION=$AWS_REGION
+      messagePrint "Cleaning up Leftover AWS Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $AWS_LOCATION"
+      cleanAWSenv
     fi
   fi
-
-  ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
-  AWS_LOCATION=$AWS_REGION
-  messagePrint "Cleaning up Leftover AWS Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $AWS_LOCATION"
-  cleanAWSenv
 fi
 
 ##############################################################################################
