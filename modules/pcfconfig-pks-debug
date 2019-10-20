@@ -490,8 +490,9 @@ checkEnvironment() {
         DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
       fi
 
-      instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name=('${GCP_DNS_PREFIX}-ops-manager')" | \
+      instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name='${GCP_DNS_PREFIX}-ops-manager'" | \
             grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
+echo "instance_status:$instance_status"
       
       messagePrint " - Ops Manager VM Name" "${GCP_DNS_PREFIX}-ops-manager"
       messagePrint " - Ops Manager Instance" "$instance_status"
@@ -1862,6 +1863,7 @@ echo "kkkkk TLS_PRIVATE_KEY:$TLS_PRIVATE_KEY"
       echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
       echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
       echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+echo "gugus"; exit 1
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
