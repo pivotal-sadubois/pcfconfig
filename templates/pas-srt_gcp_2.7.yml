@@ -393,6 +393,7 @@ resource-config:
     internet_connected: false
     elb_names:
     - tcp:((ws_router_pool))
+    - http:((http_router_backend))
     additional_vm_extensions: []
   tcp_router:
     instances: 0
