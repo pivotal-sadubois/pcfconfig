@@ -115,6 +115,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     exit 1
   fi
 
+echo "xxxxxxxxx"
+gcloud iam service-accounts list
+
   gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
          --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
   if [ $? -ne 0 ]; then
