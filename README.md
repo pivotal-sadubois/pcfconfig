@@ -22,7 +22,6 @@ git clone https://github.com/pivotal-sadubois/pcfconfig.git
 ```
 
 Runing PCF Config
-Change into your Terraform directory for PKS/PAS and execute pcfconfig to see the options
 ```
 $ ./deployPCF
 
