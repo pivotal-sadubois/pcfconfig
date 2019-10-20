@@ -3464,7 +3464,7 @@ echo "DNSLB:$DNSLB gaga"
 
 
 
-      if [ "${ALIAS}" != "$DNSLB" ]; then
+      #if [ "${ALIAS}" != "$DNSLB" ]; then
         if [ "${ZONE_ID}" != "" ]; then
           ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
           ZONE="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
