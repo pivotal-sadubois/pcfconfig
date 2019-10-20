@@ -3442,14 +3442,21 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
     fi
 
     if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
-      echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+      echo "1Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
-      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
       DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].DNSName')
       DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
           jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+echo "ZONE_ID_STR:$ZONE_ID_STR"
+echo "DNSLB_ZONEID:$DNSLB_ZONEID"
+echo "/hostedzone/Z18AX60YL8ZV3E"
+
+      #als=$(aws route53 list-resource-record-sets --hosted-zone-id /hostedzone/Z18AX60YL8ZV3E --query "ResourceRecordSets[?contains(Name, 'apps-cl1.awspks.pcfsdu.com')].AliasTarget.DNSName" | jq -r '.[]'
+
+      ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+
 
       if [ "${ZONE_ID}" != "" ]; then
         ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
