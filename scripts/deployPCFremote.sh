@@ -94,13 +94,41 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$PCF_TLS_CERTIFICATE" "$PCF_TLS_F
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+  # --- CLEANUP OLD SERVICE ACCOUNTS ---
+  for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
+             egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
+    gcloud iam service-accounts delete -q $n > /dev/null 2>&1
+  done
+
   GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} --display-name "GCP PAS Manual" > /dev/null 2>&1
+  gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
+         --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "ERROR: Failed to greate service account ${PCF_DEPLOYMENT_ENV_NAME} Service Account"
+    echo "       => gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \\"
+    echo "          --display-name \"${PCF_DEPLOYMENT_ENV_NAME} Service Account\""
+    exit 1
+  fi
+
   gcloud iam service-accounts keys create "$GCP_SERVICE_ACCOUNT" \
          --iam-account "${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "ERROR: Failed to greate service-account key"
+    echo "       => gcloud iam service-accounts keys create \"$GCP_SERVICE_ACCOUNT\" \\"
+    echo "          --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
+    exit 1
+  fi
+
   gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
          --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
          --role "roles/owner" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "ERROR: Failed to bind IAM policy"
+    echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
+    echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
+    echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
+    exit 1
+  fi
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
