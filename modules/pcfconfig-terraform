@@ -246,35 +246,35 @@ usage_pas() {
   echo "                       --nodownload               - No software download from pivnet if copy local is available"
 }
 
-environmentCleanUp() {
-  TFDIR="$1"
-
-  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
-    ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-    AWS_LOCATION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-    DNS_SUFFIX=$(egrep "^dns_suffix" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-
-    if [ "${ROUTE53_TOKEN}" != "" ]; then
-      aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
-      if [ $? -eq 0 ]; then
-        ROUTE53_STAT="zone managed by route53"
-      fi
-    fi
-
-    messagePrint "Cleaning up Leftover AWS Objects" "Environment: $ENV_NAME Location: $AWS_LOCATION"
-
-    cleanRoute53
-    cleanAWSenv
-  fi
-
-  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
-    ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-    GCP_REGION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
-
-    messagePrint "1Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
-    cleanGCPenv
-  fi
-}
+#environmentCleanUp() {
+#  TFDIR="$1"
+#
+#  if [ "${cloud}" == "AWS" -o "${TF_DEPLOYMENT}" == "aws" ]; then
+#    ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+#    AWS_LOCATION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+#    DNS_SUFFIX=$(egrep "^dns_suffix" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+#
+#    if [ "${ROUTE53_TOKEN}" != "" ]; then
+#      aws route53 list-hosted-zones-by-name --dns-name $DNS_SUFFIX --hosted-zone-id $ROUTE53_TOKEN > /dev/null 2>&1
+#      if [ $? -eq 0 ]; then
+#        ROUTE53_STAT="zone managed by route53"
+#      fi
+#    fi
+#
+#    messagePrint "Cleaning up Leftover AWS Objects" "Environment: $ENV_NAME Location: $AWS_LOCATION"
+#
+#    cleanRoute53
+#    cleanAWSenv
+#  fi
+#
+#  if [ "${cloud}" == "GCP" -o "${TF_DEPLOYMENT}" == "gcp" ]; then
+#    ENV_NAME=$(egrep "^env_name" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+#    GCP_REGION=$(egrep "^region" $TFDIR/$TERRAFORM_VARS | awk '{ print $NF }' | sed 's/"//g')
+#
+#    messagePrint "1Cleaning up Leftover GCP Objects" "Environment: $ENV_NAME Location: $GCP_REGION"
+#    cleanGCPenv
+#  fi
+#}
 
 checkPKStools() {
   # --- CHECK FOR OPENSSL UTILITY ---
@@ -1241,12 +1241,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   ########################################## CLEAN-UP ##########################################
   ##############################################################################################
 
-  echo "-----------------------------------------------------------------------------------------------------------"
-  if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
-    environmentCleanUp $TF_HOME/terraforming-pks
-  else
-    environmentCleanUp $TF_HOME/terraforming-pas
-  fi
+#  echo "-----------------------------------------------------------------------------------------------------------"
+#  if [ "$TF_PKS_VARFILE" != "" -a -f "$TF_PKS_VARFILE" ]; then
+#    environmentCleanUp $TF_HOME/terraforming-pks
+#  else
+#    environmentCleanUp $TF_HOME/terraforming-pas
+#  fi
 
   exit 0
 fi

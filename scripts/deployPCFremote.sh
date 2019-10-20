@@ -90,10 +90,27 @@ verifyCertificate "$PCF_DEPLOYMENT_CLOUD" PKS "$PCF_TLS_CERTIFICATE" "$PCF_TLS_F
                   "$PCF_TLS_PRIVATE_KEY" "$PCF_TLS_CHAIN" "$PCF_TLS_ROOT_CA"
 
 ##############################################################################################
+########################################## CLEAN-UP ##########################################
+##############################################################################################
+
+ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then 
+  messagePrint "Cleaning up Leftover AWS Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $AWS_LOCATION"
+  cleanAWSenv
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
+  messagePrint "Cleaning up Leftover GCP Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $GCP_REGION"
+  cleanGCPenv
+fi
+
+exit 1
+
+##############################################################################################
 ######################################### PREPERATION ########################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP1" ]; then 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then 
   # --- CLEANUP OLD SERVICE ACCOUNTS ---
   for n in $(gcloud iam service-accounts list --format="json" | jq -r '.[].email' | \
              egrep "^${PCF_DEPLOYMENT_ENV_NAME}@"); do
