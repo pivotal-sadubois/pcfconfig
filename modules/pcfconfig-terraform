@@ -3474,7 +3474,7 @@ echo "DNSLB:$DNSLB gaga"
           echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
           echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
           echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
-          echo "    \"Type\": \"NS\","                               >> $TMPROUTE53
+          echo "    \"Type\": \"A\","                                >> $TMPROUTE53
           echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
           echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
           echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
