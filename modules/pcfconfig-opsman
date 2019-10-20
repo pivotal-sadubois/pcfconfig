@@ -3457,7 +3457,7 @@ echo "/hostedzone/Z18AX60YL8ZV3E"
 
       ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
               --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
-              jq -r '.[]') 
+              jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' ) 
 
 echo "ALIAS:$ALIAS"
 echo "DNSLB:$DNSLB"
