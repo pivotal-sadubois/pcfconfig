@@ -188,6 +188,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     fi
   else
     NEW_DEPLOY=1
+
+    ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+    messagePrint "Cleaning up Leftover GCP Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $GCP_REGION"
+    cleanGCPenv
   fi
 
   if [ $NEW_DEPLOY -eq 1 ]; then
