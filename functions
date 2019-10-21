@@ -1188,12 +1188,13 @@ echo gaga14
 cleanAWSlb() {
   # --- DELETE PKS LOAD-BALANCERS ---
   for n in elb-api-lb k8s-master-cl1 k8s-master-cl2 k8s-master-cl3; do
-    aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-names k8s-master-cl2 >/dev/null 2>&1
+    aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-names $n >/dev/null 2>&1
     if [ $? -eq 0 ]; then
-      for tag in $(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name k8s-master-cl1 2>/dev/null | \
+      for tag in $(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $n 2>/dev/null | \
         jq -r '.TagDescriptions[].Tags[].Value'); do
 
         if [ "${tag}" == "${ENV_NAME}" ]; then 
+          messagePrint " - Cleaning up elp Load-Balancers:" "$n"
           aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $n >/dev/null 2>&1
           if [ $? -ne 0 ]; then
             echo "ERROR: failled to delete load-balancer: $n"
