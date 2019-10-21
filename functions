@@ -1935,8 +1935,8 @@ cleanGCPenv() {
   for n in $(gcloud dns managed-zones list 2>/dev/null | \
         egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
 
-    gcloud dns record-sets import -z $n --delete-all-existing /dev/null
-    #for zone in $(gcloud dns record-sets list --zone=$n | grep -v "NAME" | \
+    gcloud dns record-sets import -z $n --delete-all-existing >/dev/null 2>&1
+    #for zone in $(gcloud dns record-sets list --zone=$n 2>/dev/null | grep -v "NAME" | \
     #              awk '{ print $1 }'); do
 #
 #      messagePrint " - Deleting DNS Zone Records of zone $n:" "$zone"
