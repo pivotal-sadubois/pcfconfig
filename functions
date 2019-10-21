@@ -2168,16 +2168,15 @@ cleanGCPenv() {
     gcloud dns managed-zones delete $zone >/dev/null 2>&1
   done
 
-#gaga111
   # --- DELETE NAT ROUTER ---
   for n in $(gcloud compute routers list --filter="region:($GCP_REGION)" 2>/dev/null | \
     egrep "^$ENV_NAME" | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up GCP NAT Router:" "$n"
-    gcloud compute routers nat delete $n --region=$GCP_REGION -q 2>/dev/null
+    gcloud compute routers delete $n --region=$GCP_REGION -q 2>/dev/null
     if [ $? -ne 0 ]; then
       echo "ERROR: Deleting Nat Router $n failed"
-      echo "       => gcloud compute routers nat delete $n --region=$GCP_REGION -q"
+      echo "       => gcloud compute routers delete $n --region=$GCP_REGION -q"
       exit 1
     fi
   done
