@@ -112,9 +112,24 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 echo "Press key"; read x
 echo "stop here"; exit 1
 
+  cd $TF_PATH
+  messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
+  terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
+  tail -20 /tmp/$$_log
+  messageTitle "-----------------------------------------------------------------------------------------------------------"
+
+  if [ $ret -ne 0 ]; then
+    echo "ERROR: Teraform destroy failed"
+  fi
+
+  if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then
+    rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+  fi
+
+  cleanAWS
 fi
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" != "Azure" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   cd $TF_PATH
   messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
   terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?
@@ -128,6 +143,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" != "Azure" ]; then
   if [ -d ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT} ]; then 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
+
+  cleanGCP
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
