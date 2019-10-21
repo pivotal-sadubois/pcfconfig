@@ -103,6 +103,17 @@ fi
 ##################################### TERRAFORM DESTROY ######################################
 ##############################################################################################
 
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  AWS_LOCATION=A$WS_REGION
+  ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+
+  cleanAWSlb
+
+echo "Press key"; read x
+echo "stop here"; exit 1
+
+fi
+
 if [ "${PCF_DEPLOYMENT_CLOUD}" != "Azure" ]; then
   cd $TF_PATH
   messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
