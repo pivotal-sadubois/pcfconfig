@@ -18,6 +18,9 @@ listDeployments() {
   echo "-----------------------------------------------------------------------------------------------------------"
 
   for deployment in $(ls -1 ${PCFPATH}/deployments/*.cfg); do
+    PCF_TILE_PKS_VERSION=""
+    PCF_TILE_PAS_VERSION=""
+
     . $deployment
 
     dep=$(basename $deployment) 
@@ -37,9 +40,8 @@ listDeployments() {
 
 usage() {
   echo "USAGE: $0 [oprions] <deployment.cfg>"
-  echo "                   --clean/-c   # Clean previous installation and stop"
+  echo "                   --clean/-c   # Clean previous installation and stop the jump server"
   echo "                   --debug/-d   # Enable debugging"
-  echo "                                # the jump server"
 }
 
 LIST_DEPLOYMENTS=0
