@@ -173,7 +173,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 
   if [ -f ${TF_STATE} ]; then
     GCP_OPSMAN_INSTANCE_ID=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" | \
-                           egrep "^gcppas-ops-manager" | awk '{ print $NF }') 
+                           egrep "^${PCF_DEPLOYMENT_ENV_NAME}-ops-manager" | awk '{ print $NF }') 
     if [ "${GCP_OPSMAN_INSTANCE_ID}" == "" ]; then 
       NEW_DEPLOY=1
       echo "Verify recent Deployment"
