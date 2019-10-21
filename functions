@@ -1193,7 +1193,7 @@ preCleanGCP() {
   GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
 
   rm -f /tmp/$$_tmp; touch /tmp/$$_tmp
-  DNS_ZONE=gcppks-zone
+  DNS_ZONE=${PCF_DEPLOYMENT_ENV_NAME}-zone
   gcloud dns record-sets import --delete-all-existing -z $DNS_ZONE /tmp/$$_tmp >/dev/null 2>&1
   gcloud dns managed-zones delete $DNS_ZONE >/dev/null 2>&1
 } 
