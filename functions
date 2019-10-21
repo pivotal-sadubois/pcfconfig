@@ -1899,7 +1899,7 @@ cleanAWSenv() {
 }
 
 cleanGCPenv() {
-  list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+  list=$(gcloud compute zones list | grep "${GCP_REGION}" 2>/dev/null | awk '{ print $1 }')
   GCP_AZ1=$(echo $list | awk '{ print $1 }')
   GCP_AZ2=$(echo $list | awk '{ print $2 }')
   GCP_AZ3=$(echo $list | awk '{ print $3 }')
@@ -2166,6 +2166,20 @@ cleanGCPenv() {
     rm -f /tmp/$$_tmp; touch /tmp/$$_tmp
     gcloud dns record-sets import --delete-all-existing -z $zone /tmp/$$_tmp >/dev/null 2>&1
     gcloud dns managed-zones delete $zone >/dev/null 2>&1
+  done
+
+#gaga111
+  # --- DELETE NAT ROUTER ---
+  for n in $(gcloud compute routers list --filter="region:($GCP_REGION)" 2>/dev/null | \
+    egrep "^$ENV_NAME" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up GCP NAT Router:" "$n"
+    gcloud compute routers nat delete $n --region=$GCP_REGION -q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Deleting Nat Router $n failed"
+      echo "       => gcloud compute routers nat delete $n --region=$GCP_REGION -q"
+      exit 1
+    fi
   done
 
   for n in $(gcloud compute networks subnets list --filter="region:($GCP_REGION)" 2>/dev/null | \
