@@ -107,7 +107,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   AWS_LOCATION=A$WS_REGION
   ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
 
-  cleanAWSlb
+  preCleanAWS
 
   cd $TF_PATH
   messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
@@ -127,6 +127,11 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  AWS_LOCATION=A$WS_REGION
+  ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
+
+  preCleanGCP
+
   cd $TF_PATH
   messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
   terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?

@@ -1185,7 +1185,20 @@ echo gaga14
   fi
 }
 
-cleanAWSlb() {
+preCleanGCP() {
+  list=$(gcloud compute zones list | grep "${GCP_REGION}" 2>/dev/null | awk '{ print $1 }')
+  GCP_AZ1=$(echo $list | awk '{ print $1 }')
+  GCP_AZ2=$(echo $list | awk '{ print $2 }')
+  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+  GCP_AVAILABILITY_ZONES="$GCP_AZ1,$GCP_AZ2,$GCP_AZ3"
+
+  rm -f /tmp/$$_tmp; touch /tmp/$$_tmp
+  DNS_ZONE=gcppks-zone
+  gcloud dns record-sets import --delete-all-existing -z $DNS_ZONE /tmp/$$_tmp >/dev/null 2>&1
+  gcloud dns managed-zones delete $DNS_ZONE >/dev/null 2>&1
+} 
+
+preCleanAWS() {
   # --- DELETE PKS LOAD-BALANCERS ---
   for n in elb-api-lb k8s-master-cl1 k8s-master-cl2 k8s-master-cl3; do
     aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-names $n >/dev/null 2>&1
