@@ -1,5 +1,8 @@
 product-name: pivotal-container-service
 product-properties:
+  .properties.oidc_selector:
+    selected_option: disabled
+    value: disabled
   .properties.cloud_provider:
     selected_option: gcp
     value: GCP
@@ -89,6 +92,9 @@ product-properties:
   .properties.telemetry_selector:
     selected_option: disabled
     value: disabled
+  .properties.telemetry_installation_purpose_selector:
+    selected_option: demo_or_poc
+    value: demo_or_poc
 
 # PKS API Service
   .pivotal-container-service.pks_tls:
