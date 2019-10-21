@@ -2135,9 +2135,8 @@ EOF
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
-#APIAPIAPI
-      #echo "pks_api_lb: ${DNS_PREFIX}-pks-lb" >> $VARFILE
-      echo "pks_api_lb: pks-api" >> $VARFILE
+      echo "pks_api_lb: ${DNS_PREFIX}-pks-lb" >> $VARFILE
+      #echo "pks_api_lb: pks-api" >> $VARFILE
       #echo "pks_api_hostname: api.pks.az.pcfsdu.com/#@pivotalio.onmicrosoft.com/res" >> $VARFILE
       echo "pks_api_hostname:  api.pks.${DNS_PREFIX}.${DNS_SUFFIX}" >> $VARFILE
       echo "location: $AZURE_REGION" >> $VARFILE
