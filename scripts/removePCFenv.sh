@@ -109,9 +109,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 
   cleanAWSlb
 
-echo "Press key"; read x
-echo "stop here"; exit 1
-
   cd $TF_PATH
   messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
   terraform destroy -auto-approve >> /tmp/$$_log 2>&1; ret=$?

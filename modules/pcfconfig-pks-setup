@@ -2709,8 +2709,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
       echo "echo '# Connecting to ${API_HOST_NAME}'"                                                          >  $TMP_SCRIPT
-      #echo "uaac target ${API_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
-      echo "uaac target ${API_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
+      echo "uaac target ${API_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
+      #echo "uaac target ${API_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
       echo "if [ \$? -ne 0 ]; then"                                                                           >> $TMP_SCRIPT
       echo "  exit 1"                                                                                         >> $TMP_SCRIPT
       echo "fi"                                                                                               >> $TMP_SCRIPT
