@@ -995,7 +995,6 @@ a=1
       let i=i+1
     done
 
-exit
     if [ "${PCF_TILE_PAS_DEPLOY}" == "true" ]; then PCFMODE=pas; else PCFMODE=pks; fi
     $SSH_COMMAND -n "[ -d $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE ] && \
           cd $SSH_HOME/workspace/cf-terraform-aws/terraforming-$PCFMODE; terraform destroy -auto-approve" > /dev/null 2>&1
@@ -2230,7 +2229,7 @@ cleanGCPenv() {
   # --- DELETE FIREWALL RULES ---
   # --filter="region:($GCP_REGION)" DOES-NOT-WORK
   for n in $(gcloud compute firewall-rules list 2>/dev/null | \
-      egrep "^${ENV_NAME}-" 2>/dev/null | awk '{ print $1 }'); do
+      egrep "^${ENV_NAME}-| ${ENV_NAME}-pcf-network" 2>/dev/null | awk '{ print $1 }'); do
 
     messagePrint " - Cleaning up GCP firewall-tules:" "$n"
     gcloud compute firewall-rules delete $n -q 2>/dev/null
