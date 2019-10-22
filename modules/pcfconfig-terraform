@@ -3344,6 +3344,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
+echo "SSH_COMMAND:$SSH_COMMAND"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
