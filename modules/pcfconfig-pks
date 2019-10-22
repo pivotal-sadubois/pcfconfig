@@ -2842,6 +2842,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       done
     fi
 
+#gaga-lb-create
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
@@ -3157,17 +3158,28 @@ EOF
     fi
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
+#gaga-lb-gcp
 
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
         ##############################################################################################
 
-        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
-        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
-        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
-        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
-        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
-        echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                     >  $TMP_LBSCRIPT
+        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                  >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "bosh -e $DNS_PREFIX -d service-instance_$uid --column='Instance' --column='VM CID' vms | \\"  >> $TMP_LBSCRIPT
+        echo "egrep \"^master/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"              >> $TMP_LBSCRIPT
+
+        #echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+        #echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+        #echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        #echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+        #echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        #echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
 
         scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
         if [ ${ret} -ne 0 ]; then
@@ -3187,8 +3199,21 @@ EOF
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
 
+        ##############################################################################################
+        ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
+        ##############################################################################################
+echo "MST:$mst"
+
+        gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        if [ ${ret} -gt 0 ]; then
+          for n in $mst; do
+            gcloud compute target-pools add-instances gcppks-cl1 --instances=$n
+          done
+        fi
+      done
     fi
 
+#gaga-lb-aws
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
@@ -3265,7 +3290,6 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   checkEnvironment 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-echo "debug7: USER:$USER PASS:$PASS"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
@@ -3344,7 +3368,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
-echo "SSH_COMMAND:$SSH_COMMAND"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
@@ -3352,31 +3375,22 @@ echo "SSH_COMMAND:$SSH_COMMAND"
   echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
   echo ""
 
-echo "XXXX1"
   i=1
   while [ $i -lt 10 ]; do
     pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
     if [ $? -eq 0 ]; then break; fi
     let i=i+1; sleep 10
   done
-echo "XXXX2"
 
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "XXXX31 CLUSTER:$cluster"
     pks get-credentials $cluster > /dev/null 2>&1
-echo "XXXX32 CLUSTER:$cluster"
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-echo "XXXX33 CLUSTER:$cluster"
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
-echo "XXXX34 CLUSTER:$cluster USERID:$userid token:$token"
     kubectl config use-context $cluster > /dev/null 2>&1
-echo "XXXX35 CLUSTER:$cluster"
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
-echo "XXXX36 CLUSTER:$cluster"
 
     cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo "XXXX37 CLUSTER:$cluster CNT:$cnt"
 
     if [ $cnt -eq 0 ]; then
       HELM=$(which helm)
