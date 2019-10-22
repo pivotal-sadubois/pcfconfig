@@ -1076,7 +1076,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   #checkPKStools
   #checkCloudCLI
 
-#gagadu
 #  if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
 #    if [ "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}/" = "aws" ]; then
 #    AWS_INSTANCE_ID=$(cat terraform.tfstate | jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' | grep -v null) 
@@ -1369,7 +1368,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
     fi
 
-#gagaduseli
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
@@ -1641,7 +1639,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
-#gaga12
     PIVNET_SLUG=pivotal-container-service
     PIVNET_SLUG_NAME="Pivotal Container Service"
     if [ "${PCF_TILE_PKS_VERSION}" == "" ]; then
@@ -1679,7 +1676,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
 
-#gaga12
     PIVNET_GLOB=$(getProductSlug $PAS_VERSION "$PIVNET_SLUG_NAME" elastic-runtime)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
@@ -1718,7 +1714,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
-#gaga
       messagePrint " - Verify download and caching options" "ops-manager"
       echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                                  >  $TMP_SCRIPT
       echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                       >> $TMP_SCRIPT
@@ -1815,7 +1810,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "skip_cert_verify: false" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     else
-#gagapas
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       API_HOST_NAME=api.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
@@ -2092,7 +2086,6 @@ EOF
       echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
       echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
     else
-#gagapks
       API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
@@ -3006,7 +2999,7 @@ EOF
     #################################### CREATE PKS CLUSTERS #####################################
     ##############################################################################################
 
-
+echo "sacha1"
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -3080,6 +3073,7 @@ EOF
       fi
     fi
 
+echo "sacha2"
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
     ##############################################################################################
@@ -3157,8 +3151,11 @@ EOF
       done
     fi
 
+echo "sacha3"
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+echo "sacha4"
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo "sacha5"
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 #gaga-lb-gcp
 
@@ -3202,18 +3199,18 @@ EOF
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
-echo "MST:$mst"
+echo "SACHA  MST:$mst"
 
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
-          for n in $mst; do
-            gcloud compute target-pools add-instances gcppks-cl1 --instances=$n
+          for ins in $mst; do
+            gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
           done
         fi
       done
     fi
+echo "sacha6"
 
-#gaga-lb-aws
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')

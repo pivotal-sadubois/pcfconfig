@@ -1076,7 +1076,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   #checkPKStools
   #checkCloudCLI
 
-#gagadu
 #  if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
 #    if [ "$TF_WORKDIR/${TF_PREFIX}-${TF_DEPLOYMENT}/" = "aws" ]; then
 #    AWS_INSTANCE_ID=$(cat terraform.tfstate | jq -r '.modules[].resources."aws_eip.ops_manager_attached".primary.attributes.instance' | grep -v null) 
@@ -1369,7 +1368,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-opsman" ]; then
       echo "pas_subnet_range: ${rng_pas}"               >> $VARFILE
     fi
 
-#gagaduseli
 
     echo "infrastructure_subnet_range: ${rng_inf}"      >> $VARFILE
     echo "services_subnet_range: ${rng_svc}"            >> $VARFILE
@@ -1641,7 +1639,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
   fi
 
   if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" ]; then
-#gaga12
     PIVNET_SLUG=pivotal-container-service
     PIVNET_SLUG_NAME="Pivotal Container Service"
     if [ "${PCF_TILE_PKS_VERSION}" == "" ]; then
@@ -1679,7 +1676,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       PIVNET_SLUG_NAME="Pivotal Application Service"
     fi
 
-#gaga12
     PIVNET_GLOB=$(getProductSlug $PAS_VERSION "$PIVNET_SLUG_NAME" elastic-runtime)
     if [ "${PIVNET_GLOB}" == "" ]; then PIVNET_GLOB="no product file found"; fi
 
@@ -1718,7 +1714,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       if [ "${ver}" != "" ]; then PXS_UPLOAD="${ver}"; else PXS_UPLOAD="not uploaded"; fi
       messagePrint " - Product Uplodad Status" "$PXS_UPLOAD"
     else
-#gaga
       messagePrint " - Verify download and caching options" "ops-manager"
       echo "if [ -f /tmp/$PIVNET_GLOB ]; then"                                                                  >  $TMP_SCRIPT
       echo "  zipinfo /tmp/$PIVNET_GLOB > /dev/null 2>&1"                                                       >> $TMP_SCRIPT
@@ -1815,7 +1810,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks" -o "${PCFCONFIG_BASE}" == "pcfconfig
       echo "skip_cert_verify: false" >> $VARFILE
       echo "skip_cert_verify: true" >> $VARFILE
     else
-#gagapas
       TLS_HOST_NAME=*.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       API_HOST_NAME=api.pas.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
@@ -2092,7 +2086,6 @@ EOF
       echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
       echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
     else
-#gagapks
       API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
@@ -2842,6 +2835,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       done
     fi
 
+#gaga-lb-create
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
@@ -3005,7 +2999,7 @@ EOF
     #################################### CREATE PKS CLUSTERS #####################################
     ##############################################################################################
 
-
+echo "sacha1"
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -3079,6 +3073,7 @@ EOF
       fi
     fi
 
+echo "sacha2"
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
     ##############################################################################################
@@ -3156,18 +3151,32 @@ EOF
       done
     fi
 
+echo "sacha3"
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+echo "sacha4"
+      for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+echo "sacha5"
+        uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
+#gaga-lb-gcp
 
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
         ##############################################################################################
 
-        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
-        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
-        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
-        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
-        echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
-        echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
+        echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                     >  $TMP_LBSCRIPT
+        echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                  >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                >> $TMP_LBSCRIPT
+        echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+        echo "bosh -e $DNS_PREFIX -d service-instance_$uid --column='Instance' --column='VM CID' vms | \\"  >> $TMP_LBSCRIPT
+        echo "egrep \"^master/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"              >> $TMP_LBSCRIPT
+
+        #echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+        #echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                       >> $TMP_LBSCRIPT
+        #echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        #echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+        #echo "[ \$? -ne 0 ] && exit 1"                                                                           >> $TMP_LBSCRIPT
+        #echo "bosh -e $DNS_PREFIX -d service-instance_$uid vms | egrep \"^master/\" | awk '{ print \$(NF-2) }'"  >> $TMP_LBSCRIPT
 
         scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
         if [ ${ret} -ne 0 ]; then
@@ -3187,7 +3196,20 @@ EOF
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
 
+        ##############################################################################################
+        ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
+        ##############################################################################################
+echo "SACHA  MST:$mst"
+
+        gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        if [ ${ret} -gt 0 ]; then
+          for ins in $mst; do
+            gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
+          done
+        fi
+      done
     fi
+echo "sacha6"
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
@@ -3265,7 +3287,6 @@ fi
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
   checkEnvironment 
   OPS_MANAGER_URL=https://${OPS_MANAGER_DNS}/setup
-echo "debug7: USER:$USER PASS:$PASS"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
 
   # GET CREDENTIALS
@@ -3344,7 +3365,6 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
 
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
-echo "SSH_COMMAND:$SSH_COMMAND"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
@@ -3352,31 +3372,22 @@ echo "SSH_COMMAND:$SSH_COMMAND"
   echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
   echo ""
 
-echo "XXXX1"
   i=1
   while [ $i -lt 10 ]; do
     pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
     if [ $? -eq 0 ]; then break; fi
     let i=i+1; sleep 10
   done
-echo "XXXX2"
 
   for cluster in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "XXXX31 CLUSTER:$cluster"
     pks get-credentials $cluster > /dev/null 2>&1
-echo "XXXX32 CLUSTER:$cluster"
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-echo "XXXX33 CLUSTER:$cluster"
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | grep "token:" | awk '{ print $2 }')
 
-echo "XXXX34 CLUSTER:$cluster USERID:$userid token:$token"
     kubectl config use-context $cluster > /dev/null 2>&1
-echo "XXXX35 CLUSTER:$cluster"
     kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default > /dev/null 2>&1
-echo "XXXX36 CLUSTER:$cluster"
 
     cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo "XXXX37 CLUSTER:$cluster CNT:$cnt"
 
     if [ $cnt -eq 0 ]; then
       HELM=$(which helm)
