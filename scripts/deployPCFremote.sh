@@ -37,6 +37,7 @@ else
   DEBUG=0
 fi
  
+NEW_DEPLOY=0
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
@@ -169,7 +170,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   fi
 
   TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
-  NEW_DEPLOY=0
 
   if [ -f ${TF_STATE} ]; then
     GCP_OPSMAN_INSTANCE_ID=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" | \
@@ -273,6 +273,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
                   jq -r '.displayStatus')
 
         if [ "$VM_STAT" != "VM running" ]; then 
+          NEW_DEPLOY=1
           messagePrint " - Last deployment does not exist anymore" "cleaning up"
           messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
           rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
@@ -281,11 +282,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
           az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
         fi
       else
+        NEW_DEPLOY=1
         messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
         az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
       fi
     fi
   else
+    NEW_DEPLOY=1
     echo "Verify recent Deployment"
     messagePrint " - Last deployment does not exist anymore" "cleaning up"
     messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
@@ -307,6 +310,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
           jq -r ".Reservations[].Instances[].State.Name")
       if [ "${stt}" == "terminated" ]; then
+        NEW_DEPLOY=1
         messagePrint "- Last deployment does not exist anymore" "cleaning up"
         messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
@@ -315,6 +319,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
         messagePrint "Found current OpsManager" "$ins"
       fi
     else
+      NEW_DEPLOY=1
       echo "Verify recent Deployment"
       messagePrint "- Last deployment does not exist anymore" "cleaning up"
       messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
@@ -333,45 +338,46 @@ fi
 ################################ GENERATE TERRAFORM VARFILE ##################################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-  list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
-  GCP_AZ1=$(echo $list | awk '{ print $1 }')
-  GCP_AZ2=$(echo $list | awk '{ print $2 }')
-  GCP_AZ3=$(echo $list | awk '{ print $3 }')
+if [ $NEW_DEPLOY -eq 1 ]; then
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
+    GCP_AZ1=$(echo $list | awk '{ print $1 }')
+    GCP_AZ2=$(echo $list | awk '{ print $2 }')
+    GCP_AZ3=$(echo $list | awk '{ print $3 }')
 
-  OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
+    OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
-  echo "env_name           = \"${PCF_DEPLOYMENT_ENV_NAME}\""                   >> $TF_VARFILE
-  echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
-  echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
-  echo "opsman_image_url   = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
-  echo "dns_suffix         = \"${AWS_HOSTED_DNS_DOMAIN}\""                     >> $TF_VARFILE
-  echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+    echo "env_name           = \"${PCF_DEPLOYMENT_ENV_NAME}\""                   >> $TF_VARFILE
+    echo "region             = \"${GCP_REGION}\""                                >> $TF_VARFILE
+    echo "zones              = [\"${GCP_AZ1}\", \"${GCP_AZ2}\", \"${GCP_AZ3}\"]" >> $TF_VARFILE
+    echo "opsman_image_url   = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
+    echo "dns_suffix         = \"${AWS_HOSTED_DNS_DOMAIN}\""                     >> $TF_VARFILE
+    echo "project            = \"${GCP_PROJECT}\""                               >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
 
-  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
-    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
-  fi
+    if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+      cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
+    fi
 
-  echo "SSL_CERT"                                                              >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+    echo "SSL_CERT"                                                              >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
 
-  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
-    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
-  fi
+    if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+      cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
+    fi
 
-  echo "SSL_KEY"                                                               >> $TF_VARFILE
+    echo "SSL_KEY"                                                               >> $TF_VARFILE
 
-  GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-  if [ -f $GCP_SERVICE_ACCOUNT ]; then
-    echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
-    cat $GCP_SERVICE_ACCOUNT >> $TF_VARFILE
-    echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
-  else
-    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
-  fi
+    GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
+    if [ -f $GCP_SERVICE_ACCOUNT ]; then
+      echo "service_account_key = <<SERVICE_ACCOUNT_KEY"     >> $TF_VARFILE
+      cat $GCP_SERVICE_ACCOUNT >> $TF_VARFILE
+      echo "SERVICE_ACCOUNT_KEY"                             >> $TF_VARFILE
+    else
+      echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
+    fi
 
 #  if [ -f $GCP_SERVICE_ACCOUNT ]; then
 #    PRJ=$(cat $GCP_SERVICE_ACCOUNT | jq -r '.project_id')
@@ -387,72 +393,73 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 #  else
 #    echo "ERROR: Service Account File ($GCP_SERVICE_ACCOUNT) could not be found"; exit
 #  fi
-fi
-
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  # --- GET AVAILABILITY ZONE FOR LOCATION ---
-  AWS_AZ1=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[0].ZoneName')
-  AWS_AZ2=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[1].ZoneName')
-  AWS_AZ3=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[2].ZoneName')
-
-  OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
-
-  echo "env_name           = \"${PCF_DEPLOYMENT_ENV_NAME}\""                   >> $TF_VARFILE
-  echo "access_key         = \"${AWS_ACCESS_KEY}\""                            >> $TF_VARFILE
-  echo "secret_key         = \"${AWS_SECRET_KEY}\""                            >> $TF_VARFILE
-  echo "region             = \"${AWS_REGION}\""                                >> $TF_VARFILE
-  echo "availability_zones = [\"${AWS_AZ1}\", \"${AWS_AZ2}\", \"${AWS_AZ3}\"]" >> $TF_VARFILE
-  echo "ops_manager_ami    = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
-  echo "dns_suffix         = \"${AWS_HOSTED_DNS_DOMAIN}\""                     >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
-
-  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
-    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
   fi
 
-  echo "SSL_CERT"                                                              >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+    # --- GET AVAILABILITY ZONE FOR LOCATION ---
+    AWS_AZ1=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[0].ZoneName')
+    AWS_AZ2=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[1].ZoneName')
+    AWS_AZ3=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[2].ZoneName')
 
-  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
-    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
+    OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
+
+    echo "env_name           = \"${PCF_DEPLOYMENT_ENV_NAME}\""                   >> $TF_VARFILE
+    echo "access_key         = \"${AWS_ACCESS_KEY}\""                            >> $TF_VARFILE
+    echo "secret_key         = \"${AWS_SECRET_KEY}\""                            >> $TF_VARFILE
+    echo "region             = \"${AWS_REGION}\""                                >> $TF_VARFILE
+    echo "availability_zones = [\"${AWS_AZ1}\", \"${AWS_AZ2}\", \"${AWS_AZ3}\"]" >> $TF_VARFILE
+    echo "ops_manager_ami    = \"${OPSMAN_IMAGE}\""                              >> $TF_VARFILE
+    echo "dns_suffix         = \"${AWS_HOSTED_DNS_DOMAIN}\""                     >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+
+    if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+      cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
+    fi
+
+    echo "SSL_CERT"                                                              >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+
+    if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+      cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
+    fi
+
+    echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 
-  echo "SSL_KEY"                                                               >> $TF_VARFILE
-fi
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
+    OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
-  OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
+    echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
+    echo "tenant_id             = \"${AZURE_TENANT_ID}\""                        >> $TF_VARFILE
+    echo "client_id             = \"${AZURE_CLIENT_ID}\""                        >> $TF_VARFILE
+    echo "client_secret         = \"${AZURE_CLIENT_SECRET}\""                    >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "env_name              = \"${PCF_DEPLOYMENT_ENV_NAME}\""                >> $TF_VARFILE
+    echo "env_short_name        = \"${PRODUCT_TILE}\""                           >> $TF_VARFILE
+    echo "location              = \"${AZURE_REGION}\""                           >> $TF_VARFILE
+    echo "ops_manager_image_uri = \"${OPSMAN_IMAGE}\""                           >> $TF_VARFILE
+    echo "dns_suffix            = \"${AWS_HOSTED_DNS_DOMAIN}\""                  >> $TF_VARFILE
+    echo "vm_admin_username     = \"opsman\""                                    >> $TF_VARFILE
 
-  echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
-  echo "tenant_id             = \"${AZURE_TENANT_ID}\""                        >> $TF_VARFILE
-  echo "client_id             = \"${AZURE_CLIENT_ID}\""                        >> $TF_VARFILE
-  echo "client_secret         = \"${AZURE_CLIENT_SECRET}\""                    >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "env_name              = \"${PCF_DEPLOYMENT_ENV_NAME}\""                >> $TF_VARFILE
-  echo "env_short_name        = \"${PRODUCT_TILE}\""                           >> $TF_VARFILE
-  echo "location              = \"${AZURE_REGION}\""                           >> $TF_VARFILE
-  echo "ops_manager_image_uri = \"${OPSMAN_IMAGE}\""                           >> $TF_VARFILE
-  echo "dns_suffix            = \"${AWS_HOSTED_DNS_DOMAIN}\""                  >> $TF_VARFILE
-  echo "vm_admin_username     = \"opsman\""                                    >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
 
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_cert = <<SSL_CERT"                                                 >> $TF_VARFILE
+    if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
+      cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
+    fi
 
-  if [ "$PCF_TLS_FULLCHAIN" != "" ]; then 
-    cat $PCF_TLS_FULLCHAIN >> $TF_VARFILE
+    echo "SSL_CERT"                                                              >> $TF_VARFILE
+    echo ""                                                                      >> $TF_VARFILE
+    echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
+
+    if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
+      cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
+    fi
+
+    echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
-
-  echo "SSL_CERT"                                                              >> $TF_VARFILE
-  echo ""                                                                      >> $TF_VARFILE
-  echo "ssl_private_key = <<SSL_KEY"                                           >> $TF_VARFILE
-
-  if [ "$PCF_TLS_PRIVATE_KEY" != "" ]; then 
-    cat $PCF_TLS_PRIVATE_KEY >> $TF_VARFILE
-  fi
-
-  echo "SSL_KEY"                                                               >> $TF_VARFILE
 fi
 
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
