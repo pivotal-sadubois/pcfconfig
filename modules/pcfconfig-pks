@@ -2703,13 +2703,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       messagePrint " - PKS Administration Email:" "$PKS_ADMIN_MAIL"
       messagePrint " - PKS Administration Role:" "pks.clusters.admin"
 
-      # SLEEP AS CRACE PERIOD 
-      sleep 240
+      # SLEEP AS GRACE PERIOD 
+      #sleep 240
 
+echo GAGA1
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
       echo "echo '# Connecting to ${API_HOST_NAME}'"                                                          >  $TMP_SCRIPT
-      echo "[ -f /home/ubuntu/.uaac.yml ] && sudo chmod a+w /home/ubuntu/.uaac.yml"                        >> $TMP_SCRIPT
+      echo "[ -f /home/ubuntu/.uaac.yml ] && sudo chmod a+w /home/ubuntu/.uaac.yml"                           >> $TMP_SCRIPT
       #echo "uaac target ${API_HOST_NAME}:8443 --ca-cert /var/tempest/workspaces/default/root_ca_certificate" >> $TMP_SCRIPT
       echo "uaac target ${API_HOST_NAME}:8443 --skip-ssl-validation 2>/dev/null"                              >> $TMP_SCRIPT
       echo "if [ \$? -ne 0 ]; then"                                                                           >> $TMP_SCRIPT
@@ -2724,9 +2725,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       echo "  uaac member add pks.clusters.admin ${PKS_ADMIN_USER} 2>/dev/null"                               >> $TMP_SCRIPT
       echo "fi"                                                                                               >> $TMP_SCRIPT
 
+echo GAGA2
       cp $TMP_OPSMAN ~/opsman.pem
       echo "ssh -qi ~/opsman.pem ubuntu@${OPS_MANAGER_DNS}" > ~/ssh-opsman.sh
   
+echo GAGA3
       scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_SCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/om-install.sh; ret=$?
       if [ ${ret} -ne 0 ]; then
         echo "ERROR: Copying script /tmp/om-install.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -2735,6 +2738,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         exit 1
       fi
 
+echo GAGA4
       echo "-----------------------------------------------------------------------------------------------------------"
       (ssh -o StrictHostKeyChecking=no -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "sudo /tmp/om-install.sh"; ret=$?) | sed '/^$/d'
       echo "-----------------------------------------------------------------------------------------------------------"
@@ -2745,12 +2749,14 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         exit 1
       fi
 
+echo GAGA5
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1; ret=$?
       if [ $ret -ne 0 ]; then
         echo "ERROR: Accessing API gateway $OPS_MANAGER_DNS failed"; exit 1
       fi
     fi
 
+echo GAGA6
     ##############################################################################################
     ################################ CONFIGURE PKS LOADBALANCERS #################################
     ##############################################################################################
@@ -2841,6 +2847,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         fi
       done
     fi
+echo GAGA8
 
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
@@ -2886,6 +2893,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         fi
       done
     fi
+echo GAGA9
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
@@ -2973,6 +2981,7 @@ EOF
         fi
       done
     fi
+echo GAGA10
 
     ##############################################################################################
     ######################################## DEBUG INFOS #########################################
@@ -2984,6 +2993,7 @@ EOF
     echo "bosh -e $DNS_PREFIX vms"                                                                           >> $TMP_LBSCRIPT
     echo "bosh -e $DNS_PREFIX tasks"                                                                         >> $TMP_LBSCRIPT
 
+echo GAGA11
     scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
@@ -2991,6 +3001,7 @@ EOF
       echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
       exit 1
     fi
+echo GAGA12
 
     #echo ""
     #echo "# --- DIRECTOR LOGIN FOR DEBUGGING ---"
@@ -3080,6 +3091,7 @@ EOF
     fi
 
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
+echo GAGA14
 
     ##############################################################################################
     ######################## SET VLAN TAGS AND INSTANCES OF MASTERNODES ##########################
@@ -3251,6 +3263,7 @@ EOF
         fi
       done
     fi
+echo GAGA19
 
     echo "################################ EOF ################################"
     date +%s 
