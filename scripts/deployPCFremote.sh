@@ -177,8 +177,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     if [ "${GCP_OPSMAN_INSTANCE_ID}" == "" ]; then 
       NEW_DEPLOY=1
       echo "Verify recent Deployment"
-      messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-      messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+      messagePrint "- Last deployment does not exist anymore" "cleaning up"
+      messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
@@ -273,8 +273,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
                   jq -r '.displayStatus')
 
         if [ "$VM_STAT" != "VM running" ]; then 
-          messagePrint " - 1Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-          messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+          messagePrint " - Last deployment does not exist anymore" "cleaning up"
+          messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
           rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
           messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
@@ -287,8 +287,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     fi
   else
     echo "Verify recent Deployment"
-    messagePrint " - Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-    messagePrint " - Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+    messagePrint " - Last deployment does not exist anymore" "cleaning up"
+    messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
@@ -307,8 +307,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       stt=$(aws ec2 --region=$AWS_REGION describe-instances --instance-ids $ins | \
           jq -r ".Reservations[].Instances[].State.Name")
       if [ "${stt}" == "terminated" ]; then
-        messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-        messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+        messagePrint "- Last deployment does not exist anymore" "cleaning up"
+        messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
         rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
       else
@@ -316,8 +316,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       fi
     else
       echo "Verify recent Deployment"
-      messagePrint "- Last deployment does not exist anymore" "$AWS_OPSMAN_INSTANCE_ID"
-      messagePrint "- Remove old Terraform Lock files" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+      messagePrint "- Last deployment does not exist anymore" "cleaning up"
+      messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
