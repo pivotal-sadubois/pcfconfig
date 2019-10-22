@@ -2999,7 +2999,6 @@ EOF
     #################################### CREATE PKS CLUSTERS #####################################
     ##############################################################################################
 
-echo "sacha1"
     if [ "${PKS_CLUSTER_1_NAME}" != "" -o "${PKS_CLUSTER_2_NAME}" != "" -o "${PKS_CLUSTER_3_NAME}" != "" ]; then 
       pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -3073,7 +3072,6 @@ echo "sacha1"
       fi
     fi
 
-echo "sacha2"
     TMP_LBSCRIPT=/tmp/tmp_lb_script_$$; rm -f $TMP_LBSCRIPT
 
     ##############################################################################################
@@ -3151,13 +3149,9 @@ echo "sacha2"
       done
     fi
 
-echo "sacha3"
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
-echo "sacha4"
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-echo "sacha5"
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
-#gaga-lb-gcp
 
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
@@ -3199,17 +3193,18 @@ echo "sacha5"
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
-echo "SACHA  MST:$mst"
+echo "Debug-1  MST:$mst"
 
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           for ins in $mst; do
+echo "Debug-2 gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins"
             gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
           done
         fi
       done
     fi
-echo "sacha6"
+echo "Debug-2"
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
