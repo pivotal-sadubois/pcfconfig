@@ -32,6 +32,11 @@ if [ ! -x /usr/bin/certbot ]; then
   #sudo pip3 install certbot-dns-route53
 fi
 
+if [ ! -x /usr/bin/zipinfo ]; then
+  echo "- Install ZIP"
+  apt-get install zip -y  > /dev/null 2>&1
+fi
+
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
 
@@ -84,11 +89,6 @@ fi
 if [ ! -x /usr/bin/jq ]; then 
   echo "- Install JQ"
   apt-get install jq -y  > /dev/null 2>&1
-fi
-
-if [ ! -x /usr/bin/zipinfo ]; then
-  echo "- Install ZIP"
-  apt-get install zip -y  > /dev/null 2>&1
 fi
 
 if [ ! -x /usr/bin/terraform ]; then 
