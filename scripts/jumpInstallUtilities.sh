@@ -27,7 +27,7 @@ if [ ! -x /usr/bin/certbot ]; then
   sudo apt update -y
   sudo apt install certbot -y
   sudo apt-get install python-pip -y
-  sudo pip install certbot_dns_route53 -y
+  pip install certbot_dns_route53 
   #sudo apt install python3-pip -y
   #sudo pip3 install certbot-dns-route53
 fi
