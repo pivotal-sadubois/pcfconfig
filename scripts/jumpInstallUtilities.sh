@@ -37,7 +37,7 @@ if [ ! -x /usr/bin/aws ]; then
 
   curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" 2>/dev/null
   unzip -q awscli-bundle.zip 
-  sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+  sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/bin/aws
 
   #apt-get install awscli -y > /dev/null 2>&1
   #sudo apt install python3-pip -y
