@@ -34,8 +34,15 @@ fi
 
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
+
+  curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" 2>/dev/null
+  unzip -q awscli-bundle.zip 
+  sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+
   #apt-get install awscli -y > /dev/null 2>&1
-  sudo -H pip3 install --upgrade awscli
+  #sudo apt install python3-pip -y
+  #pip3 install --upgrade awscli
+  #sudo -H pip3 install --upgrade awscli
 fi
 
 if [ ! -x /usr/bin/cf ]; then 
