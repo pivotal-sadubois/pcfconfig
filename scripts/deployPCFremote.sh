@@ -341,7 +341,6 @@ fi
 ################################ GENERATE TERRAFORM VARFILE ##################################
 ##############################################################################################
 
-echo "NEW_DEPLOY:$NEW_DEPLOY"
 if [ $NEW_DEPLOY -eq 1 ]; then
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
@@ -399,9 +398,7 @@ if [ $NEW_DEPLOY -eq 1 ]; then
 #  fi
   fi
 
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-echo gaga1
     # --- GET AVAILABILITY ZONE FOR LOCATION ---
     AWS_AZ1=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[0].ZoneName')
     AWS_AZ2=$(aws ec2 describe-availability-zones --region $AWS_REGION | jq -r '.AvailabilityZones[1].ZoneName')
@@ -432,8 +429,6 @@ echo gaga1
     fi
 
     echo "SSL_KEY"                                                               >> $TF_VARFILE
-echo "TF_VARFILE:$TF_VARFILE"
-echo gaga2
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
@@ -512,9 +507,6 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   fi
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
-
-echo xxxxxxxxxxxxxxxxxxx
-exit 1
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/terraform.log 2>&1
