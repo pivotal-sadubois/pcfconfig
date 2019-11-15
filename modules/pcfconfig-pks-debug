@@ -2696,8 +2696,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       messagePrint " - PKS Administration Email:" "$PKS_ADMIN_MAIL"
       messagePrint " - PKS Administration Role:" "pks.clusters.admin"
 
-      # SLEEP AS GRACE PERIOD 
-      #sleep 240
+      # SLEEP AS GRACE PERIOD - NEEDED !!!
+      sleep 240
 
       # --- UAAC LOGIN SCRIPT ---
       TMP_SCRIPT=/tmp/tmp_script_$$; rm -f $TMP_SCRIPT
