@@ -721,10 +721,8 @@ installJumpHost() {
   stt=$($SSH_COMMAND -n "[ -f /jump_software_installed ] && echo true")
   if [ "${stt}" == "" ]; then
     messagePrint " - Install CLI Utilities"   "aws,az,gcp,bosh,pivnet,cf,om,jq"
-    #$SSH_COMMAND -n "[ -d $SSH_HOME/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
-    #    sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PCF_PIVNET_TOKEN > /dev/null 2>&1"
     $SSH_COMMAND -n "[ -d $SSH_HOME/pcfconfig ] && chmod a+x ${PCFHOME}/scripts/jumpInstallUtilities.sh && \
-        sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PCF_PIVNET_TOKEN"
+        sudo ${PCFHOME}/scripts/jumpInstallUtilities.sh $PCF_PIVNET_TOKEN > /dev/null 2>&1"
 
     # --- COPY THE AWS DIRECTORY ---
     $SCP_COMMAND -r ~/.aws ${SSH_USER}@${SSH_HOST}:$SSH_HOME > /dev/null 2>&1
