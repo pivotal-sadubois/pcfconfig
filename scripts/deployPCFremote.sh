@@ -338,6 +338,7 @@ fi
 ################################ GENERATE TERRAFORM VARFILE ##################################
 ##############################################################################################
 
+echo "NEW_DEPLOY:$NEW_DEPLOY"
 if [ $NEW_DEPLOY -eq 1 ]; then
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
@@ -508,6 +509,9 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   fi
 
   #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
+
+echo xxxxxxxxxxxxxxxxxxx
+exit 1
 
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/terraform.log 2>&1
