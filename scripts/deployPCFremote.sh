@@ -283,7 +283,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
         fi
       else
         NEW_DEPLOY=1
-        messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
+        messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
         az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
       fi
     fi
@@ -331,6 +331,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       messagePrint "Cleaning up Leftover AWS Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $AWS_LOCATION"
       cleanAWSenv
     fi
+  else
+    NEW_DEPLOY=1
+    echo "No current deployment found"
   fi
 fi
 
