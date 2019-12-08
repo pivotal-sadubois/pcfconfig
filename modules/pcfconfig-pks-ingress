@@ -49,6 +49,8 @@ fi
 messageTitle "Install Ingress Routing on ($cluster)"
 messagePrint " - Harbor Version"                  ""
 
+echo gaga1
+cluster=cl1
 pks get-credentials $cluster > /dev/null 2>&1
 userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
 token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
