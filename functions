@@ -65,9 +65,9 @@ debugInfos() {
 echo gaga1
   if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
     for cvar in PCF_TILE_PKS_CLUSTER_CL1_PLAN PCF_TILE_PKS_CLUSTER_CL2_PLAN PCF_TILE_PKS_CLUSTER_CL3_PLAN; do
-      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL1_PLAN" ]; then cluster=cl1
-      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL2_PLAN" ]; then cluster=cl2
-      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL3_PLAN" ]; then cluster=cl3
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL1_PLAN" ] && cluster=cl1
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL2_PLAN" ] && cluster=cl2
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL3_PLAN" ] && cluster=cl3
 
       eval plan=\$$cvar
 
