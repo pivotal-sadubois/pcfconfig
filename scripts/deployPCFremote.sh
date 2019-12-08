@@ -635,10 +635,10 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ${PCFPATH}/modules/pcfconfig-pks-ingress $envFile
 
     if [ $? -ne 0 ]; then
-      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "failed"
+      setPCFconfigState $PCFCONFIG_PKS_INGRESS "failed"
       echo "ERROR: Problem with pcfconfig-pks-ingress occured"; exit 1
     else
-      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "completed"
+      setPCFconfigState $PCFCONFIG_PKS_INGRESS "completed"
     fi
   else
     messagePrint "pcfconfig-pks-ingress already done" "skipping"
