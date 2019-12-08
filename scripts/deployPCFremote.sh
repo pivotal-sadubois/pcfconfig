@@ -507,8 +507,6 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
     sed -i '/^provider "azurerm"/,/^}/{s/version = .*/version = "~> 1.33.1"/}' main.tf
   fi
 
-  #cp /Users/sadubois/workspace/terraform/ops_manager.tf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/modules/ops_manager
-
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/terraform.log 2>&1
 
@@ -636,6 +634,8 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_INGRESS)" != "completed" ]; then
     ${PCFPATH}/modules/pcfconfig-pks-ingress $envFile
   fi
+
+exit 1
 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then 
