@@ -661,6 +661,8 @@ fi
 
 exit 0
 
+# NOT-NEEDED-ANYMORE
+if [ 1 -eq 0 ]; then
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---
   cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
 
@@ -692,6 +694,7 @@ exit 0
        --pks-cluster-2-plan $PKS_CLUSTER_2_PLAN \
        --pks-cluster-3-name $PKS_CLUSTER_3_NAME \
        --pks-cluster-3-plan $PKS_CLUSTER_3_PLAN
+fi
 
 
 else
