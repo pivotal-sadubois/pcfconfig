@@ -1,6 +1,6 @@
 #!/bin/bash
 # ############################################################################################
-# File: ........: pcfconfig-pks-harbot
+# File: ........: pcfconfig-pks-harbor
 # Language .....: bash
 # Author .......: Sacha Dubois, Pivotal
 # Description ..: PCF OpsManager Configuration Utility
