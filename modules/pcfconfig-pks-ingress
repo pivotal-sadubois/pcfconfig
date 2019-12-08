@@ -46,11 +46,11 @@ fi
 ######################################################################################################
 ########################################## INSTALL INGRESS ###########################################
 ######################################################################################################
+cluster=cl1
 messageTitle "Install Ingress Routing on ($cluster)"
 messagePrint " - Harbor Version"                  ""
 
 echo gaga1
-cluster=cl1
 pks get-credentials $cluster > /dev/null 2>&1
 userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
 token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
@@ -60,7 +60,7 @@ kubectl config use-context $cluster > /dev/null 2>&1
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
 cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo "CNT:$cnt"
+echo "1 CNT:$cnt"
 if [ $cnt -eq 0 ]; then
   HELM=$(which helm)
   if [ ! -x "$HELM" ]; then
@@ -80,7 +80,7 @@ if [ $cnt -eq 0 ]; then
     --set controller.config.proxy-buffer-size=16k
     #--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K(S))
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
     echo "ERROR: failed to deploy ingress controller with helm"
     echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
