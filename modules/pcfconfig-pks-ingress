@@ -39,7 +39,7 @@ done
 
 stt=1
 if [ $stt -eq 1 ]; then
-  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS))
 
   echo "ERROR: Failed to login to pks"
   echo "       => pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} \\"

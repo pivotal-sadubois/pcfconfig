@@ -79,15 +79,15 @@ debugInfos() {
         echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
         echo "=> pks get-credentials $cluster"
         echo "=> kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
-        echo "=> kubectl proxy                                       # To start Kubernetes Dashboard"
+        echo "=> kubectl proxy                                     # To start Kubernetes Dashboard"
         echo "DASHBOARD ACCESS TOKEN (http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy)"
         echo "$token"
-        echo ""
       fi
     done
   fi
 
   echo "######################################################################################################"
+  echo ""
 }
 
 createENVfile() {
