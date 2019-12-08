@@ -1,3 +1,9 @@
+BITMASK_JMP=0x01
+BITMASK_OPS=0x02
+BITMASK_PKS=0x04
+BITMASK_PAS=0x08
+BITMASK_KB8=0x10
+
 setPCFconfigState() {
   dirname=$(dirname $1)
   if [ -d $dirname ]; then 
@@ -24,6 +30,37 @@ demo_usage() {
 
 verifyEnvVariables() {
 a=1
+}
+
+debugInfos() {
+  MASK=$1
+
+echo "MASK:$MASK"
+
+  if [ $(($MASK & $BITMASK_JMP)) -gt 0 ]; then 
+echo xxxxx
+  fi
+
+  sshEnvironment
+
+  echo ""
+  echo "##############################################################################################"
+  echo "######################################## DEBUG INFOS #########################################"
+  echo "##############################################################################################"
+  TMP_OPSMAN="$(pwd)/opsman.pem"
+  API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+
+  echo "# --- CONNECT TO JUMP-SERVER ---
+  echo "$SSH_COMMAND"
+  echo ""
+  echo "# --- OPSMANAGER ACCESS (TO BE INITIATED ON THE JUMP_HOST) ---"
+  echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+  echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
+  echo ""
+  echo "# -- PKS ACCESS CREDENTIALS ---"
+  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+  echo ""
+
 }
 
 createENVfile() {
