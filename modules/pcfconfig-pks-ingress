@@ -47,8 +47,6 @@ fi
 ########################################## INSTALL INGRESS ###########################################
 ######################################################################################################
 cluster=cl1
-messageTitle "Install Ingress Routing on ($cluster)"
-messagePrint " - Harbor Version"                  ""
 
 echo gaga1
 pks get-credentials $cluster > /dev/null 2>&1
@@ -60,8 +58,12 @@ kubectl config use-context $cluster > /dev/null 2>&1
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
 cnt=$(kubectl get namespace | egrep -c "^ingress ")
-echo "1 CNT:$cnt"
 if [ $cnt -eq 0 ]; then
+  messageTitle "Install Ingress Routing on ($cluster)"
+  messagePrint " - Namespace:"                  "ingress"
+  messagePrint " - Ingress Release:"            "stable/nginx-ingress"
+  messagePrint " - Options:"                    "controller.config.proxy-buffer-size=16k"
+
   HELM=$(which helm)
   if [ ! -x "$HELM" ]; then
     echo "ERROR: unable to find the helm utility"
@@ -75,20 +77,23 @@ if [ $cnt -eq 0 ]; then
   helm init --service-account tiller > /dev/null 2>&1
   sleep 30
   helm install stable/nginx-ingress \
-    --set rbac.create=true \
     --namespace ingress \
+    --set rbac.create=true \
+    --set name=ingress \
     --set controller.config.proxy-buffer-size=16k
     #--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-
     echo "ERROR: failed to deploy ingress controller with helm"
     echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
     echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
+    echo ""
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+
     exit 1
   fi
 fi
 
+exit 1
 echo gaga1
 DNSLB="pending"
 while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
