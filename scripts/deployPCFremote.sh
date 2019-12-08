@@ -633,9 +633,16 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_INGRESS)" != "completed" ]; then
     ${PCFPATH}/modules/pcfconfig-pks-ingress $envFile
-  fi
 
-exit 1
+    if [ $? -ne 0 ]; then
+      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "failed"
+      echo "ERROR: Problem with pcfconfig-pks-ingress occured"; exit 1
+    else
+      setPCFconfigState $PCFCONFIG_PKS_AUTH_STATE "completed"
+    fi
+  else
+    messagePrint "pcfconfig-pks-ingress already done" "skipping"
+  fi
 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then 
