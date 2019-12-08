@@ -92,10 +92,11 @@ if [ "${cnt}" == "" ]; then
 
   helm install nginx-ingress stable/nginx-ingress --set rbac.create=true --namespace ingress > /dev/null 2>&1
   if [ $? -ne 0 ]; then
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+
     echo "ERROR: failed to deploy ingress controller with helm"
     echo "       => helm install nginx-ingress stable/nginx-ingress --set rbac.create=true --namespace ingress"
     echo ""
-    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
     exit 1
   fi
@@ -141,11 +142,14 @@ echo gaga41
 
   az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
   if [ $? -eq 0 ]; then
-    az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
+    az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} \
+       -n $DNS_NAME -a $DNSLB > /dev/null 2>&1
     if [ $? -ne 0 ]; then
+      debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+
       echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
-      echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
-      echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+      echo "       => az network dns record-set a remove-record -g $DNS_PREFIX \\"
+      echo "          -n $DNS_NAME -a $DNSLB"
       exit 1
     fi
   fi
@@ -153,6 +157,8 @@ echo gaga41
   az network dns record-set a add-record -g $DNS_PREFIX -z "${DNS_PREFIX}.${DNS_SUFFIX}" \
       -n "$DNS_NAME" --ipv4-address $DNSLB > /dev/null 2>&1
   if [ $? -ne 0 ]; then
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+
     echo "ERROR: failed to create DNS record-set for $DNS_NAME"
     echo "       => az network dns record-set a add-record -g $DNS_PREFIX \\"
     echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME --ipv4-address $DNSLB"
