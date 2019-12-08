@@ -70,22 +70,18 @@ debugInfos() {
 
       eval plan=\$$cvar
 
-      echo "PLAN:$plan"
-      echo "cluster:$cluster"
+      pks get-credentials $cluster > /dev/null 2>&1
+      userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+      token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
+            grep "token:" | awk '{ print $2 }')
+
+      echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
+      echo "=> pks get-credentials $cluster"
+      echo "=> kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
+      echo "=> kubectl proxy                                               # To start Kubernetes Dashboard"
+      echo "DASHBOARD ACCESS TOKEN (http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy)"
+      echo "$token"
     done
-
-    cluster=cl1
-    pks get-credentials $cluster > /dev/null 2>&1
-    userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-    token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
-          grep "token:" | awk '{ print $2 }')
-
-    echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
-    echo "=> pks get-credentials $cluster"
-    echo "=> kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
-    echo "=> kubectl proxy                                               # To start Kubernetes Dashboard"
-    echo "DASHBOARD ACCESS TOKEN (http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy)"
-    echo "$token"
   fi
 
   echo "######################################################################################################"
