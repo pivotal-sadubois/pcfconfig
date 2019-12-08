@@ -3349,7 +3349,8 @@ fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   checkEnvironment
-  sshEnvironment
+
+if [ 1 -eq 0 ]; then
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
 
@@ -3402,8 +3403,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
       sleep 30
       helm install stable/nginx-ingress \
   	--name nginx \
-  	--set rbac.create=true \
   	--namespace ingress \
+  	--set rbac.create=true \
+        --set name=ingress \
   	--set controller.config.proxy-buffer-size=16k 
   	#--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
       if [ $? -ne 0 ]; then 
@@ -3536,6 +3538,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   done
 
   echo ""
+fi
+
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
   exit 0
 fi
