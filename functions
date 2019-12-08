@@ -58,7 +58,7 @@ debugInfos() {
 
   if [ $(($MASK & $BITMASK_PXS)) -gt 0 ]; then 
     echo "LOGIN TO PKS"
-    echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+    echo "=> pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
     echo ""
   fi
 
@@ -79,9 +79,10 @@ debugInfos() {
         echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
         echo "=> pks get-credentials $cluster"
         echo "=> kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
-        echo "=> kubectl proxy                                               # To start Kubernetes Dashboard"
+        echo "=> kubectl proxy                                       # To start Kubernetes Dashboard"
         echo "DASHBOARD ACCESS TOKEN (http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy)"
         echo "$token"
+        echo ""
       fi
     done
   fi
