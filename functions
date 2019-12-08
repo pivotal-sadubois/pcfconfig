@@ -1,7 +1,7 @@
 BITMASK_JMP=0x01
 BITMASK_OPS=0x02
 BITMASK_PXS=0x04
-BITMASK_KB8=0x08
+BITMASK_K8S=0x08
 
 setPCFconfigState() {
   dirname=$(dirname $1)
@@ -37,30 +37,53 @@ debugInfos() {
   sshEnvironment
 
   echo ""
-  echo "##############################################################################################"
-  echo "######################################## DEBUG INFOS #########################################"
-  echo "##############################################################################################"
+  echo "######################################################################################################"
+  echo "############################################ DEBUG INFOS #############################################"
+  echo "######################################################################################################"
   TMP_OPSMAN="$(pwd)/opsman.pem"
   API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
   if [ $(($MASK & $BITMASK_JMP)) -gt 0 ]; then 
-    echo "# --- CONNECT TO JUMP_HOST ---"
-    echo "$SSH_COMMAND"
+    echo "ACCESSING THE JUMP-HOST"
+    echo "=> $SSH_COMMAND"
     echo ""
   fi
 
   if [ $(($MASK & $BITMASK_OPS)) -gt 0 ]; then 
-    echo "# --- OPSMANAGER ACCESS (TO BE INITIATED ON THE JUMP_HOST) ---"
-    echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-    echo "# --- LOAD OPSMANAGER ENVIRONMENT ---"
-    echo "ubuntu@${PCF_DEPLOYMENT_ENV_NAME}-ops-manager:~$ . /tmp/debug.sh"
+    echo "ACCESSING THE OPS-MANAGER (VIA JUMP-HOST) "
+    echo "=> ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+    echo "=> . /tmp/debug.sh"
     echo ""
   fi
 
-  echo "# -- PKS ACCESS CREDENTIALS ---"
-  echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
-  echo ""
+  if [ $(($MASK & $BITMASK_PXS)) -gt 0 ]; then 
+    echo "LOGIN TO PKS"
+    echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+    echo ""
+  fi
 
+  if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
+    pks get-credentials $cluster > /dev/null 2>&1
+    userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+    token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
+          grep "token:" | awk '{ print $2 }')
+
+    cluster=cl1
+    echo "--------------------------------------------------"
+    echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
+    echo "--------------------------------------------------"
+    echo "pks get-credentials $cluster"
+    echo "kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
+    echo "kubectl create clusterrolebinding add-on-cluster-admin \\    # Get ClusterAdmin Role"
+    echo "        --clusterrole=cluster-admin \\"
+    echo "        --serviceaccount=kube-system:default"
+    echo "kubectl cluster-info                                        # Kubernetes Cluster Infos"
+    echo "kubectl proxy                                               # To start Kubernetes Dashboard"
+    echo "  => WebURL.: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+    echo "  => Token..: $token"
+  fi
+
+  echo "######################################################################################################"
 }
 
 createENVfile() {
