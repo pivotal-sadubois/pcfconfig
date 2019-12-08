@@ -33,6 +33,7 @@ while [ $i -lt 10 ]; do
   let i=i+1; sleep 10
 done
 
+echo "STT:$stt"
 if [ $stt -eq 1 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS))
 
@@ -57,6 +58,7 @@ kubectl config use-context $cluster > /dev/null 2>&1
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
 cnt=$(kubectl get namespace | egrep -c "^ingress ")
+echo "CNT:$cnt"
 if [ $cnt -eq 0 ]; then
   HELM=$(which helm)
   if [ ! -x "$HELM" ]; then
