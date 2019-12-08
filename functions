@@ -1168,7 +1168,6 @@ cleanRoute53() {
           read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
   
            if [ $type != "NS" -a $type != "SOA" ]; then
-echo gaga14
               aws route53 change-resource-record-sets \
                 --hosted-zone-id $zone \
                 --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":
@@ -2433,7 +2432,6 @@ verifyCertificate () {
     echo "                                                                          *.apps.cl3.${dom}"
     echo ""
   else
-echo gaga1
     messageTitle "TLS Encryption for domain (${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
 
     for n in $TLS_CERTIFICATE $TLS_FULLCHAIN; do
@@ -2454,7 +2452,6 @@ echo gaga1
       fi
     done
 
-echo gaga2
     # --- VERIFY THE CERTIFICATE ---
     cnm="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     cnt=$(openssl crl2pkcs7 -nocrl -certfile $TLS_FULLCHAIN | openssl pkcs7 -print_certs | egrep "^subject|^issuer" | \
@@ -2464,7 +2461,6 @@ echo gaga2
       exit 1
     fi
 
-echo gaga3
     ISSUER="*.${cnm}"; item_found=1
     while [ ${item_found} -eq 1 ]; do
       item_found=0
@@ -2479,7 +2475,6 @@ echo gaga3
       done
     done
 
-echo gaga4
     ROOT_CA=$ISSUER
     ROOT_CA_NAME=$(echo $ISSUER | sed 's/~1~/ /g') 
 
@@ -2503,7 +2498,6 @@ echo gaga4
       fi
     fi
 
-echo gaga5
     # --- VERIFY TO ROOT_CA ---
     for n in $TLS_ROOT_CA; do
       if [ ! -f $n ]; then 
@@ -2535,7 +2529,6 @@ echo gaga5
       echo "       => File: $TLS_ROOT_CA Subject=$iss"
       exit 1
     fi
-echo gaga6
 
     # --- VERIFY CERTITICATE AND FULLCHAAIN SIGNED BY ROOT_CA ---
     cat $TLS_ROOT_CA $TLS_FULLCHAIN > /tmp/ca.crt
@@ -2575,7 +2568,6 @@ echo gaga6
     messagePrint " - TLS Private Key"                  "$TLS_PRIVATE_KEY"
     messagePrint " - TLS Root CA ($ROOT_CA_NAME)"      "$TLS_ROOT_CA"
   fi
-echo gaga7
 }
 
 checkCloudAccess() {

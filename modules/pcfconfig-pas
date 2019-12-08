@@ -3349,6 +3349,9 @@ fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   checkEnvironment
+echo 11111
+  sshEnvironment
+echo 22222
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
 
