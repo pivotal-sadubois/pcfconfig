@@ -630,12 +630,14 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
   fi
 
 if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
+  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
-  if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then 
-    ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
+    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then 
+      ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
+    fi
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   fi
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 fi
 
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS 'completed' ---

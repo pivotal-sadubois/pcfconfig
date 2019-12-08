@@ -3401,7 +3401,8 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   	--name nginx \
   	--set rbac.create=true \
   	--namespace ingress \
-  	--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+  	--set controller.config.proxy-buffer-size=16k 
+  	#--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
       if [ $? -ne 0 ]; then 
         echo "ERROR: failed to deploy ingress controller with helm"
         echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
