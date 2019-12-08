@@ -47,8 +47,10 @@ if [ $stt -eq 1 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PKS))
 
   echo "ERROR: Failed to login to pks"
-  echo " 
+  echo "       => pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} \\"
+  echo "                    -a ${API_HOST_NAME} --skip-ssl-validation" 
 
+  exit
 fi
 
 
