@@ -628,8 +628,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     messagePrint "pcfconfig-pks-setup already done" "skipping"
   fi
 
-if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - INGRESS"
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_INGRESS)" != "completed" ]; then
     ${PCFPATH}/modules/pcfconfig-pks-ingress $envFile
@@ -644,6 +642,7 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     messagePrint "pcfconfig-pks-ingress already done" "skipping"
   fi
 
+if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then 
     # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
@@ -651,8 +650,6 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
     fi
   fi
-
-
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
 fi
 
