@@ -23,6 +23,8 @@ sshEnvironment
 
 # --- ENVIRONMENT VARIABLES ---
 API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+DNS_PREFIX=$PCF_DEPLOYMENT_ENV_NAME
+DNS_SUFFIX=$AWS_HOSTED_DNS_DOMAIN
 
 # --- LOGIN TO PKS ---
 i=1; stt=1
@@ -80,18 +82,18 @@ if [ $cnt -eq 0 ]; then
   sleep 30
 fi
 
-cnt=$(helm list --namespace ingress --filter nginx-ingress-cl1 -q) 
+cnt=$(helm list --namespace ingress --filter nginx-ingress -q) 
 if [ "${cnt}" == "" ]; then
   messageTitle "Install Ingress Controller (nginx-ingress)"
   messagePrint " - Namespace:"                  "ingress"
   messagePrint " - Ingress Release:"            "stable/nginx-ingress"
-  messagePrint " - Options:"                    "controller.config.proxy-buffer-size=16k"
+  messagePrint " - Service Name:"               "nginx-ingress-controller"
+  messagePrint " - Options:"                    "rbac.create=true"
 
-  helm install nginx-ingress-cl1 stable/nginx-ingress --set rbac.create=true --namespace ingress > /dev/null 2>&1
+  helm install nginx-ingress stable/nginx-ingress --set rbac.create=true --namespace ingress > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: failed to deploy ingress controller with helm"
-    echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
-    echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
+    echo "       => helm install nginx-ingress stable/nginx-ingress --set rbac.create=true --namespace ingress"
     echo ""
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
@@ -103,20 +105,21 @@ echo gaga1
 DNSLB="pending"
 while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
   sleep 10
-  DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+  DNSLB=$(kubectl get svc -n ingress | grep nginx-ingress-controller | awk '{ print $4 }')
 done
 
-echo gaga2
+echo "gaga2 DNSLB:$DNSLB"
 if [ "${DNSLB}" == "" ]; then
-  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K(S))
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
   echo "ERROR: optaining name/ip of Ingress Controller"
-  echo "       => kubectl get svc -n ingress | grep nginx-nginx-ingress-controller"
+  echo "       => kubectl get svc -n ingress | grep nginx-ingress-controller"
   exit 1
 fi
 echo gaga3
+echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 
-if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
   AWS_LB="k8s-master-$cluster"
   AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
@@ -131,7 +134,7 @@ if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
 fi
 echo gaga4
 
-if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   DNS_NAME="*.apps-${cluster}"
   echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
@@ -156,8 +159,9 @@ if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
   fi
 fi
 
+#AWS_HOSTED_ZONE_ID
 echo gaga5
-if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
+if [ "${AWS_HOSTED_ZONE_ID}" != "" -a "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 
   ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
   DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
