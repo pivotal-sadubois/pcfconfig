@@ -50,7 +50,7 @@ echo xxxxx
   TMP_OPSMAN="$(pwd)/opsman.pem"
   API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
-  echo "# --- CONNECT TO JUMP-SERVER ---
+  echo "# --- CONNECT TO JUMP-SERVER ---"
   echo "$SSH_COMMAND"
   echo ""
   echo "# --- OPSMANAGER ACCESS (TO BE INITIATED ON THE JUMP_HOST) ---"
