@@ -102,14 +102,12 @@ if [ "${cnt}" == "" ]; then
   fi
 fi
 
-echo gaga1
 DNSLB="pending"
 while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
   sleep 10
   DNSLB=$(kubectl get svc -n ingress | grep nginx-ingress-controller | awk '{ print $4 }')
 done
 
-echo "gaga2 DNSLB:$DNSLB"
 if [ "${DNSLB}" == "" ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
@@ -117,8 +115,6 @@ if [ "${DNSLB}" == "" ]; then
   echo "       => kubectl get svc -n ingress | grep nginx-ingress-controller"
   exit 1
 fi
-echo gaga3
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
@@ -133,23 +129,23 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     a=1
   fi
 fi
-echo gaga4
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-echo gaga41
   DNS_NAME="*.apps-${cluster}"
   echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
   az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
   if [ $? -eq 0 ]; then
+   ipa=$(az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME | \
+       jq -r '.arecords[].ipv4Address')
     az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} \
-       -n $DNS_NAME -a $DNSLB > /dev/null 2>&1
+       -n $DNS_NAME -a $ipa > /dev/null 2>&1
     if [ $? -ne 0 ]; then
       debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
       echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
       echo "       => az network dns record-set a remove-record -g $DNS_PREFIX \\"
-      echo "          -n $DNS_NAME -a $DNSLB"
+      echo "          -n $DNS_NAME -a $ipa"
       exit 1
     fi
   fi
@@ -166,10 +162,7 @@ echo gaga41
   fi
 fi
 
-#AWS_HOSTED_ZONE_ID
-echo gaga5
 if [ "${AWS_HOSTED_ZONE_ID}" != "" -a "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-echo gaga51
 
   ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
   DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
@@ -182,7 +175,6 @@ echo gaga51
           --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
           jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
-echo "gaga ALIAS:$ALIAS DNSLB:$DNSLB"
   if [ "${ALIAS}" != "$DNSLB" ]; then
     if [ "${ZONE_ID}" != "" ]; then
       echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
@@ -220,10 +212,7 @@ echo "gaga ALIAS:$ALIAS DNSLB:$DNSLB"
   fi
 fi
 
-echo gaga10
-
-
-exit 1
+exit 0
 
 
 
