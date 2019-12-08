@@ -57,7 +57,12 @@ token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
 kubectl config use-context $cluster > /dev/null 2>&1
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
-cnt=$(kubectl get namespace | egrep -c "^ingress ")
+
+# --- VERIFY NAMESPACE ---
+kubectl get namespace ingress > /dev/null 2>&1
+if [ $? -eq 0 ]; then kubectl create namespace ingress > /dev/null 2>&1; fi
+
+cbt=$(helm search repo stable/nginx-ingress | egrep -c "stable/nginx-ingress")
 if [ $cnt -eq 0 ]; then
   messageTitle "Install and configure Helm Charts"
   messagePrint " - Helm Version:"         "$(helm version --short)"
@@ -75,30 +80,24 @@ if [ $cnt -eq 0 ]; then
   kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
   helm init --service-account tiller > /dev/null 2>&1
   sleep 30
+fi
 
-  messageTitle "Install Ingress Routing on ($cluster)"
+cnt=$(helm list --namespace ingress --filter nginx-ingress-cl1 -q) 
+if [ "${cnt}" == "" ]; then
+  messageTitle "Install Ingress Controller (nginx-ingress)"
   messagePrint " - Namespace:"                  "ingress"
   messagePrint " - Ingress Release:"            "stable/nginx-ingress"
   messagePrint " - Options:"                    "controller.config.proxy-buffer-size=16k"
 
-  # --- VERIFY NAMESPACE ---
-  kubectl get namespace ingress > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    kubectl create namespace ingress > /dev/null 2>&1
-  fi
+  helm install nginx-ingress-cl1 stable/nginx-ingress --set rbac.create=true --namespace ingress
+  if [ $? -ne 0 ]; then
+    echo "ERROR: failed to deploy ingress controller with helm"
+    echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
+    echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
+    echo ""
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 
-  cnt=$(helm list --namespace ingress --filter nginx-ingress-cl1 -q) 
-  if [ "${cnt}" == "" ]; then
-    helm install nginx-ingress-cl1 stable/nginx-ingress --set rbac.create=true --namespace ingress
-    if [ $? -ne 0 ]; then
-      echo "ERROR: failed to deploy ingress controller with helm"
-      echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
-      echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
-      echo ""
-      debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-  
-      exit 1
-    fi
+    exit 1
   fi
 fi
 
