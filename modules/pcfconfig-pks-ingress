@@ -19,10 +19,6 @@ export PCFPATH=$HOME/pcfconfig
 . ${PCFPATH}/functions
 . $envFile
 
-echo "envFile:$envFile"
-messageTitle "Install Ingress Routing"
-messagePrint " - Harbor Version"                  ""
-
 sshEnvironment
 
 # --- ENVIRONMENT VARIABLES ---
@@ -37,16 +33,167 @@ while [ $i -lt 10 ]; do
   let i=i+1; sleep 10
 done
 
-stt=1
 if [ $stt -eq 1 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS))
 
   echo "ERROR: Failed to login to pks"
   echo "       => pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} \\"
   echo "                    -a ${API_HOST_NAME} --skip-ssl-validation" 
-
   exit
 fi
+
+######################################################################################################
+########################################## INSTALL INGRESS ###########################################
+######################################################################################################
+messageTitle "Install Ingress Routing on ($cluster)"
+messagePrint " - Harbor Version"                  ""
+
+pks get-credentials $cluster > /dev/null 2>&1
+userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
+      awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+
+kubectl config use-context $cluster > /dev/null 2>&1
+kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
+        --serviceaccount=kube-system:default > /dev/null 2>&1
+cnt=$(kubectl get namespace | egrep -c "^ingress ")
+if [ $cnt -eq 0 ]; then
+  HELM=$(which helm)
+  if [ ! -x "$HELM" ]; then
+    echo "ERROR: unable to find the helm utility"
+    exit 1
+  fi
+
+  # --- INSTALLING HELM ---
+  helm init --history-max 200 > /dev/null 2>&1
+  helm repo update > /dev/null 2>&1
+  kubectl apply -f $PCFCONFIG_PATH/demos/k8s-helm/rbac-config.yaml > /dev/null 2>&1
+  helm init --service-account tiller > /dev/null 2>&1
+  sleep 30
+  helm install stable/nginx-ingress \
+    --set rbac.create=true \
+    --namespace ingress \
+    --set controller.config.proxy-buffer-size=16k
+    #--set controller.config.proxy-buffer-size=16k > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K(S))
+
+    echo "ERROR: failed to deploy ingress controller with helm"
+    echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
+    echo "          --namespace ingress --set controller.config.proxy-buffer-size=16k"
+    exit 1
+  fi
+fi
+
+echo gaga1
+DNSLB="pending"
+while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
+  sleep 10
+  DNSLB=$(kubectl get svc -n ingress | grep nginx-nginx-ingress-controller | awk '{ print $4 }')
+done
+
+echo gaga2
+if [ "${DNSLB}" == "" ]; then
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K(S))
+
+  echo "ERROR: optaining name/ip of Ingress Controller"
+  echo "       => kubectl get svc -n ingress | grep nginx-nginx-ingress-controller"
+  exit 1
+fi
+echo gaga3
+
+if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+  AWS_ID=$(echo $DNSLB | awk -F '-' '{ print $1 }')
+  AWS_LB="k8s-master-$cluster"
+  AWS_SG=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
+           jq -r '.LoadBalancerDescriptions[].SecurityGroups[]')
+  AWS_VP=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names $AWS_ID | \
+           jq -r '.LoadBalancerDescriptions[].VPCId')
+
+  cnt=$(echo "${AWS_SG}" | egrep -c "$AWS_SG_NEW")
+  if [ $cnt -eq 0 ]; then
+    a=1
+  fi
+fi
+echo gaga4
+
+if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
+  DNS_NAME="*.apps-${cluster}"
+  echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+
+  az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    az network dns record-set a remove-record -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to delete DNS record-set for $DNS_NAME"
+      echo "       => az network dns remove-set a add-record -g $DNS_PREFIX \\"
+      echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME"
+      exit 1
+    fi
+  fi
+
+  az network dns record-set a add-record -g $DNS_PREFIX -z "${DNS_PREFIX}.${DNS_SUFFIX}" \
+      -n "$DNS_NAME" --ipv4-address $DNSLB > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: failed to create DNS record-set for $DNS_NAME"
+    echo "       => az network dns record-set a add-record -g $DNS_PREFIX \\"
+    echo "          -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME --ipv4-address $DNSLB"
+    exit 1
+  fi
+fi
+
+echo gaga5
+if [ "${ROUTE53_TOKEN}" != "" -a "${TF_DEPLOYMENT}" == "aws" ]; then
+
+  ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+  DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
+      jq -r '.LoadBalancerDescriptions[0].DNSName')
+  DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
+      jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${DNS_PREFIX}.${DNS_SUFFIX} | jq -r '.HostedZones[0].Id')
+
+  ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+          --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
+          jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
+
+  if [ "${ALIAS}" != "$DNSLB" ]; then
+    if [ "${ZONE_ID}" != "" ]; then
+      echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+      ZONE="*.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+      ZONE="*.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
+
+      TMPROUTE53=/tmp/$$_tmp_route53.json
+      echo "{"                                                   >  $TMPROUTE53
+      echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+      echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+      echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+      echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+      echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
+      echo "    \"Type\": \"A\","                                >> $TMPROUTE53
+      echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
+      echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
+      echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
+      echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
+      echo "    }"                                               >> $TMPROUTE53
+      echo "}}]"                                                 >> $TMPROUTE53
+      echo "}"                                                   >> $TMPROUTE53
+
+      aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
+          --change-batch file://${TMPROUTE53} > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failed to set DNS for $hnm"
+        echo "       => aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" \\"
+        echo "              --change-batch file://${TMPROUTE53}"
+        cat $TMPROUTE53
+        exit 1
+      fi
+
+      rm -f $TMPROUTE53
+    fi
+  fi
+fi
+
+echo gaga10
 
 
 exit 1
