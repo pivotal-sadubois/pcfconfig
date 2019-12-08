@@ -48,7 +48,6 @@ fi
 ######################################################################################################
 cluster=cl1
 
-echo gaga1
 pks get-credentials $cluster > /dev/null 2>&1
 userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
 token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
@@ -89,7 +88,7 @@ if [ "${cnt}" == "" ]; then
   messagePrint " - Ingress Release:"            "stable/nginx-ingress"
   messagePrint " - Options:"                    "controller.config.proxy-buffer-size=16k"
 
-  helm install nginx-ingress-cl1 stable/nginx-ingress --set rbac.create=true --namespace ingress
+  helm install nginx-ingress-cl1 stable/nginx-ingress --set rbac.create=true --namespace ingress > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: failed to deploy ingress controller with helm"
     echo "       => helm install stable/nginx-ingress --name nginx --set rbac.create=true \\"
@@ -101,7 +100,6 @@ if [ "${cnt}" == "" ]; then
   fi
 fi
 
-exit 1
 echo gaga1
 DNSLB="pending"
 while [ "${DNSLB}" == "pending" -o "${DNSLB}" == "<pending>" ]; do
