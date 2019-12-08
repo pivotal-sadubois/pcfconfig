@@ -135,6 +135,7 @@ fi
 echo gaga4
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+echo gaga41
   DNS_NAME="*.apps-${cluster}"
   echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
@@ -162,6 +163,7 @@ fi
 #AWS_HOSTED_ZONE_ID
 echo gaga5
 if [ "${AWS_HOSTED_ZONE_ID}" != "" -a "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+echo gaga51
 
   ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
   DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "$AWS_ID" | \
@@ -174,6 +176,7 @@ if [ "${AWS_HOSTED_ZONE_ID}" != "" -a "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
           --query "ResourceRecordSets[?contains(Name, 'apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}')].AliasTarget.DNSName" | \
           jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
+echo "gaga ALIAS:$ALIAS DNSLB:$DNSLB"
   if [ "${ALIAS}" != "$DNSLB" ]; then
     if [ "${ZONE_ID}" != "" ]; then
       echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
