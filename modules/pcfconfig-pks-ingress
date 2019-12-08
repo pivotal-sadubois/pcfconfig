@@ -42,6 +42,7 @@ while [ $i -lt 10 ]; do
   let i=i+1; sleep 10
 done
 
+stt=1
 if [ $stt -eq 1 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PKS))
 
