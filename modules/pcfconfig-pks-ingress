@@ -23,14 +23,25 @@ echo "envFile:$envFile"
 messageTitle "Install Ingress Routing"
 messagePrint " - Harbor Version"                  ""
 
-checkEnvironment
 sshEnvironment
+
+# --- ENVIRONMENT VARIABLES ---
+API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
   echo "# JUMP_HOST:$JUMP_HOST"
   echo "# SSH_COMMAND:$SSH_COMMAND"
   echo "# PKS ACCESS CREDENTIALS"
-  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+  echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
   echo ""
+
+# --- LOGIN TO PKS ---
+i=1
+while [ $i -lt 10 ]; do
+  pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
+  if [ $? -eq 0 ]; then break; fi
+  let i=i+1; sleep 10
+done
+
 
 exit 1
 
