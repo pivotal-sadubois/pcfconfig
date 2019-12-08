@@ -1,8 +1,7 @@
 BITMASK_JMP=0x01
 BITMASK_OPS=0x02
-BITMASK_PKS=0x04
-BITMASK_PAS=0x08
-BITMASK_KB8=0x10
+BITMASK_PXS=0x04
+BITMASK_KB8=0x08
 
 setPCFconfigState() {
   dirname=$(dirname $1)
@@ -35,12 +34,6 @@ a=1
 debugInfos() {
   MASK=$1
 
-echo "MASK:$MASK"
-
-  if [ $(($MASK & $BITMASK_JMP)) -gt 0 ]; then 
-echo xxxxx
-  fi
-
   sshEnvironment
 
   echo ""
@@ -48,17 +41,24 @@ echo xxxxx
   echo "######################################## DEBUG INFOS #########################################"
   echo "##############################################################################################"
   TMP_OPSMAN="$(pwd)/opsman.pem"
-  API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
+  API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
-  echo "# --- CONNECT TO JUMP-SERVER ---"
-  echo "$SSH_COMMAND"
-  echo ""
-  echo "# --- OPSMANAGER ACCESS (TO BE INITIATED ON THE JUMP_HOST) ---"
-  echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-  echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
-  echo ""
+  if [ $(($MASK & $BITMASK_JMP)) -gt 0 ]; then 
+    echo "# --- CONNECT TO JUMP_HOST ---"
+    echo "$SSH_COMMAND"
+    echo ""
+  fi
+
+  if [ $(($MASK & $BITMASK_OPS)) -gt 0 ]; then 
+    echo "# --- OPSMANAGER ACCESS (TO BE INITIATED ON THE JUMP_HOST) ---"
+    echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+    echo "# --- LOAD OPSMANAGER ENVIRONMENT ---"
+    echo "ubuntu@${PCF_DEPLOYMENT_ENV_NAME}-ops-manager:~$ . /tmp/debug.sh"
+    echo ""
+  fi
+
   echo "# -- PKS ACCESS CREDENTIALS ---"
-  echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
+  echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
   echo ""
 
 }

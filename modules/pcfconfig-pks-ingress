@@ -28,27 +28,18 @@ sshEnvironment
 # --- ENVIRONMENT VARIABLES ---
 API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
-  echo "# JUMP_HOST:$JUMP_HOST"
-  echo "# SSH_COMMAND:$SSH_COMMAND"
-  echo "# PKS ACCESS CREDENTIALS"
-  echo "pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
-  echo ""
-
 # --- LOGIN TO PKS ---
 i=1; stt=1
 while [ $i -lt 10 ]; do
-  pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
+  pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} \
+            -a ${API_HOST_NAME} --skip-ssl-validation > /dev/null 2>&1
   if [ $? -eq 0 ]; then break; stt=0; fi
-echo bla
   let i=i+1; sleep 10
 done
 
-echo gaga1
 stt=1
 if [ $stt -eq 1 ]; then
-echo gaga2
-  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PKS))
-echo gaga3
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS))
 
   echo "ERROR: Failed to login to pks"
   echo "       => pks login -u ${PCF_TILE_PKS_ADMIN_USER} -p ${PCF_TILE_PKS_ADMIN_PASS} \\"
