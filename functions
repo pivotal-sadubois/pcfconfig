@@ -62,11 +62,18 @@ debugInfos() {
     echo ""
   fi
 
+echo gaga1
   if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
+echo gaga2
     pks get-credentials $cluster > /dev/null 2>&1
+echo gaga3
     userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+echo gaga4
     token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
           grep "token:" | awk '{ print $2 }')
+echo gaga5
+echo "userid:$userid"
+echo "token:$token"
 
     cluster=cl1
     echo "--------------------------------------------------"
