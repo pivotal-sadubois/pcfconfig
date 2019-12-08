@@ -212,7 +212,6 @@ if [ "${AWS_HOSTED_ZONE_ID}" != "" -a "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   fi
 fi
 
-echo xxxxxxx
 
 
 
