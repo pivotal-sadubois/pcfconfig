@@ -3359,7 +3359,9 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
   API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
 
   echo "-----------------------------------------------------------------------------------------------------------"
-  echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT"
+  echo "# JUMP_HOST:$JUMP_HOST"
+  echo "# SSH_COMMAND:$SSH_COMMAND"
+  echo "# OPSMANAGER ACCESS WITH DEBUG ENVIRONMENT (INITIATED ON THE JUMP_HOST)"
   echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
   echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ . /tmp/debug.sh"
   echo ""
