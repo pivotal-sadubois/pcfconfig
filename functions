@@ -64,6 +64,18 @@ debugInfos() {
 
 echo gaga1
   if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
+    for cvar in PCF_TILE_PKS_CLUSTER_CL1_PLAN PCF_TILE_PKS_CLUSTER_CL2_PLAN PCF_TILE_PKS_CLUSTER_CL3_PLAN; do
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL1_PLAN" ]; then cluster=cl1
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL2_PLAN" ]; then cluster=cl2
+      [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL3_PLAN" ]; then cluster=cl3
+
+      eval plan=\$$cvar
+
+      echo "PLAN:$plan"
+    done
+
+    cluster=cl1
+
 echo gaga2
     pks get-credentials $cluster > /dev/null 2>&1
 echo gaga3
@@ -75,7 +87,6 @@ echo gaga5
 echo "userid:$userid"
 echo "token:$token"
 
-    cluster=cl1
     echo "--------------------------------------------------"
     echo "PKS CLUSTER ($cluster) ACCESS CREDENTIALS"
     echo "--------------------------------------------------"
