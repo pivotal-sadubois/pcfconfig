@@ -1291,7 +1291,7 @@ echo "DOMAIN:$domain"
 echo "aws route53 list-hosted-zones-by-name --dns-name ${domain}"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
             jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
-echo "functions: cleanAWSenv gaga000
+echo "functions: cleanAWSenv gaga000"
 
   if [ "${ZONE_ID}" != "" ]; then
     messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
