@@ -1298,9 +1298,10 @@ echo "functions: cleanAWSenv gaga000"
     route53deleteHostedZone $ZONE_ID
   fi
 
-echo "functions: cleanAWSenv gaga2"
+echo "functions: cleanAWSenv gaga2000"
   # --- DELETE INSTANCES ---
   SECGRP=/tmp/$$_aws_routing_table.json
+echo "aws --region $AWS_LOCATION ec2 describe-instances"
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
 cp $SECGRP /tmp/12345
 echo "functions: cleanAWSenv gaga211"
