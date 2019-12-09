@@ -1254,19 +1254,26 @@ preCleanGCP() {
 } 
 
 preCleanAWS() {
+#gaga99999999999
   # --- DELETE PKS LOAD-BALANCERS ---
   for n in elb-api-lb k8s-master-cl1 k8s-master-cl2 k8s-master-cl3; do
     aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-names $n >/dev/null 2>&1
     if [ $? -eq 0 ]; then
-      for tag in $(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $n 2>/dev/null | \
+      for tag in $(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam 2>/dev/null | \
         jq -r '.TagDescriptions[].Tags[].Value'); do
 
-        if [ "${tag}" == "${ENV_NAME}" ]; then 
-          messagePrint " - Cleaning up elp Load-Balancers:" "$n"
-          aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $n >/dev/null 2>&1
+        # --- DELETE LOAD-BALANCERS WITH TAG ENV_NAME ---
+        enm=$(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam | \
+            jq -r '.TagDescriptions[].Tags[].Value' | grep -c "${ENV_NAME}")
+
+        # --- CLEANUOP NGINX-INGRESS-LOADBALANCER ---
+        cnt=$(echo $tag | egrep -c "nginx-ingress-controller")
+        if [ ${cnt} -gt 0 -o ${enm} -gt 0 ]; then
+          messagePrint " - Cleaning up elp Load-Balancers:" "$nam"
+          aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam >/dev/null 2>&1
           if [ $? -ne 0 ]; then
-            echo "ERROR: failled to delete load-balancer: $n"
-            echo "aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $n"
+            echo "ERROR: failled to delete load-balancer: $nam"
+            echo "aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam"
             exit 1
           fi
         fi
@@ -1482,11 +1489,27 @@ cleanAWSenv() {
   # --- DELETE LOAD BALANCERS ---
   TMPAWS=/tmp/$$_aws.json
   for nam in $(aws --region $AWS_LOCATION elb describe-load-balancers | jq -r '.LoadBalancerDescriptions[].LoadBalancerName' 2>/dev/null); do
-    cnt=$(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam | \
-        jq -r '.TagDescriptions[].Tags[].Value' | grep -c "${ENV_NAME}")
-    if [ $cnt -gt 0 ]; then
-      aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam
-      messagePrint " - Cleaning up elp LoadBalancers:" "$nam"
+    aws --region $AWS_LOCATION elb describe-load-balancers --load-balancer-names $nam >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      for tag in $(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam 2>/dev/null | \
+        jq -r '.TagDescriptions[].Tags[].Value'); do
+
+        # --- DELETE LOAD-BALANCERS WITH TAG ENV_NAME ---
+        enm=$(aws --region $AWS_LOCATION elb describe-tags --load-balancer-name $nam | \
+            jq -r '.TagDescriptions[].Tags[].Value' | grep -c "${ENV_NAME}")
+
+        # --- CLEANUOP NGINX-INGRESS-LOADBALANCER ---
+        cnt=$(echo $tag | egrep -c "nginx-ingress-controller") 
+        if [ ${cnt} -gt 0 -o ${enm} -gt 0 ]; then
+          messagePrint " - Cleaning up elp Load-Balancers:" "$nam"
+          aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam >/dev/null 2>&1
+          if [ $? -ne 0 ]; then
+            echo "ERROR: failled to delete load-balancer: $nam"
+            echo "aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam"
+            exit 1
+          fi
+        fi
+      done
     fi
   done
 
@@ -1631,7 +1654,8 @@ cleanAWSenv() {
         aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid > /dev/null 2>&1; re1=$?
         aws --region $AWS_LOCATION ec2 release-address --public-ip $pid > /dev/null 2>&1; re2=$?
         if [ $re1 -ne 0 -a $re2 -ne 0 ]; then
-          echo "ERROR: failed to release IP: $pid"
+#=> Delete NatGateway first (awspks-nat)
+          echo "ERROR: 1failed to release IP: $pid"
           echo "aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid"
           echo "aws --region $AWS_LOCATION ec2 release-address --public-ip $pid"
           exit 1
@@ -1892,7 +1916,8 @@ cleanAWSenv() {
       aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid > /dev/null 2>&1; re1=$?
       aws --region $AWS_LOCATION ec2 release-address --public-ip $pid > /dev/null 2>&1; re2=$?
       if [ $re1 -ne 0 -a $re2 -ne 0 ]; then
-        echo "ERROR: failed to release IP: $pid"
+#=> Delete NatGateway first (awspks-nat)
+        echo "ERROR: 2failed to release IP: $pid"
         echo "aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid"
         echo "aws --region $AWS_LOCATION ec2 release-address --public-ip $pid"
         exit 1

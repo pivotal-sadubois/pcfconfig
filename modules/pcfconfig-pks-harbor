@@ -20,7 +20,10 @@ export PCFPATH=$HOME/pcfconfig
 . $envFile
 
 messageTitle "Install Harbor"
-messagePrint " - Harbor Version"                  "$TLS_CERTIFICATE"
+messagePrint " - Harbor Version:"                  "$PCF_TILE_HARBOR_VERSION"
+messagePrint " - Tile Config:"                     "$PCF_TILE_HARBOR_CONFIG"
+messagePrint " - Stemcell Type:"                   "$PCF_TILE_HARBOR_STEMCELL_TYPE"
+messagePrint " - Stemcell Version:"                "$PCF_TILE_HARBOR_STEMCELL_VERSION"
 
 #PCF_TILE_HARBOR_DEPLOY=true
 #PCF_TILE_HARBOR_NAME=harbor-container-registry
