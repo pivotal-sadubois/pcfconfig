@@ -1284,29 +1284,19 @@ echo "functions: preCleanAWS gaga2"
 }
 
 cleanAWSenv() {
-echo "AWS_LOCATION:$AWS_LOCATION"
-echo "AWS_REGION:$AWS_REGION"
-echo "functions: cleanAWSenv gaga1"
   # --- DELETE HOSTED ZONE ---
   domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
-echo "DOMAIN:$domain"
-echo "aws route53 list-hosted-zones-by-name --dns-name ${domain}"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
             jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
-echo "functions: cleanAWSenv gaga000"
 
   if [ "${ZONE_ID}" != "" ]; then
     messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
     route53deleteHostedZone $ZONE_ID
   fi
 
-echo "functions: cleanAWSenv gaga2000"
   # --- DELETE INSTANCES ---
   SECGRP=/tmp/$$_aws_routing_table.json
-echo "aws --region $AWS_LOCATION ec2 describe-instances"
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
-cp $SECGRP /tmp/12345
-echo "functions: cleanAWSenv gaga211"
   tot=$(grep -c "InstanceId" $SECGRP); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
     gid=$(jq -r ".Reservations[$i].Instances[].InstanceId" 2>/dev/null $SECGRP)
@@ -1316,14 +1306,12 @@ echo "functions: cleanAWSenv gaga211"
       cnt=$(jq -r ".Reservations[$i].Instances[].State.Name" 2>/dev/null $SECGRP | egrep -c "terminated")
       if [ $cnt -eq 0 ]; then
         messagePrint " - Terminate Instance:" "$gid"
-echo "functions: cleanAWSenv gaga213"
         aws --region $AWS_LOCATION ec2 terminate-instances --instance-ids $gid > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "ERROR: failled to Terminage Instance: $gid"
           echo "aws --region $AWS_LOCATION ec2 terminate-instances  --instance-ids $gid"
           exit 1
         fi
-echo "functions: cleanAWSenv gaga214"
 
         sleep 30
       fi
@@ -1332,7 +1320,6 @@ echo "functions: cleanAWSenv gaga214"
     let i=i+1
   done
 
-echo "functions: cleanAWSenv gaga3"
   # --- CLEANUP ---
   rm -f $SECGRP
 
@@ -1362,7 +1349,6 @@ echo "functions: cleanAWSenv gaga3"
     let i=i+1
   done
  
-echo "functions: cleanAWSenv gaga4"
   # --- DELETE KMS ALIASES ---
   aws --region eu-central-1 kms list-aliases --query "Aliases[?contains(to_string(AliasName),'$ENV_NAME')]" > $TMPAWS
   tot=$(grep -c "PolicyName" $TMPAWS); i=0
@@ -1374,7 +1360,6 @@ echo "functions: cleanAWSenv gaga4"
     messagePrint " - Delete KMS Alias:" "$nam"
   done
 
-echo "functions: cleanAWSenv gaga5"
 
   # --- IAM DELETE POLICIES ---
   aws --region $AWS_LOCATION iam list-roles --query "Roles[?starts_with(to_string(RoleName), '$ENV_NAME')]" > $TMPAWS
@@ -1388,7 +1373,6 @@ echo "functions: cleanAWSenv gaga5"
     aws --region $AWS_LOCATION kms delete-alias --alias-name "$nam" 
   done
 
-echo "functions: cleanAWSenv gaga6"
   # --- IAM DELETE ROLES ---
   TMPAWS=/tmp/$$_aws.json
   aws --region $AWS_LOCATION iam list-roles --query "Roles[?starts_with(to_string(RoleName), '$ENV_NAME')]" > $TMPAWS
@@ -1398,7 +1382,6 @@ echo "functions: cleanAWSenv gaga6"
     rid=$(jq -r ".[$i].RoleId" 2>/dev/null $TMPAWS)
     arn=$(jq -r ".[$i].Arn" 2>/dev/null $TMPAWS)
     nam=$(jq -r ".[$i].RoleName" 2>/dev/null $TMPAWS)
-echo "functions: cleanAWSenv gaga11"
 
     messagePrint " - Delete IAM Role:" "$nam"
 
@@ -1420,7 +1403,6 @@ echo "functions: cleanAWSenv gaga11"
 
       aws iam delete-policy --policy-arn $tmp
     done
-echo "functions: cleanAWSenv gaga12"
 
     for pol in $(aws --region $AWS_LOCATION iam list-attached-role-policies --role-name $nam | \
         jq -r ".AttachedPolicies[].PolicyArn"); do
@@ -1428,7 +1410,6 @@ echo "functions: cleanAWSenv gaga12"
       aws --region $AWS_LOCATION iam detach-role-policy --role-name $nam --policy-arn $pol
       aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
     done
-echo "functions: cleanAWSenv gaga13"
 
     # --- DELETE ROLE POLICY ---
     for pol in $(aws --region $AWS_LOCATION iam list-role-policies --role-name $nam | \
@@ -1436,7 +1417,6 @@ echo "functions: cleanAWSenv gaga13"
 
       aws --region $AWS_LOCATION iam delete-role-policy --role-name $nam --policy-name $pol
     done
-echo "functions: cleanAWSenv gaga14"
 
     aws --region $AWS_LOCATION iam delete-role --role-name $nam > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -1444,22 +1424,18 @@ echo "functions: cleanAWSenv gaga14"
       echo "       aws --region $AWS_LOCATION iam delete-role --role-name $nam"
       exit 1
     fi
-echo "functions: cleanAWSenv gaga15"
     let i=i+1
   done
-echo "functions: cleanAWSenv gaga20"
 
   # --- CLEANUP ---
   rm -f $TMPAWS
 
   # --- IAM DELETE USERS ---
   for arn in $(aws --region $AWS_LOCATION iam list-users | jq -r '.Users[].UserName' 2>/dev/null); do
-echo "functions: cleanAWSenv gaga21"
     cnt=$(echo $arn | egrep -c "^${ENV_NAME}_")
     if [ $cnt -gt 0 ]; then
       messagePrint " - Cleaning up iam User:" "$arn"
 
-echo "functions: cleanAWSenv gaga22"
       # --- DETACH POLICY ---
       for pol in $(aws --region $AWS_LOCATION iam list-attached-user-policies --user-name $arn | \
           jq -r ".AttachedPolicies[].PolicyArn"); do
@@ -1467,7 +1443,6 @@ echo "functions: cleanAWSenv gaga22"
         aws --region $AWS_LOCATION iam detach-user-policy --user-name $arn --policy-arn $pol
       done
 
-echo "functions: cleanAWSenv gaga23"
       # --- DELETE POLICY ---
       for pol in $(aws --region $AWS_LOCATION iam list-attached-user-policies --user-name $arn | \
           jq -r ".AttachedPolicies[].PolicyName"); do
@@ -1481,7 +1456,6 @@ echo "functions: cleanAWSenv gaga23"
 
         aws --region $AWS_LOCATION iam delete-access-key --access-key-id $key --user-name $arn
       done
-echo "functions: cleanAWSenv gaga24"
 
       aws --region $AWS_LOCATION iam delete-user --user-name $arn
       if [ $? -ne 0 ]; then
@@ -1489,11 +1463,9 @@ echo "functions: cleanAWSenv gaga24"
         echo "aws --region $AWS_LOCATION iam delete-user --user-name $arn"
         exit 1
       fi
-echo "functions: cleanAWSenv gaga25"
     fi
   done
 
-echo "functions: cleanAWSenv gaga30"
 #  # --- IAM DELETE POLICIES ---
 #  for arn in $(aws --region $AWS_LOCATION iam list-policies | jq -r '.Policies[].Arn' 2>/dev/null); do
 #echo "arn:$arn"
@@ -1541,7 +1513,6 @@ echo "functions: cleanAWSenv gaga30"
       done
     fi
   done
-echo "functions: cleanAWSenv gaga40"
 
   rm -f $TMPAWS
 
@@ -1557,7 +1528,6 @@ echo "functions: cleanAWSenv gaga40"
     fi
   done
 
-echo "functions: cleanAWSenv gaga50"
   # --- DELETE TARGET GROUPS ---
   SECGRP=/tmp/$$_aws_tgp.json
   aws --region $AWS_LOCATION elbv2 describe-target-groups > $SECGRP
@@ -1578,7 +1548,6 @@ echo "functions: cleanAWSenv gaga50"
     fi
     let i=i+1
   done
-echo "functions: cleanAWSenv gaga60"
 
   # --- CLEANUP ---
   rm -f $SECGRP
@@ -1595,7 +1564,6 @@ echo "functions: cleanAWSenv gaga60"
     fi
   done
 
-echo "functions: cleanAWSenv gaga70"
   # --- DELETE VPC's ---
   TMPVCP=/tmp/$$_aws_vpc.json
   aws --region $AWS_LOCATION ec2 describe-vpcs > $TMPVCP
@@ -1655,7 +1623,6 @@ echo "functions: cleanAWSenv gaga70"
         #exit 1
       fi
     done
-echo "functions: cleanAWSenv gaga80"
 
     sleep 10
 
@@ -1700,7 +1667,6 @@ echo "functions: cleanAWSenv gaga80"
 
       let i=i+1
     done
-echo "functions: cleanAWSenv gaga90"
 
     # --- CLEANUP ---
     rm -f $TMPAWS
@@ -1717,7 +1683,6 @@ echo "functions: cleanAWSenv gaga90"
       fi
     done
 
-echo "functions: cleanAWSenv gaga100"
     # --- DELETE INTERNET GATEWAYS ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$vpc" | \
                 jq -r ".InternetGateways[].InternetGatewayId" 2>/dev/null); do
@@ -1738,7 +1703,6 @@ echo "functions: cleanAWSenv gaga100"
         exit 1
       fi
     done
-echo "functions: cleanAWSenv gaga110"
 
     # --- DELETE SUBNETS ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-subnets --filter "Name=vpc-id,Values=$vpc" | \
@@ -1752,7 +1716,6 @@ echo "functions: cleanAWSenv gaga110"
         exit 1
       fi
     done
-echo "functions: cleanAWSenv gaga120"
 
     SECGRP=/tmp/$$_aws_security_groups.json
     aws --region $AWS_LOCATION ec2 describe-security-groups --filter "Name=vpc-id,Values=$vpc" > $SECGRP
@@ -1777,7 +1740,6 @@ echo "functions: cleanAWSenv gaga120"
       fi
       let i=i+1
     done
-echo "functions: cleanAWSenv gaga130"
 
     # --- DELETE ALL SCURITY GROUPS ATTACHED TO THIS VPC ---
     for gid in $(aws --region $AWS_LOCATION ec2 describe-security-groups | \
@@ -1799,7 +1761,6 @@ echo "functions: cleanAWSenv gaga130"
       sleep 30
     done
 
-echo "functions: cleanAWSenv gaga140"
     # --- CLEANUP ---
     rm -f $SECGRP
 
@@ -1829,7 +1790,6 @@ echo "functions: cleanAWSenv gaga140"
       #  #exit 1
       #fi
     done
-echo "functions: cleanAWSenv gaga150"
 
     # --- DELETE VPC ---
     messagePrint " - Delete VPC:" "$vpc"
@@ -1843,7 +1803,6 @@ echo "functions: cleanAWSenv gaga150"
     let i=i+1
   done
 
-echo "functions: cleanAWSenv gaga160"
   # --- CLEANUP ---
   rm -f $TMPVCP
 

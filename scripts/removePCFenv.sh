@@ -104,14 +104,11 @@ fi
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  AWS_LOCATION=A$WS_REGION
+  AWS_LOCATION=$WS_REGION
   ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
 
-echo "removePCFenv.sh gaga1"
   preCleanAWS
-echo "removePCFenv.sh gaga2"
   cleanAWSenv
-echo "removePCFenv.sh gaga3"
 
 #  cd $TF_PATH
 #  messageTitle "----------------------------------------- TERRAFORM DESTROY -----------------------------------------------"
