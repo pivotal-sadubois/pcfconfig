@@ -60,7 +60,7 @@ kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-adm
 
 # --- VERIFY NAMESPACE ---
 kubectl get namespace ingress > /dev/null 2>&1
-if [ $? -eq 0 ]; then kubectl create namespace ingress > /dev/null 2>&1; fi
+if [ $? -ne 0 ]; then kubectl create namespace ingress > /dev/null 2>&1; fi
 
 cnt=$(helm search repo stable/nginx-ingress | egrep -c "stable/nginx-ingress")
 if [ $cnt -eq 0 ]; then
