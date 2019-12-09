@@ -1254,6 +1254,7 @@ preCleanGCP() {
 } 
 
 preCleanAWS() {
+echo "functions: preCleanAWS gaga1"
 #gaga99999999999
   # --- DELETE PKS LOAD-BALANCERS ---
   for n in elb-api-lb k8s-master-cl1 k8s-master-cl2 k8s-master-cl3; do
@@ -1280,6 +1281,7 @@ preCleanAWS() {
       done
     fi
   done
+echo "functions: preCleanAWS gaga2"
 }
 
 cleanAWSenv() {
