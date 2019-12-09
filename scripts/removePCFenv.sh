@@ -104,7 +104,7 @@ fi
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  AWS_LOCATION=$WS_REGION
+  AWS_LOCATION=$AWS_REGION
   ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
 
   preCleanAWS
