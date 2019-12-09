@@ -1287,8 +1287,11 @@ cleanAWSenv() {
 echo "functions: cleanAWSenv gaga1"
   # --- DELETE HOSTED ZONE ---
   domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
+echo "DOMAIN:$domain"
+echo "aws route53 list-hosted-zones-by-name --dns-name ${domain}"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
             jq -r ".HostedZones[] | select(.Name | scan(\"^$domain.\")).Id")
+echo "functions: cleanAWSenv gaga000
 
   if [ "${ZONE_ID}" != "" ]; then
     messagePrint " - Deleting DNS Hosted Zone:" "$ZONE_ID"
