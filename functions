@@ -1284,6 +1284,8 @@ echo "functions: preCleanAWS gaga2"
 }
 
 cleanAWSenv() {
+echo "AWS_LOCATION:$AWS_LOCATION"
+echo "AWS_REGION:$AWS_REGION"
 echo "functions: cleanAWSenv gaga1"
   # --- DELETE HOSTED ZONE ---
   domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
