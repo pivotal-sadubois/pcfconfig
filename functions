@@ -1284,9 +1284,6 @@ echo "functions: preCleanAWS gaga2"
 }
 
 cleanAWSenv() {
-echo "AWS_LOCATION:$AWS_LOCATION"
-echo "AWS_REGION:$AWS_REGION"
-sleep 10000
   # --- DELETE HOSTED ZONE ---
   domain="$ENV_NAME.$AWS_HOSTED_DNS_DOMAIN"
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${domain} | \
