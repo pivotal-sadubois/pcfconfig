@@ -1299,6 +1299,8 @@ echo "functions: cleanAWSenv gaga2"
   # --- DELETE INSTANCES ---
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-instances > $SECGRP
+cp $SECGRP /tmp/12345
+echo "functions: cleanAWSenv gaga211"
   tot=$(grep -c "InstanceId" $SECGRP); i=0; let tot=tot-1
   while [ $i -le $tot ]; do
     gid=$(jq -r ".Reservations[$i].Instances[].InstanceId" 2>/dev/null $SECGRP)
@@ -1308,12 +1310,14 @@ echo "functions: cleanAWSenv gaga2"
       cnt=$(jq -r ".Reservations[$i].Instances[].State.Name" 2>/dev/null $SECGRP | egrep -c "terminated")
       if [ $cnt -eq 0 ]; then
         messagePrint " - Terminate Instance:" "$gid"
+echo "functions: cleanAWSenv gaga213"
         aws --region $AWS_LOCATION ec2 terminate-instances --instance-ids $gid > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "ERROR: failled to Terminage Instance: $gid"
           echo "aws --region $AWS_LOCATION ec2 terminate-instances  --instance-ids $gid"
           exit 1
         fi
+echo "functions: cleanAWSenv gaga214"
 
         sleep 30
       fi
