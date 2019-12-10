@@ -47,6 +47,116 @@ uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PROD
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
 
 ##############################################################################################
+################################ CONFIGURE PKS LOADBALANCERS #################################
+##############################################################################################
+messageTitle Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "azure" ]; then
+echo gaga1
+  # --- CREATE PULIC IP FOR LOADBALANCER ---
+  ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
+        jq -r '.[].ipAddress')
+  if [ "${ipa}" == "" ]; then
+    az network public-ip create -g $PCF_DEPLOYMENT_ENV_NAME -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \
+       --allocation-method Static --sku Standard > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failled to create publicip"
+      echo "       => az network public-ip create -g $PCF_DEPLOYMENT_ENV_NAME -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \\"
+      echo "             --allocation-method Static"
+      exit 1
+    fi
+
+    ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
+         jq -r '.[].ipAddress')
+    messagePrint " - Create LB Public IP ($ipa)" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
+  else
+    messagePrint " - Verify LB Public IP ($ipa)" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
+  fi
+
+echo gaga2
+  # --- CHECK IF ENTRY EXISTS ---
+  rec=$(az network dns record-set list -g ${PCF_DEPLOYMENT_ENV_NAME} \
+           --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+           --query "[?fqdn=='${n}.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}.']" | jq -r '.[].fqdn')
+  if [ "${rec}" == "" ]; then
+    messagePrint " - Creating DNS entry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" "$ipa"
+    az network dns record-set a add-record -g ${PCF_DEPLOYMENT_ENV_NAME} \
+       --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+       --record-set-name harbor --ipv4-address $ipa > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create DNS record for harbor (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+      echo "       => az network dns record-set a add-record -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
+      echo "             --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} --record-set-name harbor \\"
+      echo "             --ipv4-address $ipa"; exit 1
+    fi
+  else
+    messagePrint " - Verify DNS entry for (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" "$ipa"
+  fi
+
+echo gaga3
+  # --- CHECK IF LB EXISTS ---
+  lbn=$(az network lb list -g ${PCF_DEPLOYMENT_ENV_NAME} --query "[?name == '${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb']" | \
+           jq -r '.[].name')
+  if [ "${lbn}" == "" ]; then
+    messagePrint " - Creating loadbalancer" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb"
+    az network lb create -g ${PCF_DEPLOYMENT_ENV_NAME} -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --sku Standard \
+       --public-ip-address "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip" --location $AZURE_REGION \
+       --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create loadbalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+      echo "       => az network lb create -g ${PCF_DEPLOYMENT_ENV_NAME} -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "           --sku Standard --public-ip-address ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \\"
+      echo "           --backend-pool-name ${n}-pool --location $AZURE_REGION"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify loadbalancer" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb"
+  fi
+
+echo gaga4
+  # --- CREATE LB HEALTH PROBE ---
+  prb=$(az network lb probe show -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+           -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe 2>/dev/null | jq -r '.name')
+  if [ "${prb}" == "" ]; then
+    messagePrint " - Creating LB Health Probe for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+    az network lb probe create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe --protocol tcp --port 443 > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create LB Health Probe"
+      echo "       => az network lb probe create -g ${PCF_DEPLOYMENT_ENV_NAME} ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "             -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe --protocol tcp --port 443"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify LB Health Proble for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+  fi
+
+echo gaga5
+  # --- CREATE LB RULE ---
+  rul=$(az network lb rule show -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+           -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule 2>/dev/null | jq -r '.name')
+  if [ "${rul}" == "" ]; then
+    messagePrint " - Creating LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
+    az network lb rule create -g ${DNS_PREFIX} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule --protocol tcp \
+       --frontend-port 443 --backend-port 443 --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool \
+       --probe-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create address-pool"
+      echo "       => az network lb rule create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "          -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule --protocol tcp --frontend-port 443 --backend-port 443 \\"
+      echo "          --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool \\"
+      echo "          --probe-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
+  fi
+
+echo gaga10
+fi
+
+##############################################################################################
 ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
 ##############################################################################################
 
@@ -94,43 +204,40 @@ fi
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
-echo "MST:$mst"
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "azure" ]; then
+  messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
+  for node in $mst; do
+    messagePrint " - Add/update Master Node" "${node}"
+    nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
+          jq -r '.networkProfile.networkInterfaces[].id')
+    if [ "${nid}" == "" ]; then
+      echo "ERROR: failed to get Network id of Instance $node"
+      echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
+    fi
 
-messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
-for node in $mst; do
-  messagePrint " - Add/update Master Node" "${node}"
-  nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
-        jq -r '.networkProfile.networkInterfaces[].id')
-  if [ "${nid}" == "" ]; then
-    echo "ERROR: failed to get Network id of Instance $node"
-    echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
-  fi
-echo "NID:$nid"
+    nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
+    if [ "${nnm}" == "" ]; then
+      echo "ERROR: failed to get Network Name of Instance $node"
+      echo "       => az network nic show --ids $nid"; exit 1
+    fi
 
-  nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
-  if [ "${nnm}" == "" ]; then
-    echo "ERROR: failed to get Network Name of Instance $node"
-    echo "       => az network nic show --ids $nid"; exit 1
-  fi
-echo "NNM:$nnm"
+    ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
+    if [ "${ipc}" == "" ]; then
+      echo "ERROR: failed to get IP Config of Instance $master"
+      echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
+    fi
 
-  ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
-  if [ "${ipc}" == "" ]; then
-    echo "ERROR: failed to get IP Config of Instance $master"
-    echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
-  fi
-echo "IPC:$ipc"
-
-  az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
-     --lb-name "${PCF_DEPLOYMENT_ENV_NAME}harbor-lb" \
-     --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
-    echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
-    echo "       => az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
-    echo "          --nic-name $nnm --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
-    echo "          --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc"; exit 1
-  fi
-done
+    az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
+       --lb-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
+       --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
+      echo "       => az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
+      echo "          --nic-name $nnm --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "          --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc"; exit 1
+    fi
+  done
+fi
 
 
 exit
