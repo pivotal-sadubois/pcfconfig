@@ -94,39 +94,38 @@ fi
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
-        messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
-        for node in $mst; do
-          messagePrint " - Add/update Master Node" "${node}"
-          nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
-                jq -r '.networkProfile.networkInterfaces[].id')
-          if [ "${nid}" == "" ]; then
-            echo "ERROR: failed to get Network id of Instance $node"
-            echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
-          fi
+messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
+for node in $mst; do
+  messagePrint " - Add/update Master Node" "${node}"
+  nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
+        jq -r '.networkProfile.networkInterfaces[].id')
+  if [ "${nid}" == "" ]; then
+    echo "ERROR: failed to get Network id of Instance $node"
+    echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
+  fi
 
-          nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
-          if [ "${nnm}" == "" ]; then
-            echo "ERROR: failed to get Network Name of Instance $node"
-            echo "       => az network nic show --ids $nid"; exit 1
-          fi
+  nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
+  if [ "${nnm}" == "" ]; then
+    echo "ERROR: failed to get Network Name of Instance $node"
+    echo "       => az network nic show --ids $nid"; exit 1
+  fi
 
-          ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
-          if [ "${ipc}" == "" ]; then
-            echo "ERROR: failed to get IP Config of Instance $master"
-            echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
-          fi
+  ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
+  if [ "${ipc}" == "" ]; then
+    echo "ERROR: failed to get IP Config of Instance $master"
+    echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
+  fi
 
-          az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
-             --lb-name "${PCF_DEPLOYMENT_ENV_NAME}harbor-lb" \
-             --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-pool" --ip-config-name $ipc > /dev/null 2>&1
-          if [ $? -ne 0 ]; then
-            echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
-            echo "       => az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
-            echo "          --nic-name $nnm --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
-            echo "          --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-pool" --ip-config-name $ipc"; exit 1
-          fi
-        done
-
+  az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
+     --lb-name "${PCF_DEPLOYMENT_ENV_NAME}harbor-lb" \
+     --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
+    echo "       => az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
+    echo "          --nic-name $nnm --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+    echo "          --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc"; exit 1
+  fi
+done
 
 echo "MST:$mst"
 
