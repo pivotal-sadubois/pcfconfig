@@ -49,7 +49,7 @@ uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL
 ##############################################################################################
 ################################ CONFIGURE PKS LOADBALANCERS #################################
 ##############################################################################################
-messageTitle Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+messageTitle "Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "azure" ]; then
 echo gaga1
