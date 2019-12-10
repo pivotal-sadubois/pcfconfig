@@ -21,17 +21,20 @@ export PCFPATH=$HOME/pcfconfig
 
 messageTitle "Install Harbor"
 messagePrint " - Harbor Version:"                  "$PCF_TILE_HARBOR_VERSION"
+messagePrint " - Harbor Slug:"                     "$PCF_TILE_HARBOR_NAME"
 messagePrint " - Tile Config:"                     "$PCF_TILE_HARBOR_CONFIG"
 messagePrint " - Stemcell Type:"                   "$PCF_TILE_HARBOR_STEMCELL_TYPE"
 messagePrint " - Stemcell Version:"                "$PCF_TILE_HARBOR_STEMCELL_VERSION"
 
-#PCF_TILE_HARBOR_DEPLOY=true
-#PCF_TILE_HARBOR_NAME=harbor-container-registry
-#PCF_TILE_HARBOR_VERSION=1.8.3
-#PCF_TILE_HARBOR_BUILD=1.8.3-build.2
-#PCF_TILE_HARBOR_CONFIG=harbor_azure_1.8.yml
-#PCF_TILE_HARBOR_STEMCELL_TYPE=stemcells-ubuntu-xenial
-#PCF_TILE_HARBOR_STEMCELL_VERSION=250.25
+HARBOR_SLUG=$PCF_TILE_HARBOR_NAME
+HARBOR_VERSION=$PCF_TILE_HARBOR_VERSION
+
+  OPS_MANAGER_URL="pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSMANAGER_ADMIN_USER \
+            --password $PCF_OPSMANAGER_ADMIN_PASS"
+
+uploadProductTile $PCF_TILE_HARBOR_NAME $PCF_TILE_HARBOR_VERSION
+uploadStemCell    $PCF_TILE_HARBOR_STEMCELL_TYPE $PCF_TILE_HARBOR_STEMCELL_VERSION
 
 
 exit 1

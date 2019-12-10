@@ -2961,6 +2961,113 @@ getProductSlug() {
   echo "$fid"
 }
 
+uploadStemCell() {
+echo xx1
+  PRODUCT_SLUG=$1
+  SLUG_VER=$2
+
+  # --- GET STEMCEL-VERSION ---
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then SLUG_STR="Ubuntu Xenial Stemcell for AWS"; fi
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Azure"; fi
+  if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then SLUG_STR="Ubuntu Xenial Stemcell for Google Cloud Platform"; fi
+
+  for pid in $(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases 2> /dev/null | \
+             jq -r ".releases[] | select(.version | scan(\"^$SLUG_VER\")).id"); do
+    fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases/$pid 2>/dev/null | \
+          jq -r ".product_files[] | select(.name | scan(\"^$SLUG_STR\")) | select(.file_version | scan(\"$SLUG_VER\")).id")
+
+    if [ "${fid}" != "" ]; then
+      # --- ACCEPT EULA ---
+      pivnetAPI $PCF_PIVNET_TOKEN POST products/$PRODUCT_SLUG/releases/$pid/eula_acceptance > /dev/null 2>&1
+      break
+    else
+      echo "ERROR: Unable to find $PRODUCT_SLUG $2 on Pivnet"
+      exit 1
+    fi
+  done
+
+  file=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases/$pid 2>/dev/null | \
+       jq -r ".product_files[] | select(.id | tostring | scan(\"^$fid$\")).aws_object_key" | \
+       awk -F'/' '{ print $NF }')
+
+  if [ ! -f /tmp/$file ]; then
+    messageTitle "Download Product from PIVNET"
+    messagePrint " - Product Slug:" "$SLUG_VER"
+    messagePrint " - Product FileID:" "$fid"
+    messagePrint " - Download Location:" "/tmp/$file"
+    pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $pid $fid $file
+  fi
+
+  messageTitle "Uploading Stemcell for Harbor"
+  messagePrint " - Staging Stemcell Version:" "$SLUG_VER"
+  messagePrint " - Staging Stemcell Type:" "$PRODUCT_SLUG"
+  messagePrint " - Staging Stemcell Description:" "$PRODUCT_SLUG $SLUG_VER"
+
+  messageTitle "Uploading Stemcell"
+  messagePrint " - Stemcell File:" "/tmp/$file"
+
+  $OM $OM_LOGIN upload-stemcell --stemcell /tmp/$file > /dev/null 2>&1
+}
+
+uploadProductTile() {
+  PRODUCT_SLUG=$1
+  PRODUCT_VERSION=$2
+
+echo "PRODUCT_SLUG:$PRODUCT_SLUG"
+echo "PRODUCT_VERSION:$PRODUCT_VERSION"
+
+  # --- CHECK IF PRODUCT IS ALREADY STAGED ---
+  cnt=$($OM $OM_LOGIN staged-products | egrep -c " $PRODUCT_SLUG ")
+
+  if [ $cnt -eq 0 ]; then
+    rec=$(echo "$PRODUCT_VERSION" | awk -F'.' '{ print NF }')
+    if [ $rec -eq 2 ]; then SEARCH_STR="^${PRODUCT_VERSION}.[0-9]*$"; else SEARCH_STR="^${PRODUCT_VERSION}$"; fi
+  
+    for id in $(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases 2>/dev/null | \
+                jq -r ".releases[] | select(.version | scan(\"^$SEARCH_STR\")).id" | head -1); do
+  
+      fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases/$id 2>/dev/null | \
+           jq -r ".product_files[] | select(.name | scan(\"^$PRODUCT_NAME\")) | select(.file_version | scan(\"$PRODUCT_VERSION\")).id")
+  
+      if [ "${fid}" != "" ]; then
+        # --- ACCEPT EULA ---
+        pivnetAPI $PCF_PIVNET_TOKEN POST products/$PRODUCT_SLUG/releases/$id/eula_acceptance > /dev/null 2>&1
+        break
+      else
+        echo "ERROR: Unable to find $PRODUCT_SLUG $2 on Pivnet"
+        exit 1
+      fi
+    done
+  
+    file=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases/$id 2>/dev/null | \
+         jq -r ".product_files[] | select(.id | tostring | scan(\"^$fid$\")).aws_object_key" | \
+         awk -F'/' '{ print $NF }')
+  
+    if [ ! -f /tmp/$file ]; then
+      messageTitle "Download Product from PIVNET"
+      messagePrint " - Product Slug:" "$PRODUCT_SLUG"
+      messagePrint " - Product FileID:" "$fid"
+      messagePrint " - Download Location:" "/tmp/$file"
+      pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $id $fid $file
+    fi
+  
+    OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep " $PRODUCT_SLUG " | awk '{ print $4 }')
+  
+    messageTitle "Staging PKS Product Tile"
+    messagePrint " - Staging PKS Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
+    $OM $OM_LOGIN stage-product --product-name $PRODUCT_SLUG --product-version ${OPSMAN_AVAILABLE_PRODUCT} > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to stage product"
+      echo "       => $OM $OM_LOGIN stage-product \\"
+      echo "          --product-name $PRODUCT_SLUG --product-version ${OPSMAN_AVAILABLE_PRODUCT}"
+      exit 1
+    fi
+  fi
+
+}
+
+
+
 # getOpsManagerAMI GCP 2.6.9
 # getOpsManagerAMI GCP 2.6
 getOpsManagerAMI() {
@@ -3189,35 +3296,35 @@ wait_loop() {
 }
 
 messageTitle() {
-  msg="$*"
-  dat=$(date "+%Y%m%d-%H:%M:%S") 
+  _msg="$*"
+  _dat=$(date "+%Y%m%d-%H:%M:%S") 
 
   if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" == "1" ]; then
-    echo "[${dat}] ${msg}"
+    echo "[${_dat}] ${_msg}"
   else
-    echo "${msg}"
+    echo "${_msg}"
   fi
 } 
 
 messagePrint() {
-  msg="$1"
-  stt="$2"
-  cnt=$(echo "${msg}" | wc -c | sed 's/ //g')
-  dat=$(date "+%Y%m%d-%H:%M:%S") 
+  _msg="$1"
+  _stt="$2"
+  _cnt=$(echo "${_msg}" | wc -c | sed 's/ //g')
+  _dat=$(date "+%Y%m%d-%H:%M:%S") 
 
-  str=""
-  while [ $cnt -lt 58 ]; do
-    str="${str}."
-    let cnt=cnt+1
+  _str=""
+  while [ $_cnt -lt 58 ]; do
+    _str="${_str}."
+    let _cnt=_cnt+1
   done
   
   # --- INIZIALIZE VALUES IF EMPTY --- ---
   [ "$DEBUG" == "" ] && DEBUG=0
 
   if [ "${PCF_DEPLOYMENT_DEBUG}" == "true" -o "${DEBUG}" == "1" ]; then 
-    echo "[${dat}] ${msg} ${str}: ${stt}"
+    echo "[${_dat}] ${_msg} ${_str}: ${_stt}"
   else
-    echo "${msg} ${str}: ${stt}"
+    echo "${_msg} ${_str}: ${_stt}"
   fi
 }
 
