@@ -97,7 +97,7 @@ fi
         messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
         for node in $mst; do
           messagePrint " - Add/update Master Node" "${node}"
-          nid=$(az vm get-instance-view -n $master -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
+          nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
                 jq -r '.networkProfile.networkInterfaces[].id')
           if [ "${nid}" == "" ]; then
             echo "ERROR: failed to get Network id of Instance $node"
