@@ -94,6 +94,8 @@ fi
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
+echo "MST:$mst"
+
 messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
 for node in $mst; do
   messagePrint " - Add/update Master Node" "${node}"
@@ -103,18 +105,21 @@ for node in $mst; do
     echo "ERROR: failed to get Network id of Instance $node"
     echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
   fi
+echo "NID:$nid"
 
   nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
   if [ "${nnm}" == "" ]; then
     echo "ERROR: failed to get Network Name of Instance $node"
     echo "       => az network nic show --ids $nid"; exit 1
   fi
+echo "NNM:$nnm"
 
   ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
   if [ "${ipc}" == "" ]; then
     echo "ERROR: failed to get IP Config of Instance $master"
     echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
   fi
+echo "IPC:$ipc"
 
   az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
      --lb-name "${PCF_DEPLOYMENT_ENV_NAME}harbor-lb" \
@@ -127,7 +132,6 @@ for node in $mst; do
   fi
 done
 
-echo "MST:$mst"
 
 exit
 
