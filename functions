@@ -3012,6 +3012,7 @@ echo xx1
 uploadProductTile() {
   PRODUCT_SLUG=$1
   PRODUCT_VERSION=$2
+  PRODUCT_NAME=$3
 
   # --- CHECK IF PRODUCT IS ALREADY STAGED ---
   cnt=$($OM $OM_LOGIN staged-products | egrep -c " $PRODUCT_SLUG ")
