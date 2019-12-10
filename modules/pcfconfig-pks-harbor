@@ -52,7 +52,6 @@ uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL
 messageTitle "Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-echo gaga1
   # --- CREATE PULIC IP FOR LOADBALANCER ---
   ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
         jq -r '.[].ipAddress')
@@ -74,11 +73,10 @@ echo gaga1
     messagePrint " - Verify LB Public IP ($ipa)" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
   fi
 
-echo gaga2
   # --- CHECK IF ENTRY EXISTS ---
   rec=$(az network dns record-set list -g ${PCF_DEPLOYMENT_ENV_NAME} \
            --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-           --query "[?fqdn=='${n}.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}.']" | jq -r '.[].fqdn')
+           --query "[?fqdn=='harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}.']" | jq -r '.[].fqdn')
   if [ "${rec}" == "" ]; then
     messagePrint " - Creating DNS entry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" "$ipa"
     az network dns record-set a add-record -g ${PCF_DEPLOYMENT_ENV_NAME} \
