@@ -51,7 +51,7 @@ debugInfos() {
 
   if [ $(($MASK & $BITMASK_OPS)) -gt 0 ]; then 
     echo "ACCESSING THE OPS-MANAGER (VIA JUMP-HOST) "
-    echo "=> ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
+    echo "=> ssh -qi $TMP_OPSMAN ubuntu@pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     echo "=> . /tmp/debug.sh"
     echo ""
   fi
