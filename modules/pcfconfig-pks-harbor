@@ -50,34 +50,49 @@ uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL
 ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
 ##############################################################################################
 
-if [ $ret -eq 0 ]; then
-  director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
-                jq -r '.instance_groups[].properties.director.address')
-  director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
-                jq -r '.credential.value.password')
-fi
+director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+              jq -r '.instance_groups[].properties.director.address')
+director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+              jq -r '.credential.value.password')
 
 echo "director_ip:$director_ip"
 echo "director_cd:$director_cd"
-exit
 
-echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                     >  $TMP_LBSCRIPT
-echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                  >> $TMP_LBSCRIPT
-echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
-echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                >> $TMP_LBSCRIPT
-echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
-echo "bosh -e $DNS_PREFIX -d service-instance_$uid --column='Instance' --column='VM CID' vms | \\"  >> $TMP_LBSCRIPT
-echo "egrep \"^master/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"              >> $TMP_LBSCRIPT
+TMP_LBSCRIPT=/tmp/harbor-nodes.sh
 
-scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+echo "bosh alias-env $PCF_DEPLOYMENT_ENV_NAME -e $director_ip --ca-cert \$cert >/dev/null 2>&1"          >> $TMP_LBSCRIPT
+echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+echo "dep=\$(bosh -e $PCF_DEPLOYMENT_ENV_NAME deployments | egrep \"^harbor-container-registry\" | \\"   >> $TMP_LBSCRIPT
+echo "  awk '{ print \$1 }')"                                                                            >> $TMP_LBSCRIPT
+echo "bosh -e $PCF_DEPLOYMENT_ENV_NAME -d $dep --column='Instance' --column='VM CID' vms | \\"           >> $TMP_LBSCRIPT
+echo "egrep \"^harbor-app/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"               >> $TMP_LBSCRIPT
+
+OPS_MANAGER_DNS=pcf.${PCF_DEPLOYMENT_ENV_NAME}.AWS_HOSTED_DNS_DOMAIN
+
+scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh; ret=$?
 if [ ${ret} -ne 0 ]; then
   echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
   echo "       Please try manually:"
-  echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh"
+  echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh"
   exit 1
 fi
 
+ssh -o StrictHostKeyChecking=no -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" >/dev/null 2>&1; ret=$?
+if [ ${ret} -ne 0 ]; then
+  echo "ERROR: executing remote-script: /tmp/masters.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+  echo "       Please try manually:"
+  echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+  exit 1
+else
+  mst=$(ssh -o StrictHostKeyChecking=no -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
+  if [ "${mst}" == "" ]; then
+    echo "ERROR: failed to retrieve the hostname and ip adresses of the master nodes"
+    echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/masters.sh\""
+  fi
+fi
 
+echo "MST:$mst"
 
 exit
 
