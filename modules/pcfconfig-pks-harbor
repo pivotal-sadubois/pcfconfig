@@ -68,7 +68,7 @@ echo "  awk '{ print \$1 }')"                                                   
 echo "bosh -e $PCF_DEPLOYMENT_ENV_NAME -d $dep --column='Instance' --column='VM CID' vms | \\"           >> $TMP_LBSCRIPT
 echo "egrep \"^harbor-app/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"               >> $TMP_LBSCRIPT
 
-OPS_MANAGER_DNS=pcf.${PCF_DEPLOYMENT_ENV_NAME}.AWS_HOSTED_DNS_DOMAIN
+OPS_MANAGER_DNS=pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 TMP_OPSMAN="/tmp/opsman.pem"
 
 scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh; ret=$?
