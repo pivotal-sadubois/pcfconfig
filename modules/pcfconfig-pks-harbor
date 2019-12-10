@@ -19,10 +19,13 @@ export PCFPATH=$HOME/pcfconfig
 . ${PCFPATH}/functions
 . $envFile
 
+messageTitle ""
+messageTitle "PCF Configuration Utility Module: (pcfconfig-pks-harbor)"
+messageTitle "by Sacha Dubois, Pivotal Inc,"
+messageTitle "-----------------------------------------------------------------------------------------------------------"
+
 # --- CHECK UTILITIES ---
 checkOpsMantools
-
-echo "OM:$OM"
 
 messageTitle "Install Harbor"
 messagePrint " - Harbor Version:"                  "$PCF_TILE_HARBOR_VERSION"

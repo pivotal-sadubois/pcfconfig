@@ -3013,21 +3013,22 @@ uploadProductTile() {
   PRODUCT_SLUG=$1
   PRODUCT_VERSION=$2
 
-echo "PRODUCT_SLUG:$PRODUCT_SLUG"
-echo "PRODUCT_VERSION:$PRODUCT_VERSION"
-
   # --- CHECK IF PRODUCT IS ALREADY STAGED ---
   cnt=$($OM $OM_LOGIN staged-products | egrep -c " $PRODUCT_SLUG ")
 
   if [ $cnt -eq 0 ]; then
     rec=$(echo "$PRODUCT_VERSION" | awk -F'.' '{ print NF }')
     if [ $rec -eq 2 ]; then SEARCH_STR="^${PRODUCT_VERSION}.[0-9]*$"; else SEARCH_STR="^${PRODUCT_VERSION}$"; fi
+
+echo "SEARCH_STR:$SEARCH_STR"
+echo "pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases"
   
     for id in $(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases 2>/dev/null | \
                 jq -r ".releases[] | select(.version | scan(\"^$SEARCH_STR\")).id" | head -1); do
   
       fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$PRODUCT_SLUG/releases/$id 2>/dev/null | \
            jq -r ".product_files[] | select(.name | scan(\"^$PRODUCT_NAME\")) | select(.file_version | scan(\"$PRODUCT_VERSION\")).id")
+echo "functions: ID:$id FID:$fid"
   
       if [ "${fid}" != "" ]; then
         # --- ACCEPT EULA ---
