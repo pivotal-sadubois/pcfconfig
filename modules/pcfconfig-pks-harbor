@@ -69,9 +69,8 @@ echo "bosh -e $PCF_DEPLOYMENT_ENV_NAME -d $dep --column='Instance' --column='VM 
 echo "egrep \"^harbor-app/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"               >> $TMP_LBSCRIPT
 
 OPS_MANAGER_DNS=pcf.${PCF_DEPLOYMENT_ENV_NAME}.AWS_HOSTED_DNS_DOMAIN
+TMP_OPSMAN="/tmp/opsman.pem"
 
-echo "scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh"
-exit
 scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh; ret=$?
 if [ ${ret} -ne 0 ]; then
   echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
