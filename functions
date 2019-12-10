@@ -2962,7 +2962,6 @@ getProductSlug() {
 }
 
 uploadStemCell() {
-echo xx1
   PRODUCT_SLUG=$1
   SLUG_VER=$2
 
@@ -3062,12 +3061,10 @@ uploadProductTile() {
 
         sleep 10
       done
-   fi
+    fi
 
-   OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep " $PRODUCT_SLUG " | awk '{ print $4 }')
-echo "OPSMAN_AVAILABLE_PRODUCT:$OPSMAN_AVAILABLE_PRODUCT"
+    OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep " $PRODUCT_SLUG " | awk '{ print $4 }')
 
-#xxxxxxx
     messageTitle "Staging Harbor Product Tile"
     messagePrint " - Staging Harbor Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
     $OM $OM_LOGIN stage-product --product-name $PRODUCT_SLUG --product-version ${OPSMAN_AVAILABLE_PRODUCT} > /dev/null 2>&1
@@ -3078,7 +3075,6 @@ echo "OPSMAN_AVAILABLE_PRODUCT:$OPSMAN_AVAILABLE_PRODUCT"
       exit 1
     fi
   fi
-
 }
 
 

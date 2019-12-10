@@ -37,14 +37,72 @@ messagePrint " - Stemcell Version:"                "$PCF_TILE_HARBOR_STEMCELL_VE
 HARBOR_SLUG=$PCF_TILE_HARBOR_NAME
 HARBOR_VERSION=$PCF_TILE_HARBOR_VERSION
 
-  OPS_MANAGER_URL="pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
-  OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSMANAGER_ADMIN_USER \
-            --password $PCF_OPSMANAGER_ADMIN_PASS"
+OPS_MANAGER_URL="pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSMANAGER_ADMIN_USER \
+          --password $PCF_OPSMANAGER_ADMIN_PASS"
 
 PRODUCT_NAME="VMware Harbor Container Registry for PCF"
 
 uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PRODUCT_NAME}"
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
 
+##############################################################################################
+############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
+##############################################################################################
+
+if [ $ret -eq 0 ]; then
+  director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+                jq -r '.instance_groups[].properties.director.address')
+  director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+                jq -r '.credential.value.password')
+fi
+
+echo "director_ip:$director_ip"
+echo "director_cd:$director_cd"
+exit
+
+echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                     >  $TMP_LBSCRIPT
+echo "bosh alias-env $DNS_PREFIX -e $director_ip --ca-cert \$cert >/dev/null 2>&1"                  >> $TMP_LBSCRIPT
+echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                >> $TMP_LBSCRIPT
+echo "[ \$? -ne 0 ] && exit 1"                                                                      >> $TMP_LBSCRIPT
+echo "bosh -e $DNS_PREFIX -d service-instance_$uid --column='Instance' --column='VM CID' vms | \\"  >> $TMP_LBSCRIPT
+echo "egrep \"^master/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"              >> $TMP_LBSCRIPT
+
+scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh; ret=$?
+if [ ${ret} -ne 0 ]; then
+  echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+  echo "       Please try manually:"
+  echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/masters.sh"
+  exit 1
+fi
+
+
+
+exit
+
+#az network public-ip create -n azpks-harbor-ip -g azpks --sku Standard --allocation-method static
+#ipa=$(az network public-ip show -n azpks-harbor-ip -g azpks | jq -r '.ipAddress')
+#az network nsg create -n azpks-harbor-sg -g azpks 
+#az network nsg rule create -g azpks --nsg-name azpks-harbor-sg -n AllowVnetInBound --protocol "*" --direction Inbound --source-port-ranges 0-65535 --priority 100
+#az network nsg rule create -g azpks --nsg-name azpks-harbor-sg -n AllowVnetOutBound --protocol "*" --direction Outbound --source-port-ranges 100-4096 --priority 100
+#az network dns record-set a add-record -g azpks --zone-name azpks.pcfsdu.com --record-set-name harbor --ipv4-address 51.144.188.185
+#az network nic create -g azpks --name azpks-harbor-nic --vnet-name azpks-virtual-network --subnet azpks-infrastructure-subnet --public-ip-address azpks-harbor-ip --network-security-group azpks-harbor-sg
+#az network nic ip-config address-pool add -g azpks --nic-name $nnm --lb-name "${n}-lb" \
+             --address-pool "${n}-pool" --ip-config-name $ipc
+
+# --- CREATE LB ---
+#az network public-ip create -n azpks-harbor-ip -g azpks --sku Standard --allocation-method static
+#az network lb create -g azpks -n azpks-harbor-lb --sku Standard --public-ip-address azpks-harbor-ip --location westeurope  --backend-pool-name azpks-harbor-pool
+#az network lb probe create -g azpks --lb-name azpks-harbor-lb -n azpks-harbor-lb-probe --protocol tcp --port 443
+az network lb rule create -g azpks --lb-name azpks-harbor-lb -n azpks-harbor-lb-rule --protocol tcp \
+             --frontend-port 443 --backend-port 443 --backend-pool-name azpks-harbor-pool --probe-name azpks-harbor-lb-probe
+
+ipc=$(az network nic ip-config list -g azpks --nic-name azpks-harbor-nic  | jq -r '.[].name') 
+ipc=ipconfig1
+#az network nic ip-config address-pool add -g azpks --nic-name azpks-harbor-nic --lb-name "azpks-harbor-lb" \
+             --address-pool "azpks-harbor-pool" --ip-config-name ipconfig1
+
+#az network nic delete -g azpks --name harbor-nic
 
 exit 1
