@@ -3050,28 +3050,26 @@ uploadProductTile() {
     fi
   
     cnt=$($OM $OM_LOGIN available-products | grep -c " $PRODUCT_SLUG ")
-echo "1 CNT:$cnt"
     if [ $cnt -eq 0 ]; then 
       messageTitle "Uploading Stemcell for Harbor"
       messagePrint " - Staging Stemcell Version:" "$SLUG_VER"
       messagePrint " - Staging Stemcell Type:" "$PRODUCT_SLUG"
       messagePrint " - Staging Stemcell Description:" "$PRODUCT_SLUG $SLUG_VER"
 
-echo "CNT:$cnt"
       while [ $cnt -eq 0 ]; do
-        $OM $OM_LOGIN upload-product --product /tmp/$file
+        $OM $OM_LOGIN upload-product --product /tmp/$file > /dev/null 2>&1
         cnt=$($OM $OM_LOGIN available-products | grep -c " $PRODUCT_SLUG ")
-echo "=> cnt:$cnt"
 
         sleep 10
       done
    fi
 
    OPSMAN_AVAILABLE_PRODUCT=$($OM $OM_LOGIN available-products | grep " $PRODUCT_SLUG " | awk '{ print $4 }')
-  
+echo "OPSMAN_AVAILABLE_PRODUCT:$OPSMAN_AVAILABLE_PRODUCT"
+
 #xxxxxxx
     messageTitle "Staging Harbor Product Tile"
-    messagePrint " - Staging Harbor Tile:" "$PRODUCT_SLUG"
+    messagePrint " - Staging Harbor Tile:" "$OPSMAN_AVAILABLE_PRODUCT"
     $OM $OM_LOGIN stage-product --product-name $PRODUCT_SLUG --product-version ${OPSMAN_AVAILABLE_PRODUCT} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
       echo "ERROR: failed to stage product"
