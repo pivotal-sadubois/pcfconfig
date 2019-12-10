@@ -51,12 +51,13 @@ uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL
 ##############################################################################################
 messageTitle "Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "azure" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
 echo gaga1
   # --- CREATE PULIC IP FOR LOADBALANCER ---
   ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
         jq -r '.[].ipAddress')
   if [ "${ipa}" == "" ]; then
+    messagePrint " - Create Public IP (${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip)"
     az network public-ip create -g $PCF_DEPLOYMENT_ENV_NAME -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \
        --allocation-method Static --sku Standard > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -204,7 +205,7 @@ fi
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
-if [ "${PCF_DEPLOYMENT_CLOUD}" == "azure" ]; then
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   messageTitle "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
   for node in $mst; do
     messagePrint " - Add/update Master Node" "${node}"
