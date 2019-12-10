@@ -19,6 +19,11 @@ export PCFPATH=$HOME/pcfconfig
 . ${PCFPATH}/functions
 . $envFile
 
+# --- CHECK UTILITIES ---
+checkOpsMantools
+
+echo "OM:$OM"
+
 messageTitle "Install Harbor"
 messagePrint " - Harbor Version:"                  "$PCF_TILE_HARBOR_VERSION"
 messagePrint " - Harbor Slug:"                     "$PCF_TILE_HARBOR_NAME"
