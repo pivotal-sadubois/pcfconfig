@@ -275,13 +275,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
         if [ "$VM_STAT" != "VM running" ]; then 
           NEW_DEPLOY=1
           messagePrint " - Last deployment does not exist anymore" "cleaning up"
-          messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+          messagePrint " - 1Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
       echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 echo "Do you want to proceede <y/n> ? "; read x
 
           rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
-          messagePrint " - No acrive deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
+          messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
           az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
 echo "deployPCFremote.sh: debug1"
         fi
