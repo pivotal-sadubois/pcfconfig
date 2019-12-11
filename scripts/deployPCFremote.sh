@@ -289,6 +289,8 @@ echo "deployPCFremote.sh: debug1"
         NEW_DEPLOY=1
         messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
         az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
+echo "deployPCFremote.sh: debug2"
+      echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
       fi
     fi
   else
@@ -299,6 +301,7 @@ echo "deployPCFremote.sh: debug1"
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
+echo "deployPCFremote.sh: debug10"
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
