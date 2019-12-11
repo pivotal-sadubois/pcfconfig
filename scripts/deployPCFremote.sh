@@ -278,20 +278,16 @@ echo "deployPCFremote.sh: debug31"
           messagePrint " - Last deployment does not exist anymore" "cleaning up"
           messagePrint " - 1Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
       echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
-echo "Do you want to proceede <y/n> ? "; read x
 
           rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
 
           messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
           az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
-echo "deployPCFremote.sh: debug1"
         fi
       else
         NEW_DEPLOY=1
         messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
         az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
-echo "deployPCFremote.sh: debug2"
-      echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
       fi
     fi
   else
@@ -302,7 +298,6 @@ echo "deployPCFremote.sh: debug2"
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
-echo "deployPCFremote.sh: debug10"
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
