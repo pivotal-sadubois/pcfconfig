@@ -9,7 +9,7 @@ product-properties:
     selected_option: default
     value: default
   .properties.hostname:
-    value: harbor.azpks.pcfsdu.com
+    value: ((harbor_hostname))
   .properties.no_proxy:
     value: 127.0.0.1,localhost,ui,registry
   .properties.registry_storage:
@@ -17,7 +17,7 @@ product-properties:
     value: filesystem
   .properties.server_cert_ca:
     value: ((harbor_tls_root_cert_pem))
-  .properties.server_cert_key
+  .properties.server_cert_key:
     value:
       cert_pem: ((harbor_tls_cert_pem))
       private_key_pem: ((harbor_tls_private_key_pem))
