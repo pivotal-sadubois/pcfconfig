@@ -3097,7 +3097,7 @@ getOpsManagerAMI() {
               jq -r ".releases[] | select(.version | scan(\"^$SEARCH_STR\")).id" | head -1); do
 
     fid=$(pivnetAPI $PCF_PIVNET_TOKEN GET products/$slug/releases/$id 2>/dev/null | \
-      jq -r ".product_files[] | select(.name | scan(\"^$sstr\")) | select(.file_version | scan(\"$ver\")).id")
+      jq -r ".product_files[] | select(.name | scan(\"^$sstr\")) | select(.file_version | scan(\"$ver\")).id" | head -1)
 
     if [ "${fid}" != "" ]; then
       # --- ACCEPT EULA ---
@@ -3113,26 +3113,30 @@ getOpsManagerAMI() {
          jq -r ".product_files[] | select(.id | tostring | scan(\"^$fid$\")).aws_object_key" | \
          awk -F'/' '{ print $NF }')
 
-  pivnetAPIdownload $PCF_PIVNET_TOKEN $slug $id $fid $file
+  if [ "${file}" != "" ]; then 
+    pivnetAPIdownload $PCF_PIVNET_TOKEN $slug $id $fid $file
 
-  if [ "${cloud}" == "GCP" ]; then 
-    egrep "ops-manager" /tmp/$file | head -1 | awk '{ print $2 }'
-  fi
-
-  if [ "${cloud}" == "Azure" ]; then 
-    egrep "http" /tmp/$file | head -1 | awk '{ print $2 }'
-  fi
-
-  if [ "${cloud}" == "AWS" ]; then 
-    if [ "$AWS_REGION" != "" ]; then 
-      egrep "^$AWS_REGION:" /tmp/$file | head -1 | awk '{ print $2 }'
-    else
-      egrep "ami-" /tmp/$file | head -1 | awk '{ print $2 }'
+    if [ "${cloud}" == "GCP" ]; then 
+      egrep "ops-manager" /tmp/$file | head -1 | awk '{ print $2 }'
     fi
-  fi
 
-  # --- CLEANUP ---
-  rm -f /tmp/$file
+    if [ "${cloud}" == "Azure" ]; then 
+      egrep "http" /tmp/$file | head -1 | awk '{ print $2 }'
+    fi
+
+    if [ "${cloud}" == "AWS" ]; then 
+      if [ "$AWS_REGION" != "" ]; then 
+        egrep "^$AWS_REGION:" /tmp/$file | head -1 | awk '{ print $2 }'
+      else
+        egrep "ami-" /tmp/$file | head -1 | awk '{ print $2 }'
+      fi
+    fi
+
+    # --- CLEANUP ---
+    [ "${file}" != "" ] && rm -f /tmp/$file
+  else
+    echo "ERROR: failed to find file in PiVNET"; exit 1
+  fi
 }
 
 # getTerraformTemplate GCP 2.6 0.94.0
