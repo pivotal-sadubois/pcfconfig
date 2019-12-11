@@ -2073,6 +2073,7 @@ EOF
     echo "Configuring PKS Tile (${PCF_TILE_PKS_CONFIG})"
     messagePrint " - PKS YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG}"
 
+#blabla
     if [ "${TLS_CERTIFICATE}" == "" -a "${TLS_PRIVATE_KEY}" == "" ]; then 
       API_HOST_NAME=api.pks.${DNS_PREFIX}.${DNS_SUFFIX}
       TLS_HOST_NAME=*.pks.${DNS_PREFIX}.${DNS_SUFFIX}
@@ -2218,10 +2219,9 @@ EOF
     fi
 
     echo "-----------------------------------------------------------------------------------------------------------"
-echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE"
-    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
-      echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
+      echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
 

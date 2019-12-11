@@ -64,9 +64,9 @@ if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}"
   TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
   TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
-  echo "container_service_pks_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
-  echo "container_service_pks_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
-  echo "container_service_pks_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
+  echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+  echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
+  echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
 else
   TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
   messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
@@ -80,12 +80,19 @@ else
   TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
   TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
 
-  echo "container_service_pks_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
-  echo "container_service_pks_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
-  echo "container_service_pks_tls_root_cert_pem: " >> $VARFILE
+  echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+  echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+  echo "harbor_tls_root_cert_pem: " >> $VARFILE
 
   rm -f $TLS_TEMP_CERT
 fi
+
+echo "-----------------------------------------------------------------------------------------------------------"
+$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
+if [ $? -ne 0 ]; then
+  echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
+fi
+echo "-----------------------------------------------------------------------------------------------------------"
 
 ##############################################################################################
 ################################ CONFIGURE PKS LOADBALANCERS #################################
