@@ -88,9 +88,10 @@ else
 fi
 
 echo "-----------------------------------------------------------------------------------------------------------"
-$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
+echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE"
+$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
 if [ $? -ne 0 ]; then
-  echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
+  echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
 fi
 echo "-----------------------------------------------------------------------------------------------------------"
 
