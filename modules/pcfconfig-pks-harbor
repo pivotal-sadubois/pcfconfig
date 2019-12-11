@@ -14,6 +14,7 @@ envFile=$1
 
 export PCFCONFIG_BASE=$(basename $0)
 export PCFPATH=$HOME/pcfconfig
+export DEBUG=0
 
 # --- SOURCE FUNCTIONS---
 . ${PCFPATH}/functions
@@ -55,6 +56,10 @@ TLS_PRIVATE_KEY=$PCFPATH/certificates/privkey.pem
 TLS_ROOT_CERT=$PCFPATH/certificates/ca.pem
 VARFILE=/tmp/harbor_vars.yml; rm -rf $VARFILE; touch $VARFILE
 
+messageTitle "Configuring Harbor Tile (${PCF_TILE_HARBOR_CONFIG})"
+messagePrint " - Harbor YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG}"
+messagePrint " - Harbor YAML Variable File" "$VARFILE"
+
 if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}" ]; then
   TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
   messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
@@ -90,12 +95,26 @@ else
 fi
 
 echo "-----------------------------------------------------------------------------------------------------------"
-echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
 $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
 if [ $? -ne 0 ]; then
   echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
 fi
 echo "-----------------------------------------------------------------------------------------------------------"
+
+echo ""
+echo "Applying Changes to PKS"
+if [ $DEBUG -gt 0 ]; then
+  echo "-----------------------------------------------------------------------------------------------------------"
+  $OM $OM_LOGIN --request-timeout=90 apply-changes
+  echo "-----------------------------------------------------------------------------------------------------------"
+else
+  $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Applying Changes has been failed, please try manual"
+    echo "       $OM $OM_LOGIN apply-changes"; exit 1
+  fi
+fi
+
 
 ##############################################################################################
 ################################ CONFIGURE PKS LOADBALANCERS #################################
