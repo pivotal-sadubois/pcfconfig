@@ -1,0 +1,66 @@
+product-name: harbor-container-registry
+product-properties:
+  .properties.auth_mode:
+    selected_option: db_auth
+    value: db_auth
+  .properties.clair_updater_interval:
+    value: 0
+  .properties.customize_container_network:
+    selected_option: default
+    value: default
+  .properties.hostname:
+    value: harbor.azpks.pcfsdu.com
+  .properties.no_proxy:
+    value: 127.0.0.1,localhost,ui,registry
+  .properties.registry_storage:
+    selected_option: filesystem
+    value: filesystem
+  .properties.server_cert_ca:
+    value: ((harbor_tls_root_cert_pem))
+  .properties.server_cert_key
+    value:
+      cert_pem: ((harbor_tls_cert_pem))
+      private_key_pem: ((harbor_tls_private_key_pem))
+  .properties.vm_monitor:
+    selected_option: no_monitor
+    value: no_monitor
+  .properties.with_clair:
+    value: true
+  .properties.with_notary:
+    value: true
+network-properties:
+  network:
+    name: pks
+  other_availability_zones:
+  - name: zone-1
+  singleton_availability_zone:
+    name: zone-1
+resource-config:
+  harbor-app:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    elb_names: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    internet_connected: false
+    persistent_disk:
+      size_mb: automatic
+    swap_as_percent_of_memory_size: automatic
+  smoke-testing:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    elb_names: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    internet_connected: false
+    swap_as_percent_of_memory_size: automatic
+errand-config:
+  smoke-testing:
+    post-deploy-state: when-changed
+  uaa-deregistration:
+    pre-delete-state: false
+
