@@ -134,7 +134,7 @@ echo gaga5
            -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule 2>/dev/null | jq -r '.name')
   if [ "${rul}" == "" ]; then
     messagePrint " - Creating LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
-    az network lb rule create -g ${DNS_PREFIX} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+    az network lb rule create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
        -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule --protocol tcp \
        --frontend-port 443 --backend-port 443 --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool \
        --probe-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe > /dev/null 2>&1
