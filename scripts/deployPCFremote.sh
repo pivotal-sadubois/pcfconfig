@@ -260,6 +260,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+echo "deployPCFremote.sh: debug31"
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
@@ -439,6 +440,7 @@ if [ $NEW_DEPLOY -eq 1 ]; then
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
+echo "deployPCFremote.sh: debug11"
     OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
     echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
@@ -471,6 +473,7 @@ if [ $NEW_DEPLOY -eq 1 ]; then
     echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 fi
+echo "deployPCFremote.sh: debug12"
 
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
