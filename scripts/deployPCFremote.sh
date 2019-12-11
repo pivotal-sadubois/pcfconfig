@@ -180,6 +180,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
       echo "Verify recent Deployment"
       messagePrint "- Last deployment does not exist anymore" "cleaning up"
       messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+echo "Do you want to proceede <y/n> ? "; read x
 
       echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
