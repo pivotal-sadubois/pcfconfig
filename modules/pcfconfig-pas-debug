@@ -1440,6 +1440,7 @@ echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL}"
 
   echo "-----------------------------------------------------------------------------------------------------------"
+  ccc=0
   while [ 1 ]; do
     $OM $OM_LOGIN configure-authentication --username $USER --password $PASS --decryption-passphrase $PASS; ret=$?
     if [ $ret -ne 0 ]; then 
@@ -1448,6 +1449,10 @@ echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
     else
       break
     fi
+    if [ $ccc -ge 5 ]; then 
+      echo "ERROR: OpsManager configure-authentication failled"; exit 1
+    fi
+    let ccc=ccc+1
   done
   echo "-----------------------------------------------------------------------------------------------------------"
 
@@ -2748,22 +2753,24 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
     ################################ CONFIGURE PKS LOADBALANCERS #################################
     ##############################################################################################
 
+#sacha
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       vmid=$(az vm list -g $DNS_PREFIX --query "[?tags.instance_group=='pivotal-container-service']" | jq -r '.[].name')
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         echo "Creating Workload LoadBalancer (${DNS_PREFIX}-$n)"
 
         # --- CREATE PULIC IP FOR LOADBALANCER ---
-        ipa=$(az network public-ip list -g azpks --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
+        ipa=$(az network public-ip list -g $DNS_PREFIX --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
         if [ "${ipa}" == "" ]; then
-          az network public-ip create -g $DNS_PREFIX -n ${DNS_PREFIX}-${n}-lb-ip --allocation-method Static --sku Standard > /dev/null 2>&1
+          az network public-ip create -g $DNS_PREFIX -n ${DNS_PREFIX}-${n}-lb-ip \
+             --allocation-method Static --sku Standard > /dev/null 2>&1
           if [ $? -ne 0 ]; then
             echo "ERROR: failled to create publicip"
             echo "       => az network public-ip create -g $DNS_PREFIX -n ${DNS_PREFIX}-${n} --allocation-method Static"
             exit 1
           fi
 
-          ipa=$(az network public-ip list -g azpks --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
+          ipa=$(az network public-ip list -g $DNS_PREFIX --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
           messagePrint " - Create LB Public IP ($ipa)" "${DNS_PREFIX}-${n}-lb-ip"
         else
           messagePrint " - Verify LB Public IP ($ipa)" "${DNS_PREFIX}-${n}-lb-ip"
@@ -3082,6 +3089,7 @@ EOF
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 
+#sacha
         ##############################################################################################
         ############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
         ##############################################################################################
@@ -3137,6 +3145,7 @@ EOF
             echo "       => az network nic ip-config list -g ${DNS_PREFIX} --nic-name $nnm"
           fi
 
+#sacha1
           az network nic ip-config address-pool add -g ${DNS_PREFIX} --nic-name $nnm --lb-name "${n}-lb" \
              --address-pool "${n}-pool" --ip-config-name $ipc > /dev/null 2>&1
           if [ $? -ne 0 ]; then 
