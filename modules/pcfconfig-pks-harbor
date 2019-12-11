@@ -47,6 +47,29 @@ uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PROD
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
 
 ##############################################################################################
+############################# GENERATING / ADDING TLS CERTIFICATES ###########################
+##############################################################################################
+
+TLS_CERTIFICATE=$PCFPATH/certificates/fullchain.pem 
+TLS_PRIVATE_KEY=$PCFPATH/certificates/privkey.pem
+TLS_ROOT_CERT=$PCFPATH/certificates/ca.pem
+VARFILE=/tmp/harbor_vars.yml; rm -rf $VARFILE; touch $VARFILE
+
+if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" == "" -a -f "${TLS_ROOT_CERT}" ]; then
+  TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+  messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
+  verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
+
+  TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
+  TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
+  TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
+
+  echo "container_service_pks_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+  echo "container_service_pks_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
+  echo "container_service_pks_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
+fi
+
+##############################################################################################
 ################################ CONFIGURE PKS LOADBALANCERS #################################
 ##############################################################################################
 messageTitle "Creating Workload LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
@@ -128,7 +151,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     messagePrint " - Verify LB Health Proble for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
   fi
 
-echo gaga5
   # --- CREATE LB RULE ---
   rul=$(az network lb rule show -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
            -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule 2>/dev/null | jq -r '.name')
@@ -149,8 +171,6 @@ echo gaga5
   else
     messagePrint " - Verify LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
   fi
-
-echo gaga10
 fi
 
 ##############################################################################################
