@@ -40,6 +40,7 @@ fi
 NEW_DEPLOY=0
 PAS_SRT=1
 TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
+echo "deployPCFremote.sh: TF_WORKDIR:$TF_WORKDIR"
 
 if [ "$PCF_DEPLOYMENT_DEBUG" == "true" ]; then DEBUG_FLAG="--debug"; else DEBUG_FLAG=""; fi
 
@@ -180,7 +181,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
       messagePrint "- Last deployment does not exist anymore" "cleaning up"
       messagePrint "- Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
-      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+      echo "deployPCFremote.sh: rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       ENV_NAME=$PCF_DEPLOYMENT_ENV_NAME
       messagePrint "Cleaning up Leftover GCP Objects" "Environment: $PCF_DEPLOYMENT_ENV_NAME Location: $GCP_REGION"
