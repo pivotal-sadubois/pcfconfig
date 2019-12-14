@@ -11,7 +11,8 @@ product-properties:
   .properties.hostname:
     value: ((harbor_hostname))
   .properties.admin_password:
-    value: ((admin_password))
+    value: 
+      secret: ((admin_password))
   .properties.no_proxy:
     value: 127.0.0.1,localhost,ui,registry
   .properties.registry_storage:
