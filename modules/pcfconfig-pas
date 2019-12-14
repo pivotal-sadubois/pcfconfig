@@ -2188,6 +2188,7 @@ EOF
     messagePrint " - PKS Variable File" "$VARFILE"
 
     OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
+echo "gaga: OPSMAN_STAGED_PRODUCT:$OPSMAN_STAGED_PRODUCT"
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       wait_loop 10 "Waiting product to be ready to stage"
 
@@ -2217,13 +2218,18 @@ EOF
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
     fi
+echo gaga2
+echo "PCF_TILE_HARBOR_CONFIG:$PCF_TILE_HARBOR_CONFIG"
+echo "PCF_TILE_PKS_CONFIG:$PCF_TILE_PKS_CONFIG"
+echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE"
 
     echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
+    $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
     if [ $? -ne 0 ]; then 
-      echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
+      echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
+echo gaga3
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
