@@ -70,6 +70,7 @@ if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}"
   TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
   echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+  echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
   echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
   echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
   echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
@@ -87,6 +88,7 @@ else
   TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
 
   echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+  echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
   echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
   echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
   echo "harbor_tls_root_cert_pem: " >> $VARFILE
