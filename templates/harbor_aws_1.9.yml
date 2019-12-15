@@ -35,9 +35,9 @@ network-properties:
   network:
     name: pks-subnet
   other_availability_zones:
-  - name: eu-central-1c
+  - name: ((availability_zone_1))
   singleton_availability_zone:
-    name: eu-central-1c
+    name: ((availability_zone_1))
 resource-config:
   harbor-app:
     max_in_flight: 1
