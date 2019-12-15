@@ -435,10 +435,7 @@ if [ $NEW_DEPLOY -eq 1 ]; then
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
-echo "deployPCFremote.sh: debug11"
-echo "getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION"
     OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
-echo "deployPCFremote.sh: debug12 OPSMAN_IMAGE:$OPSMAN_IMAGE"
 
     echo "subscription_id       = \"${AZURE_SUBSCRIPTION_ID}\""                  >> $TF_VARFILE
     echo "tenant_id             = \"${AZURE_TENANT_ID}\""                        >> $TF_VARFILE

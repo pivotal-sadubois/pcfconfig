@@ -3200,20 +3200,21 @@ EOF
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
-echo "Debug-1  MST:$mst"
+echo "pcfconfig-pks: Debug-1  MST:$mst"
 
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           for ins in $mst; do
-echo "Debug-2 gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins"
+echo "pcfconfig-pks: Debug-2 gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins"
             gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
           done
         fi
       done
     fi
-echo "Debug-2"
+echo "pcfconfig-pks: Debug-2"
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
+echo "pcfconfig-pks: Debug-21"
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 
@@ -3355,9 +3356,11 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pas-debug" ]; then
 fi
 
 if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-debug" ]; then
+echo "pcfconfig-pks: Debug-10"
   checkEnvironment
   sshEnvironment
 
+echo "pcfconfig-pks: Debug-11"
 if [ 1 -eq 0 ]; then
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
