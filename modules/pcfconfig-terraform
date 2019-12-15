@@ -2161,8 +2161,6 @@ EOF
       messagePrint " - OPS Manager Image" "$AZURE_OPS_MANAGER_IMAGE"
     fi
 
-#ggggg
-
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       $JQ -r '"worker_node_service_account: " + .modules[].resources."google_service_account.pks_worker_node_service_account".primary.attributes.email' \
       $TERRAFORM_TFSTATE | sed '/: $/d' | grep -v null | sort -u >> $VARFILE
@@ -2188,7 +2186,6 @@ EOF
     messagePrint " - PKS Variable File" "$VARFILE"
 
     OPSMAN_STAGED_PRODUCT=$($OM $OM_LOGIN staged-products | grep "pivotal-container-service" | awk '{ print $4 }')
-echo "gaga: OPSMAN_STAGED_PRODUCT:$OPSMAN_STAGED_PRODUCT"
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       wait_loop 10 "Waiting product to be ready to stage"
 
@@ -2218,10 +2215,6 @@ echo "gaga: OPSMAN_STAGED_PRODUCT:$OPSMAN_STAGED_PRODUCT"
     if [ "${OPSMAN_STAGED_PRODUCT}" == "" ]; then
       echo "ERROR: Product pivotal-container-service could not be staged"; exit 1
     fi
-echo gaga2
-echo "PCF_TILE_HARBOR_CONFIG:$PCF_TILE_HARBOR_CONFIG"
-echo "PCF_TILE_PKS_CONFIG:$PCF_TILE_PKS_CONFIG"
-echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE"
 
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_TILE_PKS_CONFIG} --vars-file $VARFILE
@@ -2229,7 +2222,6 @@ echo "$OM $OM_LOGIN configure-product --config $PCFCONFIG_PATH/templates/${PCF_T
       echo "ERROR: Configuring PKS tile has been failed, please retry"; exit 1
     fi
     echo "-----------------------------------------------------------------------------------------------------------"
-echo gaga3
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
