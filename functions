@@ -50,8 +50,9 @@ debugInfos() {
   fi
 
   if [ $(($MASK & $BITMASK_OPS)) -gt 0 ]; then 
-    echo "ACCESSING THE OPS-MANAGER (VIA JUMP-HOST) "
-    echo "=> ssh -qi $TMP_OPSMAN ubuntu@pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    echo "ACCESSING THE OPS-MANAGER"
+    echo "=> http://pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (PCF_OPSMANAGER_ADMIN_USER/$PCF_OPSMANAGER_ADMIN_PASS)"
+    echo "=> ssh -qi $TMP_OPSMAN ubuntu@pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (via JUMP-HOST)"
     echo "=> . /tmp/debug.sh"
     echo ""
   fi
