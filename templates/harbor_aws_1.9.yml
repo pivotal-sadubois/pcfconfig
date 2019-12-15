@@ -33,11 +33,11 @@ product-properties:
     value: true
 network-properties:
   network:
-    name: pks
+    name: pks-subnet
   other_availability_zones:
-  - name: zone-1
+  - name: eu-central-1c
   singleton_availability_zone:
-    name: zone-1
+    name: eu-central-1c
 resource-config:
   harbor-app:
     max_in_flight: 1
