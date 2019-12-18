@@ -1573,6 +1573,7 @@ cleanAWSenv() {
     vpc=$(jq -r ".Vpcs[$i].VpcId" 2>/dev/null $TMPVCP)
     cnt=$(jq -r ".Vpcs[$i].Tags[].Value" 2>/dev/null $TMPVCP | egrep -c "^${ENV_NAME}")
     if [ $cnt -eq 0 ]; then let i=i+1; continue; fi
+    messagePrint " VPC Ressources:" "$vpc"
 
     # --- DELETE SECURITY GROUPS BY ID ---
 #    for id in $(aws --region $AWS_LOCATION ec2 describe-security-groups --filter "Name=vpc-id,Values=$vpc" | \
@@ -1612,15 +1613,11 @@ cleanAWSenv() {
 #      fi
 #    done
 
-#lllllllllllll 1615
-echo "aws --region $AWS_LOCATION ec2 describe-nat-gateways"
-echo "lllllll VPC:$vpc"
     # --- DELETE NAT GATEWAY ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-nat-gateways --filter "Name=vpc-id,Values=$vpc" | \
                 jq -r ".NatGateways[].NatGatewayId" 2>/dev/null $TMPVAL); do
 
-echo "ID:$id"
-      messagePrint " - Delete NAT Gateway:" "$id"
+      messagePrint "  - 1Delete NAT Gateway:" "$id"
       aws --region $AWS_LOCATION ec2 delete-nat-gateway --nat-gateway-id $id > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to NAT Gateway: $id"
@@ -1683,7 +1680,7 @@ echo "ID:$id"
           jq -r '.LoadBalancerDescriptions[].VPCId')
       if [ "$tvpc" == "${vpc}" ]; then
         aws --region $AWS_LOCATION elb delete-load-balancer --load-balancer-name $nam
-        messagePrint " - Cleaning up elp LoadBalancers:" "$nam"
+        messagePrint "  - Cleaning up elp LoadBalancers:" "$nam"
         sleep 30
       fi
     done
@@ -1692,7 +1689,7 @@ echo "ID:$id"
     for id in $(aws --region $AWS_LOCATION ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$vpc" | \
                 jq -r ".InternetGateways[].InternetGatewayId" 2>/dev/null); do
 
-      messagePrint " - Detach Internet Gateway:" "$id"
+      messagePrint "  - Detach Internet Gateway:" "$id"
       aws --region $AWS_LOCATION ec2 detach-internet-gateway --internet-gateway-id $id --vpc-id $vpc > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to detach internet gateway: $id"
@@ -1700,7 +1697,7 @@ echo "ID:$id"
         exit 1
       fi
 
-      messagePrint " - Delete Internet Gateway:" "$id"
+      messagePrint "  - Delete Internet Gateway:" "$id"
       aws --region $AWS_LOCATION ec2 delete-internet-gateway --internet-gateway-id $id > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to delete internet gateway: $id"
@@ -1713,7 +1710,7 @@ echo "ID:$id"
     for id in $(aws --region $AWS_LOCATION ec2 describe-subnets --filter "Name=vpc-id,Values=$vpc" | \
                 jq -r ".Subnets[].SubnetId" 2>/dev/null); do
 
-      messagePrint " - Delete Subnet:" "$id"
+      messagePrint "  - Delete Subnet:" "$id"
       aws --region $AWS_LOCATION ec2 delete-subnet --subnet-id $id > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to deleting subnet: $id"
@@ -1731,7 +1728,7 @@ echo "ID:$id"
 
       cnt=$(jq -r ".SecurityGroups[$i].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}")
       if [ $cnt -gt 0 ]; then
-        messagePrint " - Delete Security Group:" "$gnm"
+        messagePrint "  - Delete Security Group:" "$gnm"
         aws --region $AWS_LOCATION ec2 delete-security-group --group-id $gid > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           aws --region $AWS_LOCATION ec2 delete-security-group --group-name $gnm > /dev/null 2>&1
@@ -1754,7 +1751,7 @@ echo "ID:$id"
       tvpc=$(aws --region $AWS_LOCATION ec2 describe-security-groups --group-ids  $gid | \
           jq -r '.SecurityGroups[].VpcId')
       if [ "$tvpc" == "${vpc}" -a "${sgnm}" != "default" ]; then
-        messagePrint " - Cleaning up SecurityGroup:" "$gid"
+        messagePrint "  - Cleaning up SecurityGroup:" "$gid"
         aws --region $AWS_LOCATION ec2 delete-security-group --group-id $gid > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "ERROR: failled to delete security group"
@@ -1787,7 +1784,7 @@ echo "ID:$id"
     for id in $(aws --region $AWS_LOCATION ec2 describe-route-tables --filter "Name=vpc-id,Values=$vpc" | \
                 jq -r ".RouteTables[].RouteTableId" 2>/dev/null); do
 
-      messagePrint " - Delete Routing Table:" "$id"
+      messagePrint "  - Delete Routing Table:" "$id"
       aws --region $AWS_LOCATION ec2 delete-route-table --route-table-id $id> /dev/null 2>&1
       #if [ $? -ne 0 ]; then
       #  echo "ERROR: failled to delete routing table: $id"
@@ -1797,7 +1794,7 @@ echo "ID:$id"
     done
 
     # --- DELETE VPC ---
-    messagePrint " - Delete VPC:" "$vpc"
+    messagePrint "  - Delete VPC:" "$vpc"
     aws --region $AWS_LOCATION ec2 delete-vpc --vpc-id $vpc > /dev/null 2>&1
     if [ $? -ne 0 ]; then
       echo "ERROR: failled to delete VPC: $vpc"
@@ -1812,6 +1809,7 @@ echo "ID:$id"
   # --- CLEANUP ---
   rm -f $TMPVCP
 
+  messageTitle " Release and Delete PublicIP:" 
   # --- DELETE ADDRESSES ---
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-addresses > $SECGRP
@@ -1842,7 +1840,6 @@ echo "ID:$id"
   # --- CLEANUP ---
   rm -f $TMPAWS
 
-echo "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL 10"; sleep 10000
   SECGRP=/tmp/$$_aws_routing_table.json
   aws --region $AWS_LOCATION ec2 describe-route-tables > $SECGRP
   tot=$(grep -c "RouteTableId" $SECGRP); i=0; let tot=tot-1
@@ -1873,7 +1870,7 @@ echo "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL 10"; sleep 10000
 
     cnt=$(jq -r ".NatGateways[$i].Tags[].Value" 2>/dev/null $SECGRP | egrep -c "^${ENV_NAME}")
     if [ $cnt -gt 0 ]; then
-      messagePrint " - Delete NAT Gateway:" "$gid"
+      messagePrint " - 2Delete NAT Gateway:" "$gid"
       aws --region $AWS_LOCATION ec2 delete-nat-gateway --group-id $gid > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         aws --region $AWS_LOCATION ec2 delete-nat-gateway --nat-gateway-id $gid > /dev/null 2>&1
