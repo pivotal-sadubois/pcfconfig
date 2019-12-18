@@ -1612,10 +1612,14 @@ cleanAWSenv() {
 #      fi
 #    done
 
+#lllllllllllll 1615
+echo "aws --region $AWS_LOCATION ec2 describe-nat-gateways"
+echo "lllllll VPC:$vpc"
     # --- DELETE NAT GATEWAY ---
     for id in $(aws --region $AWS_LOCATION ec2 describe-nat-gateways --filter "Name=vpc-id,Values=$vpc" | \
                 jq -r ".NatGateways[].NatGatewayId" 2>/dev/null $TMPVAL); do
 
+echo "ID:$id"
       messagePrint " - Delete NAT Gateway:" "$id"
       aws --region $AWS_LOCATION ec2 delete-nat-gateway --nat-gateway-id $id > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -1656,7 +1660,7 @@ cleanAWSenv() {
         aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid > /dev/null 2>&1; re1=$?
         aws --region $AWS_LOCATION ec2 release-address --public-ip $pid > /dev/null 2>&1; re2=$?
         if [ $re1 -ne 0 -a $re2 -ne 0 ]; then
-#=> Delete NatGateway first (awspks-nat)
+#=> Delete NatGateway first (awspks-nat) 1660 llllllll
           echo "ERROR: 1failed to release IP: $pid"
           echo "aws --region $AWS_LOCATION ec2 release-address --allocation-id $aid"
           echo "aws --region $AWS_LOCATION ec2 release-address --public-ip $pid"
