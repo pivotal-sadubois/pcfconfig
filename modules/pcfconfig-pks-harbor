@@ -52,9 +52,11 @@ OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSM
           --password $PCF_OPSMANAGER_ADMIN_PASS"
 
 PRODUCT_NAME="VMware Harbor Container Registry for PCF"
+echo "xxxxxxxxxxxxxxxxxxx-1";sleep 10000
 
 uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PRODUCT_NAME}"
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
+echo "xxxxxxxxxxxxxxxxxxx-2";sleep 10000
 
 ##############################################################################################
 ############################# GENERATING / ADDING TLS CERTIFICATES ###########################
@@ -125,8 +127,7 @@ pending=$($OM $OM_LOGIN pending-changes | grep "harbor-container-registry" | awk
 echo "pending:$pending"
 #if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
 
-sleep 10000
-exit 1
+echo "xxxxxxxxxxxxxxxxxxx-3";sleep 10000
 echo "-----------------------------------------------------------------------------------------------------------"
 echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
 $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
@@ -135,6 +136,7 @@ if [ $? -ne 0 ]; then
 fi
 echo "-----------------------------------------------------------------------------------------------------------"
 
+echo "xxxxxxxxxxxxxxxxxxx-4";sleep 10000
 echo ""
 messageTitle "Applying Changes to Harbor"
 if [ $DEBUG -gt 0 ]; then
