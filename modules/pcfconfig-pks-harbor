@@ -52,47 +52,9 @@ OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSM
           --password $PCF_OPSMANAGER_ADMIN_PASS"
 
 PRODUCT_NAME="VMware Harbor Container Registry for PCF"
-echo "xxxxxxxxxxxxxxxxxxx-1";sleep 10000
-#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal staged-products
-#+---------------------------+------------------+
-#|           NAME            |     VERSION      |
-#+---------------------------+------------------+
-#| p-bosh                    | 2.6.18-build.263 |
-#| pivotal-container-service | 1.6.0-build.17   |
-#+---------------------------+------------------+
-
 
 uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PRODUCT_NAME}"
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
-
-#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal staged-products
-#+---------------------------+------------------+
-#|           NAME            |     VERSION      |
-#+---------------------------+------------------+
-#| p-bosh                    | 2.6.18-build.263 |
-#| pivotal-container-service | 1.6.0-build.17   |
-#| harbor-container-registry | 1.9.3-build.2    |
-#+---------------------------+------------------+
-
-#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal deployed-products
-#+---------------------------+------------------+
-#|           NAME            |     VERSION      |
-#+---------------------------+------------------+
-#| p-bosh                    | 2.6.18-build.263 |
-#| pivotal-container-service | 1.6.0-build.17   |
-#+---------------------------+------------------+
-
-#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal pending-changes
-#+------------------------------------------------+-----------+-------------------------------+
-#|                    PRODUCT                     |  ACTION   |            ERRANDS            |
-#+------------------------------------------------+-----------+-------------------------------+
-#| p-bosh-05e8eab598ed833fe37e                    | unchanged |                               |
-#| pivotal-container-service-2d8afff75bcc8b1cdf3a | unchanged | pks-nsx-t-precheck            |
-#|                                                |           | smoke-tests                   |
-#|                                                |           | upgrade-all-service-instances |
-#|                                                |           | wavefront-alert-creation      |
-#+------------------------------------------------+-----------+-------------------------------+
-echo "xxxxxxxxxxxxxxxxxxx-2";sleep 10000
 
 ##############################################################################################
 ############################# GENERATING / ADDING TLS CERTIFICATES ###########################
@@ -157,15 +119,6 @@ if [ $status -eq 0 ]; then
     rm -f $TLS_TEMP_CERT
   fi
 
-  echo "$OM $OM_LOGIN staged-products"
-  $OM $OM_LOGIN staged-products
-  echo "$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l"
-  $OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l
-  pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
-  echo "pending:$pending"
-  #if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
-
-  echo "xxxxxxxxxxxxxxxxxxx-3";sleep 10000
   echo "-----------------------------------------------------------------------------------------------------------"
   echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
   $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
@@ -173,24 +126,20 @@ if [ $status -eq 0 ]; then
     echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
   fi
   echo "-----------------------------------------------------------------------------------------------------------"
-  #staged-products
-  #pending-changes
-  #staged-config 
-  #deployed-products 
-  #available-products
 
-  echo "xxxxxxxxxxxxxxxxxxx-4";sleep 10000
-  echo ""
-  messageTitle "Applying Changes to Harbor"
-  if [ $DEBUG -gt 0 ]; then
-    echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN --request-timeout=90 apply-changes
-    echo "-----------------------------------------------------------------------------------------------------------"
-  else
-    $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Applying Changes has been failed, please try manual"
-      echo "       $OM $OM_LOGIN apply-changes"; exit 1
+  pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
+  if [ "${pending}" == "install" -o "${pending}" == "update" ]; then
+    messageTitle "Applying Changes to Harbor"
+    if [ $DEBUG -gt 0 ]; then
+      echo "-----------------------------------------------------------------------------------------------------------"
+      $OM $OM_LOGIN --request-timeout=90 apply-changes
+      echo "-----------------------------------------------------------------------------------------------------------"
+    else
+      $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Applying Changes has been failed, please try manual"
+        echo "       $OM $OM_LOGIN apply-changes"; exit 1
+      fi
     fi
   fi
 fi
