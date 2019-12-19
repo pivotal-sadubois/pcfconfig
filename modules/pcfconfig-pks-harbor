@@ -166,14 +166,39 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   aws elb --region $AWS_REGION describe-load-balancers \
           --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
   if [ ${ret} -gt 0 ]; then
+    vpcid=$(aws ec2 describe-subnets --region $AWS_REGION --subnet-ids $SUB1 | jq -r '.Subnets[].VpcId')
+    secid=$(aws ec2 describe-security-groups --region $AWS_REGION \
+            --filters Name=group-name,Values=$PCF_DEPLOYMENT_ENV_NAME-harbor-security-group | \
+            jq -r '.SecurityGroups[].GroupId') 
+    if [ "${secid}" == "" ]; then 
+      messageTitle "Create Security Group: $PCF_DEPLOYMENT_ENV_NAME-harbor-security-group"
+      aws ec2 create-security-group --region $AWS_REGION --group-name $PCF_DEPLOYMENT_ENV_NAME-harbor-security-group \
+          --description "Harbor Security Group" --vpc-id $vpcid
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: failed to create Security Group"
+        echo "       => aws ec2 create-security-group --region $AWS_REGION --group-name $PCF_DEPLOYMENT_ENV_NAME-harbor-security-group \\"
+        echo "          --description "Harbor Security Group" --vpc-id $vpcid"
+        exit 1
+      fi
+
+      aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $secid \
+          --protocol tcp --port 443 --cidr 0.0.0.0/24
+      if [ $? -ne 0 ]; then        
+        echo "ERROR: failed to create Security Group Roules"
+        echo "       => aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $secid \\"
+        echo "          --protocol tcp --port 443 --cidr 0.0.0.0/24"
+        exit 1
+      fi
+    fi
+
     aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
-       --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
+       --tags "Key=Environment,Value=$PCF_DEPLOYMENT_ENV_NAME" \
        --listeners "Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443" \
        --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating LoadBalancer"
       echo "aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name \"${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb\" \\"
-      echo "  --tags \"Key=Environment,Value=$AWS_DNS_PREFIX\" \\"
+      echo "  --tags \"Key=Environment,Value=$PCF_DEPLOYMENT_ENV_NAME\" \\"
       echo "  --listeners \"Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443\" \\"
       echo "  --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG"
       exit 1
@@ -204,7 +229,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 
   if [ "${ALIAS}" != "$DNSLB" ]; then
     if [ "${ZONE_ID}" != "" ]; then
-      echo "Create DNS Entry for $HARBOR"
+      messageTitle "Create DNS Entry for $HARBOR"
       ZONE="$HARBOR"
 
       TMPROUTE53=/tmp/$$_tmp_route53.json
