@@ -189,7 +189,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       if [ $? -ne 0 ]; then        
         echo "ERROR: failed to create Security Group Roules"
         echo "       => aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $secid \\"
-        echo "          --protocol tcp --port 443 --cidr 0.0.0.0/24"
+        echo "          --protocol tcp --port 443 --cidr 0.0.0.0/0"
         exit 1
       fi
     fi
@@ -407,13 +407,10 @@ else
   fi
 fi
 
-echo "MST:$mst"
-
 ##############################################################################################
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
-xxxxxxxxx
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
   if [ ${ret} -eq 0 ]; then
