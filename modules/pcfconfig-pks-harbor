@@ -215,27 +215,22 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       echo "  --health-check \"Target=TCP:443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3\""
       exit 1
     fi
-  fi
 
-  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
-           jq -r '.HostedZones[0].Id')
-  ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-  DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
-      jq -r '.LoadBalancerDescriptions[0].DNSName')
-  DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
-      jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
+             jq -r '.HostedZones[0].Id')
+    ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+    DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].DNSName')
+    DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
 
-  HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
-  ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
-          --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
-          jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
+    HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+            --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
+            jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
-echo "HARBOR:$HARBOR"
-echo "ALIAS:$ALIAS DNSLB:$DNSLB"
-echo "ZONE_ID:$ZONE_ID"
-  if [ "${ALIAS}1" != "$DNSLB" ]; then
     if [ "${ZONE_ID}" != "" ]; then
-      messageTitle "Create DNS Entry for $HARBOR"
+      messagePrint " - Create DNS Entry for $HARBOR"
       ZONE="$HARBOR"
 
       TMPROUTE53=/tmp/$$_tmp_route53.json
