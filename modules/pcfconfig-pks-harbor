@@ -233,7 +233,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 echo "HARBOR:$HARBOR"
 echo "ALIAS:$ALIAS DNSLB:$DNSLB"
 echo "ZONE_ID:$ZONE_ID"
-  if [ "${ALIAS}" != "$DNSLB" ]; then
+  if [ "${ALIAS}1" != "$DNSLB" ]; then
 echo gaga1
     if [ "${ZONE_ID}" != "" ]; then
 echo gaga2
