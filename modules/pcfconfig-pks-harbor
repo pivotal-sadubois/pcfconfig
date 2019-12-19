@@ -161,7 +161,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   messagePrint " - Subnet-1:" "$SUB1"
   messagePrint " - Subnet-2:" "$SUB2"
   messagePrint " - Subnet-3:" "$SUB3"
-  messagePrint " - Security Group:" "$SECG"
 
   aws elb --region $AWS_REGION describe-load-balancers \
           --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
@@ -231,6 +230,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
           --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
           jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
+echo "XX1"
+echo "ALIAS:$ALIAS DNSLB:$DNSLB"
+echo "ZONE_ID:$ZONE_ID"
   if [ "${ALIAS}" != "$DNSLB" ]; then
     if [ "${ZONE_ID}" != "" ]; then
       messageTitle "Create DNS Entry for $HARBOR"
