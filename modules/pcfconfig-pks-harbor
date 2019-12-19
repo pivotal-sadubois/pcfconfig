@@ -230,11 +230,13 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
           --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
           jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
-echo "XX1"
+echo "HARBOR:$HARBOR"
 echo "ALIAS:$ALIAS DNSLB:$DNSLB"
 echo "ZONE_ID:$ZONE_ID"
   if [ "${ALIAS}" != "$DNSLB" ]; then
+echo gaga1
     if [ "${ZONE_ID}" != "" ]; then
+echo gaga2
       messageTitle "Create DNS Entry for $HARBOR"
       ZONE="$HARBOR"
 
