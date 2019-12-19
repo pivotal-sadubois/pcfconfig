@@ -297,6 +297,9 @@ echo "deployPCFremote.sh: debug311  RG:$RG"
       messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
 
       rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
+
+      messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
+      az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
     fi
   else
 echo "deployPCFremote.sh: debug32"
