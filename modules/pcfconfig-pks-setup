@@ -1216,7 +1216,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-terraform" ]; then
   if [ "$TF_PKS_VARFILE" != "" ]; then
     if [ -f "$TF_PKS_VARFILE" ]; then 
       TERRAFORM_VARS=terraform.tfvars
-      TERRAFORM_VARS_ORIG=$TF_PKS_VARFILE
+      TERRAFORM_VARS_ORITERRAFORM_VARSG=$TF_PKS_VARFILE
       cp $TF_PKS_VARFILE $TF_HOME/terraforming-pks/$TERRAFORM_VARS
       messagePrint " - Placing Terraform Variable file" "$TF_HOME/terraforming-pks/$TERRAFORM_VARS"
     else
@@ -2886,6 +2886,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       done
     fi
 
+#sacha
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       # --- CREATE ELB LOADBALANCER ---
       SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
@@ -3282,6 +3283,7 @@ echo "pcfconfig-pks: Debug-21"
   else
     echo ""
     echo "ERROR: API Host: $API_HOST_NAME can not be resolved by DNS"; exit 1
+echo "pcfconfig-pks: Debug-29"
   fi
 
   exit 0
@@ -3455,7 +3457,7 @@ if [ 1 -eq 0 ]; then
 
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       DNS_NAME="*.apps-${cluster}"
-      echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+      echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
 
       az network dns record-set a show -g $DNS_PREFIX -z ${DNS_PREFIX}.${DNS_SUFFIX} -n $DNS_NAME > /dev/null 2>&1
       if [ $? -eq 0 ]; then
