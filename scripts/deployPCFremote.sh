@@ -434,6 +434,8 @@ if [ $NEW_DEPLOY -eq 1 ]; then
     echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 
+echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
+echo "NEW_DEPLOY:$NEW_DEPLOY"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
     OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
