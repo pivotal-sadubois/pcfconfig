@@ -121,9 +121,9 @@ fi
 
 echo "$OM $OM_LOGIN staged-products"
 $OM $OM_LOGIN staged-products
-echo "$OM $OM_LOGIN staged-config --product-name harbor-container-registry | wc -l"
-$OM $OM_LOGIN staged-config --product-name harbor-container-registry | wc -l
-pending=$($OM $OM_LOGIN pending-changes | grep "harbor-container-registry" | awk '{ print $4 }')
+echo "$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l"
+$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l
+pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
 echo "pending:$pending"
 #if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
 
@@ -135,6 +135,9 @@ if [ $? -ne 0 ]; then
   echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
 fi
 echo "-----------------------------------------------------------------------------------------------------------"
+#staged-products
+#pending-changes
+#staged-config 
 
 echo "xxxxxxxxxxxxxxxxxxx-4";sleep 10000
 echo ""
