@@ -144,28 +144,13 @@ if [ $status -eq 0 ]; then
   fi
 fi
 
-echo "xxxxxxxxxxxxxxxxxxx-5";sleep 10000
-
-
 ##############################################################################################
 ################################ CONFIGURE PKS LOADBALANCERS #################################
 ##############################################################################################
 messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
-
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-#gaga
-  TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
-
-
-  ERRAFORM_VARS=terraform.tfvars
-  TERRAFORM_TFSTATE=terraform.tfstate
-  TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
-
-echo "$PWD"
-pwd
-
+  #TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
   # --- CREATE ELB LOADBALANCER ---
   SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
   SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
@@ -178,22 +163,83 @@ pwd
   messagePrint " - Subnet-3:" "$SUB3"
   messagePrint " - Security Group:" "$SECG"
 
-#  aws elb --region $AWS_REGION describe-load-balancers \
-#          --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
-#  if [ ${ret} -gt 0 ]; then
-#    aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
-#       --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
-#       --listeners "Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443" \
-#       --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG > /dev/null 2>&1; ret=$?
-#    if [ ${ret} -ne 0 ]; then
-#      echo "ERROR: Creating LoadBalancer"
-#      echo "aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name \"${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb\" \\"
-#      echo "  --tags \"Key=Environment,Value=$AWS_DNS_PREFIX\" \\"
-#      echo "  --listeners \"Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443\" \\"
-#      echo "  --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG"
-#      exit 1
-#    fi
+  aws elb --region $AWS_REGION describe-load-balancers \
+          --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
+       --tags "Key=Environment,Value=$AWS_DNS_PREFIX" \
+       --listeners "Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443" \
+       --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating LoadBalancer"
+      echo "aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name \"${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb\" \\"
+      echo "  --tags \"Key=Environment,Value=$AWS_DNS_PREFIX\" \\"
+      echo "  --listeners \"Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443\" \\"
+      echo "  --subnet $SUB1 $SUB2 $SUB3 --security-groups $SECG"
+      exit 1
+    fi
 
+    aws elb configure-health-check --region $AWS_REGION --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       --health-check "Target=TCP:443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3" > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Configure Healhcheck"
+      echo "aws elb configure-health-check --region $AWS_REGION --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "  --health-check \"Target=TCP:443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3\""
+      exit 1
+    fi
+  fi
+
+#AWS_ID => ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb
+  if [ "${ROUTE53_TOKEN}" != "" ]; then
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
+             jq -r '.HostedZones[0].Id')
+    ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+    DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].DNSName')
+    DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+    HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+            --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
+            jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
+
+    if [ "${ALIAS}" != "$DNSLB" ]; then
+      if [ "${ZONE_ID}" != "" ]; then
+        echo "Create DNS Entry for $HARBOR"
+        ZONE="$HARBOR"
+
+        TMPROUTE53=/tmp/$$_tmp_route53.json
+        echo "{"                                                   >  $TMPROUTE53
+        echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+        echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+        echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+        echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+        echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
+        echo "    \"Type\": \"A\","                                >> $TMPROUTE53
+        echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
+        echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
+        echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
+        echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
+        echo "    }"                                               >> $TMPROUTE53
+        echo "}}]"                                                 >> $TMPROUTE53
+        echo "}"                                                   >> $TMPROUTE53
+
+        aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
+            --change-batch file://${TMPROUTE53} > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "ERROR: failed to set DNS for $hnm"
+          echo "       => aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" \\"
+          echo "              --change-batch file://${TMPROUTE53}"
+          cat $TMPROUTE53
+          exit 1
+        fi
+
+        rm -f $TMPROUTE53
+      fi
+    fi
+  fi
+  
 fi 
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
