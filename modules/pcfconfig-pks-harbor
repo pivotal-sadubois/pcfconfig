@@ -189,57 +189,53 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
     fi
   fi
 
-#AWS_ID => ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb
-  if [ "${ROUTE53_TOKEN}" != "" ]; then
-    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
-             jq -r '.HostedZones[0].Id')
-    ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
-    DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
-        jq -r '.LoadBalancerDescriptions[0].DNSName')
-    DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
-        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+  ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
+           jq -r '.HostedZones[0].Id')
+  ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+  DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+      jq -r '.LoadBalancerDescriptions[0].DNSName')
+  DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+      jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
 
-    HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
-    ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
-            --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
-            jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
+  HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+          --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
+          jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
 
-    if [ "${ALIAS}" != "$DNSLB" ]; then
-      if [ "${ZONE_ID}" != "" ]; then
-        echo "Create DNS Entry for $HARBOR"
-        ZONE="$HARBOR"
+  if [ "${ALIAS}" != "$DNSLB" ]; then
+    if [ "${ZONE_ID}" != "" ]; then
+      echo "Create DNS Entry for $HARBOR"
+      ZONE="$HARBOR"
 
-        TMPROUTE53=/tmp/$$_tmp_route53.json
-        echo "{"                                                   >  $TMPROUTE53
-        echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
-        echo "  \"Changes\": [{"                                   >> $TMPROUTE53
-        echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
-        echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
-        echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
-        echo "    \"Type\": \"A\","                                >> $TMPROUTE53
-        echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
-        echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
-        echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
-        echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
-        echo "    }"                                               >> $TMPROUTE53
-        echo "}}]"                                                 >> $TMPROUTE53
-        echo "}"                                                   >> $TMPROUTE53
+      TMPROUTE53=/tmp/$$_tmp_route53.json
+      echo "{"                                                   >  $TMPROUTE53
+      echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+      echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+      echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+      echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+      echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
+      echo "    \"Type\": \"A\","                                >> $TMPROUTE53
+      echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
+      echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
+      echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
+      echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
+      echo "    }"                                               >> $TMPROUTE53
+      echo "}}]"                                                 >> $TMPROUTE53
+      echo "}"                                                   >> $TMPROUTE53
 
-        aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
-            --change-batch file://${TMPROUTE53} > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
-          echo "ERROR: failed to set DNS for $hnm"
-          echo "       => aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" \\"
-          echo "              --change-batch file://${TMPROUTE53}"
-          cat $TMPROUTE53
-          exit 1
-        fi
-
-        rm -f $TMPROUTE53
+      aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
+          --change-batch file://${TMPROUTE53} > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failed to set DNS for $hnm"
+        echo "       => aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" \\"
+        echo "              --change-batch file://${TMPROUTE53}"
+        cat $TMPROUTE53
+        exit 1
       fi
+
+      rm -f $TMPROUTE53
     fi
   fi
-  
 fi 
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
