@@ -53,9 +53,45 @@ OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSM
 
 PRODUCT_NAME="VMware Harbor Container Registry for PCF"
 echo "xxxxxxxxxxxxxxxxxxx-1";sleep 10000
+#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal staged-products
+#+---------------------------+------------------+
+#|           NAME            |     VERSION      |
+#+---------------------------+------------------+
+#| p-bosh                    | 2.6.18-build.263 |
+#| pivotal-container-service | 1.6.0-build.17   |
+#+---------------------------+------------------+
+
 
 uploadProductTile "${PCF_TILE_HARBOR_NAME}" "${PCF_TILE_HARBOR_VERSION}" "${PRODUCT_NAME}"
 uploadStemCell    "${PCF_TILE_HARBOR_STEMCELL_TYPE}" "${PCF_TILE_HARBOR_STEMCELL_VERSION}"
+
+#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal staged-products
+#+---------------------------+------------------+
+#|           NAME            |     VERSION      |
+#+---------------------------+------------------+
+#| p-bosh                    | 2.6.18-build.263 |
+#| pivotal-container-service | 1.6.0-build.17   |
+#| harbor-container-registry | 1.9.3-build.2    |
+#+---------------------------+------------------+
+
+#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal deployed-products
+#+---------------------------+------------------+
+#|           NAME            |     VERSION      |
+#+---------------------------+------------------+
+#| p-bosh                    | 2.6.18-build.263 |
+#| pivotal-container-service | 1.6.0-build.17   |
+#+---------------------------+------------------+
+
+#om --target pcf.awspks.pcfsdu.com --skip-ssl-validation --username admin --password pivotal pending-changes
+#+------------------------------------------------+-----------+-------------------------------+
+#|                    PRODUCT                     |  ACTION   |            ERRANDS            |
+#+------------------------------------------------+-----------+-------------------------------+
+#| p-bosh-05e8eab598ed833fe37e                    | unchanged |                               |
+#| pivotal-container-service-2d8afff75bcc8b1cdf3a | unchanged | pks-nsx-t-precheck            |
+#|                                                |           | smoke-tests                   |
+#|                                                |           | upgrade-all-service-instances |
+#|                                                |           | wavefront-alert-creation      |
+#+------------------------------------------------+-----------+-------------------------------+
 echo "xxxxxxxxxxxxxxxxxxx-2";sleep 10000
 
 ##############################################################################################
@@ -73,86 +109,93 @@ AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
 AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
 AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
 
-messageTitle "Configuring Harbor Tile (${PCF_TILE_HARBOR_CONFIG})"
-messagePrint " - Harbor YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG}"
-messagePrint " - Harbor YAML Variable File" "$VARFILE"
+status=$($OM $OM_LOGIN deployed-products | grep -c "$PCF_TILE_HARBOR_NAME")
+if [ $status -eq 0 ]; then 
+  messageTitle "Configuring Harbor Tile (${PCF_TILE_HARBOR_CONFIG})"
+  messagePrint " - Harbor YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG}"
+  messagePrint " - Harbor YAML Variable File" "$VARFILE"
 
-if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}" ]; then
-  TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
-  messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
-  verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
+  if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}" ]; then
+    TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+    messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
+    verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
 
-  TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
-  TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
-  TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
+    TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
+    TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
+    TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
-  echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
-  echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
-  echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
-  echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
-  echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
-  echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
-  echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
-  echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-else
-  TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
-  messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
+    echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
+    echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+    echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
+    echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
+    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+  else
+    TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+    messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
 
-  TLS_TEMP_CERT=/tmp/$$_cert
-  $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1
+    TLS_TEMP_CERT=/tmp/$$_cert
+    $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1
+    fi
+
+    TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
+    TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+
+    echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
+    echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+    echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+    echo "harbor_tls_root_cert_pem: " >> $VARFILE
+    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+
+    rm -f $TLS_TEMP_CERT
   fi
 
-  TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
-  TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+  echo "$OM $OM_LOGIN staged-products"
+  $OM $OM_LOGIN staged-products
+  echo "$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l"
+  $OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l
+  pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
+  echo "pending:$pending"
+  #if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
 
-  echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
-  echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
-  echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
-  echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
-  echo "harbor_tls_root_cert_pem: " >> $VARFILE
-  echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
-  echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
-  echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
-
-  rm -f $TLS_TEMP_CERT
-fi
-
-echo "$OM $OM_LOGIN staged-products"
-$OM $OM_LOGIN staged-products
-echo "$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l"
-$OM $OM_LOGIN staged-config --product-name $PCF_TILE_HARBOR_NAME | wc -l
-pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
-echo "pending:$pending"
-#if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
-
-echo "xxxxxxxxxxxxxxxxxxx-3";sleep 10000
-echo "-----------------------------------------------------------------------------------------------------------"
-echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
-$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
-if [ $? -ne 0 ]; then
-  echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
-fi
-echo "-----------------------------------------------------------------------------------------------------------"
-#staged-products
-#pending-changes
-#staged-config 
-
-echo "xxxxxxxxxxxxxxxxxxx-4";sleep 10000
-echo ""
-messageTitle "Applying Changes to Harbor"
-if [ $DEBUG -gt 0 ]; then
+  echo "xxxxxxxxxxxxxxxxxxx-3";sleep 10000
   echo "-----------------------------------------------------------------------------------------------------------"
-  $OM $OM_LOGIN --request-timeout=90 apply-changes
-  echo "-----------------------------------------------------------------------------------------------------------"
-else
-  $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
+  echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
+  $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
   if [ $? -ne 0 ]; then
-    echo "ERROR: Applying Changes has been failed, please try manual"
-    echo "       $OM $OM_LOGIN apply-changes"; exit 1
+    echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
+  fi
+  echo "-----------------------------------------------------------------------------------------------------------"
+  #staged-products
+  #pending-changes
+  #staged-config 
+  #deployed-products 
+  #available-products
+
+  echo "xxxxxxxxxxxxxxxxxxx-4";sleep 10000
+  echo ""
+  messageTitle "Applying Changes to Harbor"
+  if [ $DEBUG -gt 0 ]; then
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN --request-timeout=90 apply-changes
+    echo "-----------------------------------------------------------------------------------------------------------"
+  else
+    $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Applying Changes has been failed, please try manual"
+      echo "       $OM $OM_LOGIN apply-changes"; exit 1
+    fi
   fi
 fi
+
+echo "xxxxxxxxxxxxxxxxxxx-5";sleep 10000
 
 
 ##############################################################################################
