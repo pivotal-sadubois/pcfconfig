@@ -262,6 +262,7 @@ fi
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
 echo "deployPCFremote.sh: debug31"
   RG=$(az group exists --name $PCF_DEPLOYMENT_ENV_NAME)
+echo "deployPCFremote.sh: debug311  RG:$RG"
   if [ "$RG" == "true" ]; then
     TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
     if [ -f ${TF_STATE} ]; then
@@ -289,8 +290,16 @@ echo "deployPCFremote.sh: debug31"
         messagePrint " - No active deployment, deleting ressource group" "$PCF_DEPLOYMENT_ENV_NAME"
         az group delete --name $PCF_DEPLOYMENT_ENV_NAME --yes
       fi
+    else
+      NEW_DEPLOY=1
+      echo "Verify recent Deployment"
+      messagePrint " - Last deployment does not exist anymore" "cleaning up"
+      messagePrint " - Remove old Terraform environment" "${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}"
+
+      rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
     fi
   else
+echo "deployPCFremote.sh: debug32"
     NEW_DEPLOY=1
     echo "Verify recent Deployment"
     messagePrint " - Last deployment does not exist anymore" "cleaning up"
@@ -298,6 +307,7 @@ echo "deployPCFremote.sh: debug31"
 
     rm -rf ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}
   fi
+echo "deployPCFremote.sh: debug39 381"
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -343,6 +353,8 @@ fi
 ##############################################################################################
 ################################ GENERATE TERRAFORM VARFILE ##################################
 ##############################################################################################
+
+echo "deployPCFremote.sh NEW_DEPLOY:$NEW_DEPLOY"
 
 if [ $NEW_DEPLOY -eq 1 ]; then
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
@@ -434,8 +446,8 @@ if [ $NEW_DEPLOY -eq 1 ]; then
     echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 
-echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
-echo "NEW_DEPLOY:$NEW_DEPLOY"
+echo "deployPCFremote.sh: debug-40 PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
+echo "deployPCFremote.sh: debug-40 NEW_DEPLOY:$NEW_DEPLOY"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
     OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
