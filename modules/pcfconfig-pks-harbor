@@ -12,13 +12,22 @@ fi
 
 envFile=$1
 
-export PCFCONFIG_BASE=$(basename $0)
-export PCFPATH=$HOME/pcfconfig
-export DEBUG=0
-
 # --- SOURCE FUNCTIONS---
 . ${PCFPATH}/functions
 . $envFile
+
+[ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ] && TF_DEPLOYMENT="aws"
+[ "$PCF_DEPLOYMENT_CLOUD" == "Azure" ] && TF_DEPLOYMENT="azure"
+[ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && TF_DEPLOYMENT="gcp"
+
+if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then PRODUCT_TILE=pks; else PRODUCT_TILE=pas; fi
+
+export DEBUG=0
+export PCFCONFIG_BASE=$(basename $0)
+export PCFPATH=$HOME/pcfconfig
+export TF_WORKDIR=$HOME/workspace
+export TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
+export TF_VARS=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfvars
 
 messageTitle ""
 messageTitle "PCF Configuration Utility Module: (pcfconfig-pks-harbor)"
@@ -139,17 +148,22 @@ messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb
 echo "PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+#gaga
+  TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
+
+
   ERRAFORM_VARS=terraform.tfvars
   TERRAFORM_TFSTATE=terraform.tfstate
+  TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
 
 echo "$PWD"
 pwd
 
   # --- CREATE ELB LOADBALANCER ---
-  SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-  SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-  SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TERRAFORM_TFSTATE | grep -v null | sed '/: $/d' | sort -u)
-  SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
+  SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TF_STATE | \
      grep -v null | sed '/: $/d' | sort -u)
 
   messagePrint " - Subnet-1:" "$SUB1"
