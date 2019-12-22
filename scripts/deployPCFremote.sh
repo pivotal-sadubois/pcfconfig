@@ -243,7 +243,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
       echo "ERROR: Failed to bind IAM policy"
       echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
       echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
-      echo "           --iam-account \"${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\""
+      echo "           --role \"roles/owner\""
       exit 1
     fi
 

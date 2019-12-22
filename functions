@@ -2445,7 +2445,20 @@ cleanGCPenv() {
   #gcloud compute target-tcp-proxies list
   #gcloud compute target-http-proxies list
 
+  #gcloud compute disks list --filter="zone:( $GCP_AZ1 $GCP_AZ2 $GCP_AZ3 )"
+
+  for n in $(gcloud compute disks list --filter="zone:( $GCP_AZ1 $GCP_AZ2 $GCP_AZ3 )" 2>/dev/null | \
+           sed '1d' | egrep -v "^jump" | awk '{ print $1 ":" $2 }'); do
+
+    disk=$(echo $n | awk -F: '{print $1 }') 
+    zone=$(echo $n | awk -F: '{print $2 }') 
+
+    messagePrint " - Deleting Disk:" "$disk"
+    gcloud compute disks delete $disk -q --zone $zone 2>/dev/null
+  done
+
   sleep 10
+
 }
 
 checkOpsMantools() {
