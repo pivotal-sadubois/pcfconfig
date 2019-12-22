@@ -3037,6 +3037,7 @@ EOF
           messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "$stt"
 
           if [ "$stt" == "failed" ]; then
+            debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) is in failed state, please delete cluster and restart"
             echo "       => pks delete-cluster $PKS_CLUSTER_1_NAME"
             exit 1
@@ -3212,10 +3213,8 @@ echo "pcfconfig-pks: Debug-2 gcloud compute target-pools add-instances ${GCP_DNS
         fi
       done
     fi
-echo "pcfconfig-pks: Debug-2"
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
-echo "pcfconfig-pks: Debug-21"
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
         uid=$(pks cluster $n | egrep "UUID:" | awk '{ print $NF }')
 
