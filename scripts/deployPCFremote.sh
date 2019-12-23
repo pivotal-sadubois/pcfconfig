@@ -218,6 +218,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     #fi
   
     GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
+echo "deployPCFremote.sh debug-1: GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
     gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
            --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -236,16 +237,20 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
       exit 1
     fi
 
-    gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-           --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
-           --role "roles/owner" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to bind IAM policy"
-      echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
-      echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
-      echo "           --role \"roles/owner\""
-      exit 1
-    fi
+    for n in roles/compute.instanceAdmin roles/compute.instanceAdmin.v1 roles/compute.networkAdmin \
+             roles/compute.securityAdmin roles/compute.storageAdmin roles/owner; do
+
+      gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+             --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
+             --role "$n" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to bind IAM policy"
+        echo "       => gcloud projects add-iam-policy-binding ${GCP_PROJECT} \\"
+        echo "           --member \"serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com\" \\"
+        echo "           --role \"$n\""
+        exit 1
+      fi
+    done
 
     # ONLY FOR TESTING
 #    gcloud auth activate-service-account ${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com \
