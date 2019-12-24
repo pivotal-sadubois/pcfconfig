@@ -2357,6 +2357,7 @@ EOF
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PKS"
+sleep 1000
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN --request-timeout=90 apply-changes
@@ -3022,6 +3023,7 @@ EOF
              --plan $PKS_CLUSTER_1_PLAN --wait 
           echo "-----------------------------------------------------------------------------------------------------------"
           if [ $? -ne 0 ]; then 
+            debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
             echo "ERROR: Creating PKS Cluster $PKS_CLUSTER_1_NAME failed"
             echo "       => pks create-cluster $PKS_CLUSTER_1_NAME --external-hostname ${lbdns} --plan $PKS_CLUSTER_1_PLAN  --wait"
             exit 1
@@ -3030,6 +3032,7 @@ EOF
           stt=$(pks cluster $PKS_CLUSTER_1_NAME | egrep "Last Action State:" | awk '{ print $NF }')
           messagePrint "PKS Cluster 1: $PKS_CLUSTER_1_NAME ($PKS_CLUSTER_1_PLAN)" "$stt"
           if [ "$stt" != "succeeded" ]; then
+            debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
             echo "ERROR: PKS Cluster ($PKS_CLUSTER_1_NAME) creation failed"; exit 1
           fi
         else
