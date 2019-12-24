@@ -237,10 +237,11 @@ echo "deployPCFremote.sh debug-1: GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
       exit 1
     fi
 
-    for n in roles/compute.instanceAdmin roles/compute.instanceAdmin.v1 roles/compute.networkAdmin \
-             roles/compute.securityAdmin roles/compute.storageAdmin roles/iam.serviceAccountUser \
-             roles/iam.serviceAccountTokenCreator roles/compute.viewer roles/owner roles/compute.viewer; do
+#    for n in roles/compute.instanceAdmin roles/compute.instanceAdmin.v1 roles/compute.networkAdmin \
+#             roles/compute.securityAdmin roles/compute.storageAdmin roles/iam.serviceAccountUser \
+#             roles/iam.serviceAccountTokenCreator roles/compute.viewer roles/owner roles/compute.viewer; do
 
+    for n in roles/owner; do
       gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
              --member "serviceAccount:${PCF_DEPLOYMENT_ENV_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com" \
              --role "$n" > /dev/null 2>&1
