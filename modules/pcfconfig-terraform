@@ -1473,6 +1473,7 @@ echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
 
     echo ""
     echo "Applying Changes to OpsManager"
+sleep 10000
     if [ $DEBUG -gt 0 ]; then
       echo "-----------------------------------------------------------------------------------------------------------"
       $OM $OM_LOGIN apply-changes
