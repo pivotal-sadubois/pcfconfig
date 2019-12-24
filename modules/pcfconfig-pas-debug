@@ -2350,6 +2350,11 @@ EOF
       done
     fi
 
+    echo "-----------------------------------------------------------------------------------------------------------"
+    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB} 
+    echo "-----------------------------------------------------------------------------------------------------------"
+exit 1
+
     # --- NETWORK TAG FOR THE FIREWALL RULE ---
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       vmnm=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | jq -r '.[].name')
@@ -2364,10 +2369,6 @@ EOF
         exit 1
       fi
     fi
-
-    echo "-----------------------------------------------------------------------------------------------------------"
-    $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB} 
-    echo "-----------------------------------------------------------------------------------------------------------"
 
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
