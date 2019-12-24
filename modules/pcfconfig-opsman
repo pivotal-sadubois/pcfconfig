@@ -2356,12 +2356,16 @@ EOF
 
     # --- NETWORK TAG FOR THE FIREWALL RULE ---
     if [ "${PCF_CLOUD_NAME}" == "gcp1" ]; then
-      vmnm=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | jq -r '.[].name')
-      zone=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | \
+      # gcloud compute instances list --filter="labels.instance_group=( 'bosh' )" --format=json | jq -r '.[].name' 
+      #vmnm=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | jq -r '.[].name')
+      #zone=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | \
+      #       jq -r '.[].zone' | awk -F'/' '{ print $NF }')
+      vmnm=$(gcloud compute instances list --filter="labels.labels.instance_group=( 'bosh' )" --format=json | jq -r '.[].name')
+      zone=$(gcloud compute instances list --filter="labels.labels.instance_group=( 'bosh' )" --format=json | \
              jq -r '.[].zone' | awk -F'/' '{ print $NF }')
       messageTitle "Adding Network Tag (${AWS_DNS_PREFIX}-pks-api) for VM $vmnm"
       gcloud compute instances add-tags $vmnm --zone $zone --tags "${AWS_DNS_PREFIX}-pks-api" > /dev/null 2>&1
-      gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
+      #gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to add network tag to VM $zone"
         echo "       => gcloud compute instances add-tags $vmnm --zone $zone --tags 'pks-api'"
