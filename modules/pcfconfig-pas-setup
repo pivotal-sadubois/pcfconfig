@@ -3219,17 +3219,12 @@ EOF
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
-echo "pcfconfig-pks: Debug-1  MST:$mst"
-
-echo "gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -eq 0 ]; then
           for ins in $mst; do
-echo "pcfconfig-pks: Debug-2 gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins"
             gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
           done
         fi
-exit 1
       done
     fi
 
