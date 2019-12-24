@@ -2355,7 +2355,7 @@ EOF
     echo "-----------------------------------------------------------------------------------------------------------"
 
     # --- NETWORK TAG FOR THE FIREWALL RULE ---
-    if [ "${PCF_CLOUD_NAME}" == "gcp1" ]; then
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       # gcloud compute instances list --filter="labels.instance_group=( 'bosh' )" --format=json | jq -r '.[].name' 
       #vmnm=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | jq -r '.[].name')
       #zone=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | \
