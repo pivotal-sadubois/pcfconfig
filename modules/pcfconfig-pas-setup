@@ -1473,7 +1473,6 @@ echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
 
     echo ""
     echo "Applying Changes to OpsManager"
-sleep 10000
     if [ $DEBUG -gt 0 ]; then
       echo "-----------------------------------------------------------------------------------------------------------"
       $OM $OM_LOGIN apply-changes
@@ -2351,6 +2350,21 @@ EOF
       done
     fi
 
+    # --- NETWORK TAG FOR THE FIREWALL RULE ---
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+      vmnm=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | jq -r '.[].name')
+      zone=$(gcloud compute instances list --filter="labels.job=( 'pivotal-container-service' )" --format=json | \
+             jq -r '.[].zone' | awk -F'/' '{ print $NF }')
+      messageTitle "Adding Network Tag (${AWS_DNS_PREFIX}-pks-api) for VM $vmnm"
+      gcloud compute instances add-tags $vmnm --zone $zone --tags "${AWS_DNS_PREFIX}-pks-api" > /dev/null 2>&1
+      gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to add network tag to VM $zone"
+        echo "       => gcloud compute instances add-tags $vmnm --zone $zone --tags 'pks-api'"
+        exit 1
+      fi
+    fi
+
     echo "-----------------------------------------------------------------------------------------------------------"
     $OM $OM_LOGIN upload-stemcell --stemcell /tmp/${STEMCELL_GLOB} 
     echo "-----------------------------------------------------------------------------------------------------------"
@@ -2358,7 +2372,6 @@ EOF
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PKS"
-sleep 1000
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN --request-timeout=90 apply-changes
