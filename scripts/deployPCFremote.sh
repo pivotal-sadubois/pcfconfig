@@ -264,8 +264,8 @@ echo "deployPCFremote.sh debug-1: GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
 #      exit 1
 #    fi
 
-     echo "deployPCFremote.sh: debug-10: mv /sa.json $GCP_SERVICE_ACCOUNT"
-     mv /sa.json $GCP_SERVICE_ACCOUNT
+     echo "deployPCFremote.sh: debug-10: sudo cp /sa.json $GCP_SERVICE_ACCOUNT"
+     sudo cp /sa.json $GCP_SERVICE_ACCOUNT
   fi
 fi
 
