@@ -2378,6 +2378,7 @@ echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PKS"
+sleep 1000
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN --request-timeout=90 apply-changes
