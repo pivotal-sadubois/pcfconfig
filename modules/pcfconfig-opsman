@@ -2365,7 +2365,6 @@ EOF
       zone=$(gcloud compute instances list --filter="labels.instance_group=( 'bosh' )" --format=json | \
              jq -r '.[].zone' | awk -F'/' '{ print $NF }')
       messageTitle "Adding Network Tag (${DNS_PREFIX}-pks-api) for VM $vmnm"
-echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-pks-api"
       gcloud compute instances add-tags $vmnm --zone $zone --tags "${DNS_PREFIX}-pks-api" > /dev/null 2>&1
       gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -2378,7 +2377,6 @@ echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-
     if [ $NO_APPLY -eq 0 ]; then
       echo ""
       echo "Applying Changes to PKS"
-sleep 1000
       if [ $DEBUG -gt 0 ]; then
         echo "-----------------------------------------------------------------------------------------------------------"
         $OM $OM_LOGIN --request-timeout=90 apply-changes
@@ -2397,7 +2395,6 @@ sleep 1000
       zone=$(gcloud compute instances list --filter="labels.instance_group=( 'bosh' )" --format=json | \
              jq -r '.[].zone' | awk -F'/' '{ print $NF }')
       messageTitle "Adding Network Tag (${DNS_PREFIX}-pks-api) for VM $vmnm"
-echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-pks-api"
       gcloud compute instances add-tags $vmnm --zone $zone --tags "${DNS_PREFIX}-pks-api" > /dev/null 2>&1
       gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -2411,7 +2408,6 @@ echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-
              jq -r '.[].zone' | awk -F'/' '{ print $NF }')
 
       messageTitle "Adding Network Tag for PKS VM (${DNS_PREFIX}-pks-api) for VM $vmnm"
-echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-pks-api"
       gcloud compute instances add-tags $vmnm --zone $zone --tags "${DNS_PREFIX}-pks-api" > /dev/null 2>&1
       gcloud compute instances add-tags $vmnm --zone $zone --tags "pks-api" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -2420,8 +2416,6 @@ echo "gcloud compute instances add-tags $vmnm --zone $zone --tags ${DNS_PREFIX}-
         exit 1
       fi
     fi
-
-
 
     echo ""
     echo "Configuration of the PKS Tile is completed."
