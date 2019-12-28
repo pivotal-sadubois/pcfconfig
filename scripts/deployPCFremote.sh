@@ -503,6 +503,7 @@ PCFCONFIG_PAS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraformi
 PCFCONFIG_PKS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-debug"
 PCFCONFIG_PAS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-debug"
 PCFCONFIG_PKS_HARBOR="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-harbor"
+PCFCONFIG_PKS_PBS="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-pbs"
 PCFCONFIG_PKS_INGRESS="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-ingress"
 
 # --- INITIALIZE STATE FILES ---
@@ -672,10 +673,36 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
 
 if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
-  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then 
+
+  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
     # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
-    if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then 
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then
       ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
+
+      if [ $? -ne 0 ]; then
+        setPCFconfigState $PCFCONFIG_PKS_HARBOR "failed"
+        echo "ERROR: Problem with pcfconfig-pks-harbor occured"; exit 1
+      else
+        setPCFconfigState $PCFCONFIG_PKS_HARBOR "completed"
+      fi
+    else
+      messagePrint "pcfconfig-pks-harbor already done" "skipping"
+    fi
+  fi
+
+  if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
+    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_PBS)" != "completed" ]; then
+      ${PCFPATH}/modules/pcfconfig-pks-pbs $envFile
+
+      if [ $? -ne 0 ]; then
+        setPCFconfigState $PCFCONFIG_PKS_PBS "failed"
+        echo "ERROR: Problem with pcfconfig-pks-pbs occured"; exit 1
+      else
+        setPCFconfigState $PCFCONFIG_PKS_PBS "completed"
+      fi
+    else
+      messagePrint "pcfconfig-pks-pbs already done" "skipping"
     fi
   fi
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
