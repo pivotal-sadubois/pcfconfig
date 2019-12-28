@@ -52,6 +52,43 @@ PBS_DUFFLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "duffle
 echo "PBS_BUNDLE:$PBS_BUNDLE"
 echo "PBS_DUFFLE:$PBS_DUFFLE"
 
+sudo mv $PBS_DUFFLE /usr/bin/duffle
+
+##############################################################################################
+############################### CONFIGURE PERSISTENT STORAGE #################################
+##############################################################################################
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  wget https://raw.githubusercontent.com/cloudfoundry-incubator/kubo-ci/master/specs/storage-class-aws.yml \
+     -O /tmp/storage-class-aws.yml -q
+
+  messageTitle "Loading AWS StorageClass (storage-class-aws)" 
+  kubectl create -f /tmp/storage-class-aws.yml
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  wget https://raw.githubusercontent.com/cloudfoundry-incubator/kubo-ci/master/specs/storage-class-azure.yml \
+     -O /tmp/storage-class-azure.yml -q
+  wget https://raw.githubusercontent.com/cloudfoundry-incubator/kubo-ci/master/specs/storage-class-azure-file.yml \
+     -O /tmp/storage-class-azure-file.yml -q
+
+  messageTitle "Loading Azure StorageClass (storage-class-azure.yml)"
+  kubectl create -f /tmp/storage-class-azure.yml
+
+  messageTitle "Loading Azure StorageClass (storage-class-azure-file.yml)"
+  kubectl create -f /tmp/storage-class-azure-file.yml
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  wget https://raw.githubusercontent.com/cloudfoundry-incubator/kubo-ci/master/specs/storage-class-gcp.yml \
+      -O /tmp/storage-class-gcp.yml -q
+
+  messageTitle "Loading Azure StorageClass (storage-class-gcp.yml)"
+  kubectl create -f /tmp/storage-class-gcp.yml
+fi
+
+debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+
 exit 1 
 
 HARBOR_SLUG=$PCF_TILE_HARBOR_NAME

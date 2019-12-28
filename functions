@@ -55,6 +55,12 @@ debugInfos() {
     echo "=> ssh -qi $TMP_OPSMAN ubuntu@pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (via JUMP-HOST)"
     echo "=> . /tmp/debug.sh"
     echo ""
+
+    if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
+      echo "ACCESSING HARBOR"
+      echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+      echo ""
+    fi
   fi
 
   if [ $(($MASK & $BITMASK_PXS)) -gt 0 ]; then 
@@ -3090,6 +3096,8 @@ downloadFromPivnet() {
     messagePrint " - Download Location:" "/tmp/$file"
     pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $id $fid $file
   fi
+
+  echo "/tmp/$file"
 }
 
 uploadProductTile() {
