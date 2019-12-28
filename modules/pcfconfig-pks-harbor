@@ -249,6 +249,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
       echo "}}]"                                                 >> $TMPROUTE53
       echo "}"                                                   >> $TMPROUTE53
 
+cp $TMPROUTE53 /tmp/123
+echo "aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID  --change-batch file://${TMPROUTE53}"
       aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
           --change-batch file://${TMPROUTE53} > /dev/null 2>&1
       if [ $? -ne 0 ]; then
@@ -463,7 +465,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
 fi
 
 
-exit
+exit 1
 
 #az network public-ip create -n azpks-harbor-ip -g azpks --sku Standard --allocation-method static
 #ipa=$(az network public-ip show -n azpks-harbor-ip -g azpks | jq -r '.ipAddress')
