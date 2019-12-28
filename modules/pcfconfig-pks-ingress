@@ -54,9 +54,16 @@ cluster=cl1
 
 echo "pcfconfig-pks-ingress: Debug 33"
 pks get-credentials $cluster > /dev/null 2>&1
-userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-token=$(kubectl describe secret $(kubectl get secret | grep $userid | \
-      awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+echo "pcfconfig-pks-ingress: Debug 33 - $?"
+
+userid=""; while [ "${userid}" == "" ]; do
+echo "pcfconfig-pks-ingress: Debug 33.1"
+  userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}" 2>/dev/null)
+  token=$(kubectl describe secret $(kubectl get secret 2>/dev/null | grep $userid | \
+        awk '{print $1}') | grep "token:" | awk '{ print $2 }')
+echo "pcfconfig-pks-ingress: Debug 33.1 USERID:$userid TOKEN:$token"
+  sleep 30
+done
 
 echo "pcfconfig-pks-ingress: Debug 34"
 kubectl config use-context $cluster > /dev/null 2>&1
