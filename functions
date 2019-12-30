@@ -327,7 +327,7 @@ installJumpHost() {
 
     vm_stt=$(az vm list -d --query "[?contains(name, '$JUMP_HOST')]" | jq -r '.[].powerState')
     if [ "${vm_stt}" == "" ]; then  
-      # --- VM DOES NOT EXIST, CREATINGIGT ---
+      # --- VM DOES NOT EXIST, CREATING ---
       nam=$(az network vnet list -g Admin --query "[?contains(name, 'admin-vnet')]" | jq -r '.[].name') 
       if [ "$nam" != "admin-vnet" ]; then
         messagePrint " - Creating Vnet" "admin-vnet"
@@ -871,9 +871,17 @@ installJumpHost() {
         fi
       fi
 
+#oooooooooooo
       # --- GET A COPY OF THE CERTIFICATES BACK ---
       [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
-      $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1
+
+      messageTitle " Copy new certificates from jump to local ./certificates/$domain" 
+      while [ ! -f ./certificates/$domain/fullchain.pem ]; do
+        $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1
+echo "$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1 - $?"
+
+        sleep 10
+      done
 
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
