@@ -121,5 +121,9 @@ if [ ! -x /snap/bin/helm ]; then
   sudo ln -s /snap/bin/helm /usr/bin/helm
 fi
 
+if [ ! -x /usr/bin/docker ]; then
+  apt-get install docker.io -y  > /dev/null 2>&1
+fi
+
 touch  /jump_software_installed
 
