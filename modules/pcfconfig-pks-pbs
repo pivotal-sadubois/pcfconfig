@@ -88,7 +88,7 @@ touch /tmp/relocated.json
 if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
   messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
-  sdudo duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
+  sudo duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
      -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then 
