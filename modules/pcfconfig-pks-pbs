@@ -52,8 +52,62 @@ PBS_DUFFLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "duffle
 echo "PBS_BUNDLE:$PBS_BUNDLE"
 echo "PBS_DUFFLE:$PBS_DUFFLE"
 
+/tmp/credentials.yml
+
+CREDENTIALS=/tmp/credentials.yml
+if [ ! -f $CREDENTIALS ]; then 
+  echo "name: build-service-credentials"                                        >  $CREDENTIALS
+  echo "credentials:"                                                           >>  $CREDENTIALS
+  echo " - name: kube_config"                                                   >>  $CREDENTIALS
+  echo "   source:"                                                             >>  $CREDENTIALS
+  echo "     path: \"/home/ubuntu/.kube/config\""                               >>  $CREDENTIALS
+  echo "   destination:"                                                        >>  $CREDENTIALS
+  echo "     path: \"/root/.kube/config\""                                      >>  $CREDENTIALS
+  echo " - name: ca_cert"                                                       >>  $CREDENTIALS
+  echo "   source:"                                                             >>  $CREDENTIALS
+  echo "     path: \"/home/ubuntu/pcfconfig/certificates/ca.crt\""              >>  $CREDENTIALS
+  echo "   destination:"                                                        >>  $CREDENTIALS
+  echo "     path: \"/cnab/app/cert/ca.crt\""                                   >>  $CREDENTIALS
+  echo " - name: tls_cert"                                                      >>  $CREDENTIALS
+  echo "   source:"                                                             >>  $CREDENTIALS
+  echo "     path: \"/home/ubuntu/pcfconfig/certificates/fullchain.crt\""       >>  $CREDENTIALS
+  echo "   destination:"                                                        >>  $CREDENTIALS
+  echo "     path: \"/cnab/app/cert/tls.crt\""                                  >>  $CREDENTIALS
+  echo " - name: tls_key"                                                       >>  $CREDENTIALS
+  echo "   source:"                                                             >>  $CREDENTIALS
+  echo "     path: \"/home/ubuntu/pcfconfig/certificates/privkey.key\""         >>  $CREDENTIALS
+  echo "   destination:"                                                        >>  $CREDENTIALS
+  echo "     path: \"/cnab/app/cert/tls.key\""                                  >>  $CREDENTIALS
+fi
+
 sudo cp $PBS_DUFFLE /usr/bin/duffle
 sudo chmod 777 /usr/bin/duffle
+export PCF_TILE_PBS_ADMIN_USER=admin
+export PCF_TILE_PBS_ADMIN_PASS=pivotal
+
+version=0.0.4
+#sudo duffle install bs4_azure -c /tmp/credentials.yml  \
+#    --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#    --set kubernetes_env=cl1 \
+#    --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#    --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
+#    --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
+#    --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
+#    -f /tmp/build-service-${version}.tgz \
+#    -m /tmp/relocated.json
+
+echo "sudo duffle install bs4_azure -c /tmp/credentials.yml  \
+    --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+    --set kubernetes_env=cl1 \
+    --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+    --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
+    --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
+    --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
+    -f /tmp/build-service-${version}.tgz \
+    -m /tmp/relocated.json"
+
+
+exit 1
 
 ##############################################################################################
 ############################### CONFIGURE PERSISTENT STORAGE #################################
