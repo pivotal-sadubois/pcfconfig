@@ -52,11 +52,9 @@ PBS_DUFFLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "duffle
 echo "PBS_BUNDLE:$PBS_BUNDLE"
 echo "PBS_DUFFLE:$PBS_DUFFLE"
 
-/tmp/credentials.yml
-
 CREDENTIALS=/tmp/credentials.yml
-if [ ! -f $CREDENTIALS ]; then 
-  echo "name: build-service-credentials"                                        >  $CREDENTIALS
+if [ ! -f $CREDENTIALS ]; then   
+  echo "name: build-service-credentials"                                         >  $CREDENTIALS
   echo "credentials:"                                                           >>  $CREDENTIALS
   echo " - name: kube_config"                                                   >>  $CREDENTIALS
   echo "   source:"                                                             >>  $CREDENTIALS
@@ -84,6 +82,21 @@ sudo cp $PBS_DUFFLE /usr/bin/duffle
 sudo chmod 777 /usr/bin/duffle
 export PCF_TILE_PBS_ADMIN_USER=admin
 export PCF_TILE_PBS_ADMIN_PASS=pivotal
+
+touch /tmp/relocated.json
+if [ $(wc -l /tmp/ttt | awk '{ print $1 }') -eq 0 ]; then 
+  messageTitle "Relocate Build Service images to Harbor registry§ (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
+  echo "-----------------------------------------------------------------------------------------------------------"
+  duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
+     -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
+  echo "-----------------------------------------------------------------------------------------------------------"
+  if [ $ret -ne 0 ]; then 
+    echo "ERROR: failed to relocate Build Servics Images"
+    echo "       => duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \\"
+    echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library"
+    exit 1
+  fi
+fi
 
 version=0.0.4
 #sudo duffle install bs4_azure -c /tmp/credentials.yml  \
