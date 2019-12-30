@@ -173,17 +173,21 @@ else
     fi
   fi
 
+echo gaga1
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
-    if [ "${PCF_TILE_HARBOR_ADMIN_PASSWORD}" == "" -o "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+echo gaga2
+    if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+echo gaga3
       missing_variables=1
       echo ""
       echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
       echo "  --------------------------------------------------------------------------------------------------------------"
 
-      if [ "${PCF_TILE_HARBOR_ADMIN_PASSWORD}" == "" ]; then
+      if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
         echo "  PCF_TILE_HARBOR_ADMIN_PASS    (required) Harbor Administrator User"
       fi
     else
+echo gaga4
       messageTitle "Pivotal Container Platform (Harbor)"
       messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
       messagePrint " - Harbor Product SLUG"           "$PCF_TILE_HARBOR_NAME"
@@ -192,6 +196,7 @@ else
       messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
     fi
   fi
+exit 1
 
   if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
     if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
