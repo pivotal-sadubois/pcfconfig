@@ -58,7 +58,7 @@ debugInfos() {
 
     if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
       echo "ACCESSING HARBOR"
-      echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+      echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (admin/$PCF_TILE_PBS_ADMIN_USER)" 
       echo ""
     fi
   fi
