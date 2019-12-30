@@ -87,7 +87,7 @@ if [ $status -eq 0 ]; then
     TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
 
     echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
-    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASS\"" >> $VARFILE
     echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
     echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
     echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
@@ -108,7 +108,7 @@ if [ $status -eq 0 ]; then
     TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
 
     echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
-    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASSWORD\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASS\"" >> $VARFILE
     echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
     echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
     echo "harbor_tls_root_cert_pem: " >> $VARFILE
@@ -148,6 +148,10 @@ fi
 ################################ CONFIGURE PKS LOADBALANCERS #################################
 ##############################################################################################
 messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  exit 1
+fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   #TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
@@ -427,8 +431,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   fi
 fi
 
+gaga
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
-  messagePrint "Adding Master Nodes of PKS Cluster ($n) to LB" "${n}-lb"
+  messageTitle "Adding Harbor Node to LB" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
   for node in $mst; do
     messagePrint " - Add/update Master Node" "${node}"
     nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
