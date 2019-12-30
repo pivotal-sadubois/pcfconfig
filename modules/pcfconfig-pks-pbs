@@ -83,9 +83,10 @@ sudo chmod 777 /usr/bin/duffle
 export PCF_TILE_PBS_ADMIN_USER=admin
 export PCF_TILE_PBS_ADMIN_PASS=pivotal
 
+version=0.0.4
 touch /tmp/relocated.json
 if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
-  messageTitle "Relocate Build Service images to Harbor registry§ (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
+  messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
   duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
      -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
@@ -98,7 +99,6 @@ if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-version=0.0.4
 #sudo duffle install bs4_azure -c /tmp/credentials.yml  \
 #    --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
 #    --set kubernetes_env=cl1 \
