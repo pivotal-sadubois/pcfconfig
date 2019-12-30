@@ -49,8 +49,12 @@ messagePrint " - PBS Slug:"                        "$PCF_TILE_PBS_SLUG"
 PBS_BUNDLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "build-service-bundle") 
 PBS_DUFFLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "duffle-cli-linux")
 
-echo "PBS_BUNDLE:$PBS_BUNDLE"
-echo "PBS_DUFFLE:$PBS_DUFFLE"
+echo "SSH_HOME:$SSH_HOME"
+
+#openssl x509 -outform der -in ca.pem -out ca.crt
+#openssl x509 -outform der -in fullchain.pem -out fullchain.crt
+#openssl rsa -outform der -in privkey.pem -out privkey.key
+
 
 CREDENTIALS=/tmp/credentials.yml
 if [ ! -f $CREDENTIALS ]; then   
