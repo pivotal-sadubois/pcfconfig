@@ -173,6 +173,49 @@ else
     fi
   fi
 
+  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
+    if [ "${PCF_TILE_HARBOR_ADMIN_PASSWORD}" == "" -o "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+      missing_variables=1
+      echo ""
+      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  --------------------------------------------------------------------------------------------------------------"
+
+      if [ "${PCF_TILE_HARBOR_ADMIN_PASSWORD}" == "" ]; then
+        echo "  PCF_TILE_HARBOR_ADMIN_PASS    (required) Harbor Administrator User"
+      fi
+    else
+      messageTitle "Pivotal Container Platform (Harbor)"
+      messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
+      messagePrint " - Harbor Product SLUG"           "$PCF_TILE_HARBOR_NAME"
+      messagePrint " - Harbor Stemcell Type"          "$PCF_TILE_HARBOR_STEMCELL_TYPE"
+      messagePrint " - Harbor Stemcell Version"       "$PCF_TILE_HARBOR_STEMCELL_VERSION"
+      messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
+    fi
+  fi
+
+  if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
+    if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
+      missing_variables=1
+      echo ""
+      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  --------------------------------------------------------------------------------------------------------------"
+
+      if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then
+        echo "  PCF_TILE_PBS_ADMIN_USER       (required) PBS Administrator User"
+      fi
+
+      if [ "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
+        echo "  PCF_TILE_PBS_ADMIN_PASS       (required) PBS Administrator Password"
+      fi
+    else
+      messageTitle "Pivotal Container Platform (PBS)"
+      messagePrint " - PBS Version"                "$PCF_TILE_PBS_VERSION"
+      messagePrint " - PBS Product SLUG"           "$PCF_TILE_PBS_SLUG"
+      messagePrint " - PBS Administrator User"     "$PCF_TILE_PBS_ADMIN_USER"
+      messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
+    fi
+  fi
+
   if [ ${missing_variables} -eq 1 ]; then
     echo "  --------------------------------------------------------------------------------------------------------------"
     echo "  IMPORTANT: Please set the missing environment variables either in your shell or in the pcfconfig"
