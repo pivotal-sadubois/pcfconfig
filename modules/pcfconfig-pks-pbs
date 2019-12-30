@@ -48,7 +48,12 @@ messagePrint " - PBS Slug:"                        "$PCF_TILE_PBS_SLUG"
 
 PBS_BUNDLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "build-service-bundle") 
 PBS_DUFFLE=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "duffle-cli-linux")
+PBS_PBCLI=$(downloadFromPivnet $PCF_TILE_PBS_SLUG $PCF_TILE_PBS_VERSION "pb-cli-linux")
 
+sudo cp $PBS_DUFFLE /usr/bin/duffle
+sudo chmod 777 /usr/bin/duffle
+sudo cp $PBS_PBCLI /usr/bin/pb
+sudo chmod 777 /usr/bin/pb
 echo "SSH_HOME:$SSH_HOME"
 
 #openssl x509 -outform der -in ca.pem -out ca.crt
@@ -82,8 +87,6 @@ if [ ! -f $CREDENTIALS ]; then
   echo "     path: \"/cnab/app/cert/tls.key\""                                  >>  $CREDENTIALS
 fi
 
-sudo cp $PBS_DUFFLE /usr/bin/duffle
-sudo chmod 777 /usr/bin/duffle
 export PCF_TILE_PBS_ADMIN_USER=admin
 export PCF_TILE_PBS_ADMIN_PASS=pivotal
 
@@ -109,26 +112,32 @@ if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-#sudo duffle install bs4_azure -c /tmp/credentials.yml  \
-#    --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-#    --set kubernetes_env=cl1 \
-#    --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-#    --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
-#    --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
-#    --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
-#    -f /tmp/build-service-${version}.tgz \
-#    -m /tmp/relocated.json
+stt=$(duffle list bs4_azure | awk ‘/^bs4_azure/{print $NF}’)
+if [ "${stt}" != "" ]; then
+  sudo duffle install bs4_azure -c /tmp/credentials.yml  \
+      --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+      --set kubernetes_env=cl1 \
+      --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+      --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
+      --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
+      --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
+      -f /tmp/build-service-${version}.tgz \
+      -m /tmp/relocated.json
+  if [ $? -ne 0 ]; then 
+    echo "ERROR: failed to install build-service"
+    echo "       => sudo duffle install bs4_azure -c /tmp/credentials.yml  \\"
+    echo "             --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
+    echo "             --set kubernetes_env=cl1 \\"
+    echo "             --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
+    echo "             --set registry_username=$PCF_TILE_PBS_ADMIN_USER \\"
+    echo "             --set registry_password=$PCF_TILE_PBS_ADMIN_PASS \\"
+    echo "             --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \\"
+    echo "             -f /tmp/build-service-${version}.tgz \\"
+    echo "             -m /tmp/relocated.json"
+  fi
+fi
 
-echo "sudo duffle install bs4_azure -c /tmp/credentials.yml  \
-    --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-    --set kubernetes_env=cl1 \
-    --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-    --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
-    --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
-    --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
-    -f /tmp/build-service-${version}.tgz \
-    -m /tmp/relocated.json"
-
+echo "done"
 
 exit 1
 
