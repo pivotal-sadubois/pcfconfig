@@ -3099,11 +3099,11 @@ downloadFromPivnet() {
        awk -F'/' '{ print $NF }')
 
   if [ ! -f /tmp/$file ]; then
-    messageTitle "Download Product from PIVNET"
-    messagePrint " - Product Slug:" "$PRODUCT_SLUG"
-    messagePrint " - Product FileID:" "$fid"
-    messagePrint " - Download Location:" "/tmp/$file"
-    pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $id $fid $file
+    messageTitle "Download Product from PIVNET" 1>&2
+    messagePrint " - Product Slug:" "$PRODUCT_SLUG" 1>&2
+    messagePrint " - Product FileID:" "$fid" 1>&2
+    messagePrint " - Download Location:" "/tmp/$file" 1>&2
+    pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $id $fid $file >/dev/null
   fi
 
   echo "/tmp/$file"
