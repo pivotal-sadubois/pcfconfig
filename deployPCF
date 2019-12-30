@@ -215,7 +215,6 @@ else
       messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
     fi
   fi
-exit 1
 
   if [ ${missing_variables} -eq 1 ]; then
     echo "  --------------------------------------------------------------------------------------------------------------"
@@ -225,6 +224,7 @@ exit 1
     echo "  --------------------------------------------------------------------------------------------------------------"
     exit 1
   fi
+exit 1
 fi
 
 #sshEnvironment
