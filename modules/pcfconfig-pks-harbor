@@ -376,7 +376,7 @@ TMP_LBSCRIPT=/tmp/harbor-nodes.sh
 
 echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
 echo "bosh alias-env $PCF_DEPLOYMENT_ENV_NAME -e $director_ip --ca-cert \$cert >/dev/null 2>&1"          >> $TMP_LBSCRIPT
-echo "echo -e \"admin\n${director_cd}\" | bosh -e $DNS_PREFIX login >/dev/null 2>&1"                     >> $TMP_LBSCRIPT
+echo "echo -e \"admin\n${director_cd}\" | bosh -e $PCF_DEPLOYMENT_ENV_NAME login >/dev/null 2>&1"        >> $TMP_LBSCRIPT
 echo "dep=\$(bosh -e $PCF_DEPLOYMENT_ENV_NAME deployments | egrep \"^harbor-container-registry\" | \\"   >> $TMP_LBSCRIPT
 echo "  awk '{ print \$1 }')"                                                                            >> $TMP_LBSCRIPT
 echo "bosh -e $PCF_DEPLOYMENT_ENV_NAME -d \$dep --column='Instance' --column='VM CID' vms | \\"          >> $TMP_LBSCRIPT
