@@ -98,7 +98,7 @@ export PCF_TILE_PBS_ADMIN_PASS=pivotal
 
 version=0.0.4
 touch /tmp/relocated.json
-if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
+if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
   messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
   sudo duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
@@ -112,7 +112,7 @@ if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-stt=$(duffle list bs4_azure | awk ‘/^bs4_azure/{print $NF}’)
+stt=$(duffle list bs4_azure | awk '/^bs4_azure/{print \$NF}')
 if [ "${stt}" != "" ]; then
   sudo duffle install bs4_azure -c /tmp/credentials.yml  \
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
