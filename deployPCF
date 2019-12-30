@@ -201,7 +201,7 @@ else
       echo "  --------------------------------------------------------------------------------------------------------------"
 
       if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then
-        echo "  PCF_TILE_PBS_ADMIN_USER       (required) PBS Administrator User"
+        echo "  PCF_TILE_PBS_ADMIN_USER       (required) PBS Administrator Password"
       fi
 
       if [ "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
@@ -224,7 +224,6 @@ else
     echo "  --------------------------------------------------------------------------------------------------------------"
     exit 1
   fi
-exit 1
 fi
 
 #sshEnvironment
