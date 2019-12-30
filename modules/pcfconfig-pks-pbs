@@ -84,7 +84,7 @@ export PCF_TILE_PBS_ADMIN_USER=admin
 export PCF_TILE_PBS_ADMIN_PASS=pivotal
 
 touch /tmp/relocated.json
-if [ $(wc -l /tmp/ttt | awk '{ print $1 }') -eq 0 ]; then 
+if [ $(wc -l /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
   messageTitle "Relocate Build Service images to Harbor registry§ (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
   duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
