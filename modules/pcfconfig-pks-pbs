@@ -112,7 +112,7 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-stt=$(duffle list bs4_azure | awk '/^bs4_azure/{print \$NF}')
+stt=$(duffle list bs4_azure | awk '/^bs4_azure/{print $NF}')
 if [ "${stt}" != "" ]; then
   sudo duffle install bs4_azure -c /tmp/credentials.yml  \
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
