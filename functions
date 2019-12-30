@@ -694,7 +694,6 @@ installJumpHost() {
       aim=ami-0085d4f8878cddc81  # Ubuntu Server t2.medium
       typ=t2.medium
 
-#ooooooooooooooo
       messagePrint " - Create Instance" "$JUMP_HOST"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
               --block-device-mapping DeviceName=/dev/sda1,Ebs={VolumeSize=30} \
@@ -873,22 +872,21 @@ installJumpHost() {
         fi
       fi
 
-#oooooooooooo
       # --- GET A COPY OF THE CERTIFICATES BACK ---
       [ ! -d ./certificates/$domain ] && mkdir -p ./certificates/$domain
-
-      messageTitle " Copy new certificates from jump to local ./certificates/$domain" 
-      while [ ! -f ./certificates/$domain/fullchain.pem ]; do
-        $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1
-echo "$SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1 - $?"
-
-        sleep 10
-      done
 
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod -R a+r /etc/letsencrypt/live /etc/letsencrypt/archive"
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live ] && sudo chmod 777 /etc/letsencrypt/live /etc/letsencrypt/live/$domain"
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/archive ] && sudo chmod 777 /etc/letsencrypt/archive /etc/letsencrypt/archive/$domain"
       $SSH_COMMAND -n "[ -d /etc/letsencrypt/live/$domain ] && cp /etc/letsencrypt/live/$domain/* ~/pcfconfig/certificates"
+
+      messageTitle " Copy new certificates from jump to local ./certificates/$domain" 
+      while [ ! -f ./certificates/$domain/fullchain.pem ]; do
+        $SCP_COMMAND ${SSH_USER}@${SSH_HOST}:$SSH_HOME/pcfconfig/certificates/* $PCFPATH/certificates/$domain/ > /dev/null 2>&1
+
+        sleep 10
+      done
+
       echo "----------------------------------------------------------------------------------------------------------------"
     fi
   fi
