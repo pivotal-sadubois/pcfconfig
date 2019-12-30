@@ -10,7 +10,6 @@ if [ "${1}" == "" ]; then
   echo "$0 <env-file>"; exit 0
 fi
 
-echo "pcfconfig-pks-ingress: Debug 30"
 envFile=$1
 
 export PCFCONFIG_BASE=$(basename $0)
@@ -26,7 +25,6 @@ sshEnvironment
 API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 DNS_PREFIX=$PCF_DEPLOYMENT_ENV_NAME
 DNS_SUFFIX=$AWS_HOSTED_DNS_DOMAIN
-echo "pcfconfig-pks-ingress: Debug 31"
 
 # --- LOGIN TO PKS ---
 i=1; stt=1
@@ -36,7 +34,6 @@ while [ $i -lt 10 ]; do
   if [ $? -eq 0 ]; then stt=0; break; fi
   let i=i+1; sleep 10
 done
-echo "pcfconfig-pks-ingress: Debug 32"
 
 if [ $stt -eq 1 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS))
@@ -52,32 +49,25 @@ fi
 ######################################################################################################
 cluster=cl1
 
-echo "pcfconfig-pks-ingress: Debug 33"
 pks get-credentials $cluster > /dev/null 2>&1
-echo "pcfconfig-pks-ingress: Debug 33 - $?"
 
 userid=""; while [ "${userid}" == "" ]; do
 echo "pcfconfig-pks-ingress: Debug 33.1"
   userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}" 2>/dev/null)
-  token=$(kubectl describe secret $(kubectl get secret 2>/dev/null | grep $userid | \
-        awk '{print $1}') | grep "token:" | awk '{ print $2 }')
-echo "pcfconfig-pks-ingress: Debug 33.1 USERID:$userid TOKEN:$token"
-  sleep 30
+  secret=$(kubectl get secret 2>/dev/null | grep $userid | awk '{print $1}')
+  token=$(kubectl describe secret $secret 2>/dev/null | grep "token:" | awk '{ print $2 }')
+  [ "${userid}" == "" -o "${token}" == "" ] && sleep 30
 done
 
-echo "pcfconfig-pks-ingress: Debug 34"
 kubectl config use-context $cluster > /dev/null 2>&1
-echo "pcfconfig-pks-ingress: Debug 35"
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
-echo "pcfconfig-pks-ingress: Debug 36"
 
 # --- VERIFY NAMESPACE ---
 kubectl get namespace ingress > /dev/null 2>&1
 if [ $? -ne 0 ]; then kubectl create namespace ingress > /dev/null 2>&1; fi
-echo "pcfconfig-pks-ingress: Debug 37"
 
-cnt=$(helm search repo stable/nginx-ingress | egrep -c "stable/nginx-ingress")
+cnt=$(helm search repo stable/nginx-ingress 2>/dev/null | egrep -c "stable/nginx-ingress")
 if [ $cnt -eq 0 ]; then
   messageTitle "Install and configure Helm Charts"
   messagePrint " - Helm Version:"         "$(helm version --short)"
