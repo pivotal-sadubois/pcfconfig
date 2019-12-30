@@ -696,12 +696,13 @@ installJumpHost() {
 
       messagePrint " - Create Instance" "$JUMP_HOST"
       aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-group-ids $gid \
+              --block-device-mapping /dev/sda1=:30:false \
               --instance-type $typ --key-name ${JUMP_HOST} --count 1 --subnet-id $sid --associate-public-ip-address \
               --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$JUMP_HOST},{Key=type,Value=pcfjump}]" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: Creating of Instance failed"
         echo "       => aws ec2 --region=$AWS_REGION run-instances --image-id $aim --security-groups pcfjump-sg \\"
-        echo "                  --instance-type t2.micro --key-name ${JUMP_HOST} --subnet-id $sid \\"
+        echo "                  --instance-type $typ --key-name ${JUMP_HOST} --subnet-id $sid \\"
         echo "                  --tag-specifications 'ResourceType=instance,Tags=[{Key=type,Value=pcfjump}]'"
         exit 1
       else

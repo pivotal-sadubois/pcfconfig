@@ -671,7 +671,7 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     messagePrint "pcfconfig-pks-ingress already done" "skipping"
   fi
 
-if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" ]; then 
+if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt"]; then 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
 
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
