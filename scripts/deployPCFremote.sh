@@ -612,6 +612,27 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     messagePrint "pcfconfig-pks already done" "skipping"
   fi
 
+if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
+
+  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
+    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then
+      ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
+
+      if [ $? -ne 0 ]; then
+        setPCFconfigState $PCFCONFIG_PKS_HARBOR "failed"
+        echo "ERROR: Problem with pcfconfig-pks-harbor occured"; exit 1
+      else
+        setPCFconfigState $PCFCONFIG_PKS_HARBOR "completed"
+      fi
+    else
+      messagePrint "pcfconfig-pks-harbor already done" "skipping"
+    fi
+  fi
+
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
+fi
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_AUTH_STATE)" != "completed" ]; then 
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
@@ -672,23 +693,7 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
   fi
 
 if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
-
-  if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
-    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
-    if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then
-      ${PCFPATH}/modules/pcfconfig-pks-harbor $envFile
-
-      if [ $? -ne 0 ]; then
-        setPCFconfigState $PCFCONFIG_PKS_HARBOR "failed"
-        echo "ERROR: Problem with pcfconfig-pks-harbor occured"; exit 1
-      else
-        setPCFconfigState $PCFCONFIG_PKS_HARBOR "completed"
-      fi
-    else
-      messagePrint "pcfconfig-pks-harbor already done" "skipping"
-    fi
-  fi
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - PBS"
 
   if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
     # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
@@ -705,7 +710,7 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       messagePrint "pcfconfig-pks-pbs already done" "skipping"
     fi
   fi
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - PBS"
 fi
 
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
