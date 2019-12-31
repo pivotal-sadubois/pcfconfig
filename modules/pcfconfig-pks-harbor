@@ -78,7 +78,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-  AVAILABILITY_ZONES="$(gcloud compute zones list | grep "${GCP_REGION}" 2>/dev/null | awk '{ print $1 }')
+  AVAILABILITY_ZONES="$(gcloud compute zones list | grep ${GCP_REGION} 2>/dev/null | awk '{ print $1 }')"
   AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
   AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
   AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
