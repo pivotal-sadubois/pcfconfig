@@ -208,7 +208,10 @@ createENVfile() {
       fi
     fi
 
+echo "PCF_TILE_HARBOR_DEPLOY:$PCF_TILE_HARBOR_DEPLOY"
+echo gaga1
     if [ "${PCF_TILE_HARBOR_DEPLOY}" == "true" ]; then
+echo gaga2
       echo "PCF_TILE_HARBOR_ADMIN_PASS=\"$PCF_TILE_HARBOR_ADMIN_PASS\"" >> $envFile
     fi
 
@@ -216,6 +219,7 @@ createENVfile() {
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
     fi
+exit 1
 
   fi
 }
