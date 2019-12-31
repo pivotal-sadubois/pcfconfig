@@ -65,11 +65,28 @@ TLS_PRIVATE_KEY=$PCFPATH/certificates/privkey.pem
 TLS_ROOT_CERT=$PCFPATH/certificates/ca.pem
 VARFILE=/tmp/harbor_vars.yml; rm -rf $VARFILE; touch $VARFILE
 
-AVAILABILITY_ZONES=$(aws ec2 --region=$AWS_REGION describe-availability-zones | \
-                    jq -r '.AvailabilityZones[].ZoneName' | paste - - -)
-AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
-AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
-AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  AVAILABILITY_ZONES=$(aws ec2 --region=$AWS_REGION describe-availability-zones | \
+                      jq -r '.AvailabilityZones[].ZoneName' | paste - - -)
+  AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
+  AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
+  AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
+
+  echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+  echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+  echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  AVAILABILITY_ZONES="$(gcloud compute zones list | grep "${GCP_REGION}" 2>/dev/null | awk '{ print $1 }')
+  AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
+  AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
+  AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
+
+  echo "zone-1: $AVAILABILITY_ZONE1" >> $VARFILE
+  echo "zone-2: $AVAILABILITY_ZONE2" >> $VARFILE
+  echo "zone-3: $AVAILABILITY_ZONE3" >> $VARFILE
+fi
 
 status=$($OM $OM_LOGIN deployed-products | grep -c "$PCF_TILE_HARBOR_NAME")
 if [ $status -eq 0 ]; then 
@@ -91,9 +108,6 @@ if [ $status -eq 0 ]; then
     echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
     echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
     echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
-    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
-    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
-    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
   else
     TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
     messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
@@ -112,9 +126,6 @@ if [ $status -eq 0 ]; then
     echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
     echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
     echo "harbor_tls_root_cert_pem: " >> $VARFILE
-    echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
-    echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
-    echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
 
     rm -f $TLS_TEMP_CERT
   fi
