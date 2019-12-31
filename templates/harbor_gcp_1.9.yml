@@ -33,7 +33,7 @@ product-properties:
     value: true
 network-properties:
   network:
-    name: ((pks_subnet_name))
+    name: pks
   other_availability_zones:
   - name: ((zone-1))
   singleton_availability_zone:
