@@ -90,7 +90,10 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   echo "pks_subnet_name: ${PCF_DEPLOYMENT_ENV_NAME}-pks-subnet" >> $VARFILE
 fi
 
+$OM $OM_LOGIN deployed-products
+
 status=$($OM $OM_LOGIN deployed-products | grep -c "$PCF_TILE_HARBOR_NAME")
+echo "status:$status"
 if [ $status -eq 0 ]; then 
   messageTitle "Configuring Harbor Tile (${PCF_TILE_HARBOR_CONFIG})"
   messagePrint " - Harbor YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG}"
