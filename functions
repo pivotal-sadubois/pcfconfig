@@ -886,14 +886,15 @@ installJumpHost() {
   fi
 
   CERTS_ENDDATE=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -enddate | awk -F'=' '{ print $2 }'")
-  CERTS_EXPIRED=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -checkend 3600000 > /dev/null 2>&1; echo \$?")
-echo "CERTS_EXPIRED:$CERTS_EXPIRED"
   CERTS_EXPIRED=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -checkend 3600 > /dev/null 2>&1; echo \$?")
-echo "CERTS_EXPIRED:$CERTS_EXPIRED"
 
-echo "CERTS_ENDDATE:$CERTS_ENDDATE"
-
+CERTS_EXPIRED=1
+  if [ $CERTS_EXPIRED -eq 0 ]; then 
     messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE"
+  else
+    messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE [>>> *EXPIRED* <<<]"
+    CERTS_GENERATE_NEW=true
+  fi
 
 exit 1
 
