@@ -867,9 +867,35 @@ installJumpHost() {
     fi
   fi
 
-  stt=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo ok")
+  ##############################################################################################
+  ################################ GENERATING TLS CERTIFICATES #################################
+  ##############################################################################################
+
+  CERTS_GENERATE_NEW=false
+  CERTS_INSTALLED=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo true || echo false")
+  domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+
+  if [ "${CERTS_INSTALLED}" == "false" ]; then
+    # --- CHECK IF LOCAL COPY OF THE CERTIFICATES ARE AVAILABLE ---
+    if [ -d $PCFPATH/certificates/$domain -a -f $PCFPATH/certificates/$domain/privkey.pem ]; then
+      messageTitle "Install Certificate for domain ($domain)"
+      $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+    else
+      messageTitle "Validate Certificates for domain ($domain)"
+    fi
+  fi
+
+  CERTS_ENDDATE=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -enddate | awk -F'=' '{ print $2 }'")
+  CERTS_EXPIRED=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -checkend 3600000; echo \$?")
+
+echo "CERTS_ENDDATE:$CERTS_ENDDATE"
+echo "CERTS_EXPIRED:$CERTS_EXPIRED"
+
+    messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE"
+
+exit 1
+
   if [ "${stt}" != "ok" ]; then 
-    domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
     route53createHostedZone $domain
 
 #iiiiiiiiiiiiiiiiiiii
@@ -917,11 +943,6 @@ installJumpHost() {
 
       echo "----------------------------------------------------------------------------------------------------------------"
     fi
-  else
-    messageTitle "Take local cached certificates for PKS Domains ($domain)"
-    tmp=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/cert.pem ] && openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -enddate")
-    edat=$(echo $tmp | awk -F'=' '{ print $2 }')
-    messagePrint " - Certificate Expiratation Data:" "$edat"
   fi
 
 echo "functions: debug"; exit 1
