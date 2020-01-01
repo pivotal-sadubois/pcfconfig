@@ -472,7 +472,7 @@ echo "MST:$mst"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 echo gaga
-echo 2gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --region=$GCP_REGION"
+echo "gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --region=$GCP_REGION"
         gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -eq 0 ]; then
           for ins in $mst; do
