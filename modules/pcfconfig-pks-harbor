@@ -475,6 +475,7 @@ echo gaga
         gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -eq 0 ]; then
           for ins in $mst; do
+echo "gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --instances=$ins"
             gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --instances=$ins
           done
         fi
@@ -497,7 +498,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   fi
 fi
 
-gaga
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   messageTitle "Adding Harbor Node to LB" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
   for node in $mst; do
@@ -536,5 +536,5 @@ fi
 # --- CLEANUP 
 rm -f /tmp/harbor*.pivotal
 
-exit 0
+exit 1
 
