@@ -163,14 +163,14 @@ fi
 messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-  gcloud compute target-pools describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  gcloud compute target-pools describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
   if [ ${ret} -gt 0 ]; then
     # --- CREATE TARGET POOL ---
     echo "Creating Target Pool (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
-    gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+    gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating target-pools (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
-      echo "gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION"
+      echo "gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION"
       exit 1
     fi
   fi
@@ -180,11 +180,11 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     # --- CREATE LOAD BALANCER ---
     echo "Creating LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
     gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \
-      --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+      --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating forwarding-rules (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
       echo "       => gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \\"
-      echo "             --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION"
+      echo "             --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION"
       exit 1
     fi
   fi
@@ -471,23 +471,13 @@ echo "MST:$mst"
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-echo gaga
-echo "gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION"
-        gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
-        if [ ${ret} -eq 0 ]; then
-          for ins in $mst; do
-#echo "gcloud compute instances describe $ins"
-#            zone=$(gcloud compute instances describe $ins --format=json | \
-#                  jq -r '.zone' | awk -F'/' '{ print $NF }')
-
-
-            zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
-
-echo "gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --instances=$ins --instances-zone=$zone"
-            gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --instances=$ins --instances-zone=$zone
-          done
-        fi
-echo gaga1
+  gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -eq 0 ]; then
+    for ins in $mst; do
+      zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
+      gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor --instances=$ins --instances-zone=$zone
+    done
+  fi
 fi 
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
