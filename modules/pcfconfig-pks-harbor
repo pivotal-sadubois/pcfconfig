@@ -166,11 +166,54 @@ fi
 messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  gcloud compute target-pools describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    # --- CREATE TARGET POOL ---
+    echo "Creating Target Pool (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
+    gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating target-pools (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
+      echo "gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION"
+      exit 1
+    fi
+  fi
+
+  gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    # --- CREATE LOAD BALANCER ---
+    echo "Creating LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
+    gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \
+      --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating forwarding-rules (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
+      echo "       => gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \\"
+      echo "             --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp --region=$GCP_REGION"
+      exit 1
+    fi
+  fi
+
+  HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  cnt=$(gcloud dns record-sets list -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --name "${HARBOR}." \
+          --type=A 2> /dev/null | wc -l | sed 's/ //g')
+  if [ ${cnt} -eq 0 ]; then
+    echo "Creating DNS Entry ${HARBOR} in (${PCF_DEPLOYMENT_ENV_NAME}-zone)"
+    ipa=$(gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION | \
+        grep IPAddress | awk '{ print $NF }')
+    gcloud dns record-sets transaction start -z ${PCF_DEPLOYMENT_ENV_NAME}-zone
+    gcloud dns record-sets transaction add "$ipa" --name ${HARBOR}. \
+       --type A -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --ttl=300
+    gcloud dns record-sets transaction execute -z ${PCF_DEPLOYMENT_ENV_NAME}-zone > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating DNS record-sets for zone (${PCF_DEPLOYMENT_ENV_NAME}-zone)"
+      exit 1
+    fi
+  fi
+
+
   exit 1
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
-  #TF_WORKDIR="$(dirname ~/workspace)/$(basename ~/workspace)"
   # --- CREATE ELB LOADBALANCER ---
   SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
   SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
