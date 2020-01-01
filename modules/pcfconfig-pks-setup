@@ -1466,7 +1466,10 @@ echo "xxxxxxx JQ_FILTER:$JQ_FILTER"
   OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $USER --password $PASS"
   sed -n '1,/^#END-STAGE-1/p' $OPSMAN_CONFIG | sed '$d' > /tmp/$$_tmpcfg.yml
 
+  pending=$($OM $OM_LOGIN pending-changes 2>/dev/null| grep "p-bosh" | awk '{ print $4 }')
+echo "pcfconfig-pks PENDING:$pending"
   pending=$($OM $OM_LOGIN pending-changes | grep "p-bosh" | awk '{ print $4 }')
+echo "pcfconfig-pks PENDING:$pending"
   if [ "${pending}" != "unchanged" -a "${pending}" != "install" ]; then
     echo "WARNING: Your have pending changes '${pending}' for the OpsManager:"
     $OM $OM_LOGIN pending-changes
