@@ -476,7 +476,8 @@ echo "gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor
         gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -eq 0 ]; then
           for ins in $mst; do
-            zone=$(gcloud compute instances describe vm-26ae56bb-8779-4aad-5703-5a031516320c --format=json | \
+echo "gcloud compute instances describe $ins"
+            zone=$(gcloud compute instances describe $ins --format=json | \
                   jq -r '.zone' | awk -F'/' '{ print $NF }')
 echo "gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --instances=$ins --instances-zone=$zone"
             gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --instances=$ins --instances-zone=$zone
