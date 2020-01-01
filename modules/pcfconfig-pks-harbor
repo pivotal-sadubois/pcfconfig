@@ -470,9 +470,22 @@ else
   fi
 fi
 
+echo "MST:$mst"
+
 ##############################################################################################
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+echo gaga
+        gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+        if [ ${ret} -eq 0 ]; then
+          for ins in $mst; do
+            gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --instances=$ins
+          done
+        fi
+echo gaga1
+fi 
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
