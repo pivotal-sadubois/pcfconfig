@@ -2474,6 +2474,16 @@ cleanGCPenv() {
   for n in $(gcloud iam service-accounts list 2>/dev/null | \
       grep -v "EMAIL" | egrep "^$ENV_NAME" | awk '{ print $(NF-1) }'); do
 
+    for role in $(gcloud projects get-iam-policy $GCP_PROJECT --flatten="bindings[].members" \
+                      --format='table(bindings.role)' --filter="$n" | grep -v ROLE; do
+
+      gcloud iam service-accounts remove-iam-policy-binding $n \
+         --role "roles/owner" --member="serviceAccount:$n" > /dev/null 2>&1
+
+      gcloud projects remove-iam-policy-binding $GCP_PROJECT --member="serviceAccount:$n" \
+         --role "roles/owner" > /dev/null 2>&1
+    done
+
     messagePrint " - Cleaning up GCP Service Account:" "$n"
     gcloud iam service-accounts delete $n -q 2>/dev/null
   done
