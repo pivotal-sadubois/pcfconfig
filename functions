@@ -309,7 +309,8 @@ sshEnvironment() {
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
     stt=$(az group exists --name Admin)
     if [ "$stt" == "true" ]; then
-      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
+      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | \
+            jq -r '.[].ipAddress')
     else
       PCF_JUMP_EXIST=0
     fi
@@ -336,7 +337,8 @@ sshEnvironment() {
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-    INSTANCE_NAME="pcfjump"
+echo "JUMP_HOST:$JUMP_HOST"
+    INSTANCE_NAME="jump-gcppks"
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
     ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
 
