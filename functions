@@ -78,27 +78,18 @@ debugInfos() {
   fi
 
   if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
-echo gaga1
     for cvar in PCF_TILE_PKS_CLUSTER_CL1_PLAN PCF_TILE_PKS_CLUSTER_CL2_PLAN PCF_TILE_PKS_CLUSTER_CL3_PLAN; do
-echo "gaga1 cvar:$cvar"
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL1_PLAN" ] && cluster=cl1
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL2_PLAN" ] && cluster=cl2
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL3_PLAN" ] && cluster=cl3
 
-echo gaga2
       eval plan=\$$cvar
-echo "CLUSTER:$cluster"
 
-echo gaga3
       if [ "${plan}" != "" ]; then 
-echo gaga4
         pks get-credentials $cluster > /dev/null 2>&1
-echo gaga5
         userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
-echo gaga6
         token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
               grep "token:" | awk '{ print $2 }')
-echo gaga7
 
         echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
         echo "=> pks get-credentials $cluster"
