@@ -3107,11 +3107,6 @@ uploadStemCell() {
     pivnetAPIdownload $PCF_PIVNET_TOKEN $PRODUCT_SLUG $pid $fid $file
   fi
 
-  messageTitle "Uploading Stemcell for Harbor"
-  messagePrint " - Staging Stemcell Version:" "$SLUG_VER"
-  messagePrint " - Staging Stemcell Type:" "$PRODUCT_SLUG"
-  messagePrint " - Staging Stemcell Description:" "$PRODUCT_SLUG $SLUG_VER"
-
   messageTitle "Uploading Stemcell"
   messagePrint " - Stemcell File:" "/tmp/$file"
 
