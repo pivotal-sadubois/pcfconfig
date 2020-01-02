@@ -471,12 +471,12 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
   if [ ${ret} -eq 0 ]; then
     for ins in $mst; do
-      messagePrint " - Adding Node to LB Backend (${DNS_PREFIX}-harbor)" "$ins"
+      messagePrint " - Adding Node to LB Backend (${PCF_DEPLOYMENT_ENV_NAME}-harbor)" "$ins"
       zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
       gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \
           --instances=$ins --instances-zone=$zone > /dev/null 2>&1
       if [ $? -ne 0 ]; then
-        echo "ERROR: failled to add node $ins to LB Backend (${DNS_PREFIX}-harbor)"
+        echo "ERROR: failled to add node $ins to LB Backend (${PCF_DEPLOYMENT_ENV_NAME}-harbor)"
         echo "       => gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \\"
         echo "             --instances=$ins --instances-zone=$zone"
         exit 1
@@ -547,5 +547,5 @@ fi
 # --- CLEANUP 
 rm -f /tmp/harbor*.pivotal
 
-exit 1
+exit 0
 
