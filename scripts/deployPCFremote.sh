@@ -503,6 +503,7 @@ PCFCONFIG_PAS_AUTH_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraformi
 PCFCONFIG_PKS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pas-debug"
 PCFCONFIG_PAS_DEBUG="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-debug"
 PCFCONFIG_PKS_HARBOR="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-harbor"
+PCFCONFIG_PKS_ISTIO="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-istio"
 PCFCONFIG_PKS_PBS="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-pbs"
 PCFCONFIG_PKS_INGRESS="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-pks-ingress"
 
@@ -612,9 +613,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     messagePrint "pcfconfig-pks already done" "skipping"
   fi
 
-if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
-
   if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
     # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
     if [ "$(getPCFconfigState $PCFCONFIG_PKS_HARBOR)" != "completed" ]; then
@@ -631,8 +629,28 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     fi
   fi
 
+if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
+echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
+
+  if [ "$PCF_TILE_ISTIO_DEPLOY" == "true" ]; then
+    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_ISTIO)" != "completed" ]; then
+      ${PCFPATH}/modules/pcfconfig-pks-istio $envFile
+
+      if [ $? -ne 0 ]; then
+        setPCFconfigState $PCFCONFIG_PKS_ISTIO "failed"
+        echo "ERROR: Problem with pcfconfig-pks-istio occured"; exit 1
+      else
+        setPCFconfigState $PCFCONFIG_PKS_ISTIO "completed"
+      fi
+    else
+      messagePrint "pcfconfig-pks-istio already done" "skipping"
+    fi
+  fi
+
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
 fi
+
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_AUTH_STATE)" != "completed" ]; then 
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
