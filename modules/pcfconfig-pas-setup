@@ -3509,6 +3509,32 @@ if [ 1 -eq 0 ]; then
       fi
     fi
 
+echo "444444444444444 1"
+    if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
+echo "444444444444444 2"
+      DNS_NAME="*.apps-${cluster}"
+      echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
+
+      cnt=$(gcloud dns record-sets list -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --name "${HARBOR}." \
+              --type=A 2> /dev/null | wc -l | sed 's/ //g')
+echo "444444444444444 3"
+      if [ ${cnt} -eq 0 ]; then
+        messagePrint " - Creating DNS Entry in (${DNS_PREFIX}-zone)" "${DNS_NAME}"
+        ipa=$(gcloud compute forwarding-rules describe ${DNS_PREFIX}-$cluster --region=$GCP_REGION | \
+            grep IPAddress | awk '{ print $NF }')
+        gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone > /dev/null 2>&1
+        gcloud dns record-sets transaction add "$ipa" --name ${DNS_NAME}. \
+           --type A -z ${DNS_PREFIX}-zone --ttl=300 > /dev/null 2>&1
+        gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
+        if [ ${ret} -ne 0 ]; then
+          echo "ERROR: Creating DNS record-sets for zone (${DNS_PREFIX}-zone)"
+          exit 1
+        fi
+      fi
+echo "444444444444444 20"
+
+    fi
+
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       DNS_NAME="*.apps-${cluster}"
       echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
