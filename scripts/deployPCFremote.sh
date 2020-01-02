@@ -218,7 +218,6 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     #fi
   
     GCP_SERVICE_ACCOUNT=/tmp/${PCF_DEPLOYMENT_ENV_NAME}.terraform.key.json
-echo "deployPCFremote.sh debug-1: GCP_SERVICE_ACCOUNT:$GCP_SERVICE_ACCOUNT"
     gcloud iam service-accounts create ${PCF_DEPLOYMENT_ENV_NAME} \
            --display-name "${PCF_DEPLOYMENT_ENV_NAME} Service Account" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -364,8 +363,6 @@ fi
 ################################ GENERATE TERRAFORM VARFILE ##################################
 ##############################################################################################
 
-echo "deployPCFremote.sh NEW_DEPLOY:$NEW_DEPLOY"
-
 if [ $NEW_DEPLOY -eq 1 ]; then
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
     list=$(gcloud compute zones list | grep "${GCP_REGION}" | awk '{ print $1 }')
@@ -456,8 +453,6 @@ if [ $NEW_DEPLOY -eq 1 ]; then
     echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 
-echo "deployPCFremote.sh: debug-40 PCF_DEPLOYMENT_CLOUD:$PCF_DEPLOYMENT_CLOUD"
-echo "deployPCFremote.sh: debug-40 NEW_DEPLOY:$NEW_DEPLOY"
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" -a $NEW_DEPLOY == "1" ]; then 
     OPSMAN_IMAGE=$(getOpsManagerAMI $PCF_DEPLOYMENT_CLOUD $PCF_OPSMANAGER_VERSION)
 
@@ -491,7 +486,6 @@ echo "deployPCFremote.sh: debug-40 NEW_DEPLOY:$NEW_DEPLOY"
     echo "SSL_KEY"                                                               >> $TF_VARFILE
   fi
 fi
-echo "deployPCFremote.sh: debug12"
 
 TERRAFORM_RELEASE_NOTES=${PCFPATH}/files/terraform-release-notes.txt
 PCFCONFIG_TF_STATE="${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/.pcfconfig-terraform"
