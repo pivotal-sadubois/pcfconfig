@@ -629,28 +629,6 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
     fi
   fi
 
-if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - HARBOR"
-
-  if [ "$PCF_TILE_ISTIO_DEPLOY" == "true" ]; then
-    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
-    if [ "$(getPCFconfigState $PCFCONFIG_PKS_ISTIO)" != "completed" ]; then
-      ${PCFPATH}/modules/pcfconfig-pks-istio $envFile
-
-      if [ $? -ne 0 ]; then
-        setPCFconfigState $PCFCONFIG_PKS_ISTIO "failed"
-        echo "ERROR: Problem with pcfconfig-pks-istio occured"; exit 1
-      else
-        setPCFconfigState $PCFCONFIG_PKS_ISTIO "completed"
-      fi
-    else
-      messagePrint "pcfconfig-pks-istio already done" "skipping"
-    fi
-  fi
-
-echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - FINISH"
-fi
-
   # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
   if [ "$(getPCFconfigState $PCFCONFIG_PKS_AUTH_STATE)" != "completed" ]; then 
     cd ${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}
@@ -728,6 +706,23 @@ echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       messagePrint "pcfconfig-pks-pbs already done" "skipping"
     fi
   fi
+
+  if [ "$PCF_TILE_ISTIO_DEPLOY" == "true" ]; then
+    # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
+    if [ "$(getPCFconfigState $PCFCONFIG_PKS_ISTIO)" != "completed" ]; then
+      ${PCFPATH}/modules/pcfconfig-pks-istio $envFile
+
+      if [ $? -ne 0 ]; then
+        setPCFconfigState $PCFCONFIG_PKS_ISTIO "failed"
+        echo "ERROR: Problem with pcfconfig-pks-istio occured"; exit 1
+      else
+        setPCFconfigState $PCFCONFIG_PKS_ISTIO "completed"
+      fi
+    else
+      messagePrint "pcfconfig-pks-istio already done" "skipping"
+    fi
+  fi
+
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - PBS"
 fi
 
