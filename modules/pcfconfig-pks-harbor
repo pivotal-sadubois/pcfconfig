@@ -534,5 +534,5 @@ fi
 # --- CLEANUP 
 rm -f /tmp/harbor*.pivotal
 
-exit 1
+exit 0
 
