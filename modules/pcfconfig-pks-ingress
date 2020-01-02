@@ -135,8 +135,8 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   fi
 fi
 
-echo "555555555555555555555555 - PCF_CLOUD_NAME:$PCF_CLOUD_NAME"
-if [ "${PCF_CLOUD_NAME}" == "GCP" ]; then
+echo "555555555555555555555555 - 0"
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 echo "555555555555555555555555 - 1"
   DNS_NAME="*.apps-${cluster}"
   echo "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
