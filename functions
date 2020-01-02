@@ -51,14 +51,22 @@ debugInfos() {
 
   if [ $(($MASK & $BITMASK_OPS)) -gt 0 ]; then 
     echo "ACCESSING THE OPS-MANAGER"
-    echo "=> http://pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (PCF_OPSMANAGER_ADMIN_USER/$PCF_OPSMANAGER_ADMIN_PASS)"
+    if [ "${PCF_OPSMANAGER_ADMIN_USER}" == "" ]; then 
+      echo "=> http://pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    else
+      echo "=> http://pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} ($PCF_OPSMANAGER_ADMIN_USER/$PCF_OPSMANAGER_ADMIN_PASS)"
+    fi
     echo "=> ssh -qi $TMP_OPSMAN ubuntu@pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (via JUMP-HOST)"
     echo "=> . /tmp/debug.sh"
     echo ""
 
     if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
       echo "ACCESSING HARBOR"
-      echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (admin/$PCF_TILE_PBS_ADMIN_USER)" 
+      if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then 
+        echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+      else
+        echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (admin/$PCF_TILE_PBS_ADMIN_USER)" 
+      fi
       echo ""
     fi
   fi
@@ -342,15 +350,11 @@ sshEnvironment() {
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-echo "JUMP_HOST:$JUMP_HOST"
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
     #ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
     ZONE=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME')" | egrep "^$INSTANCE_NAME" | awk '{ print $2 }')
-echo "INSTANCE_NAME:$INSTANCE_NAME"
-echo "ZONE:$ZONE"
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
-echo "prj:$prj"
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
