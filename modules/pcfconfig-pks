@@ -2801,7 +2801,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
     if [ "${PCF_CLOUD_NAME}" == "azure" ]; then
       vmid=$(az vm list -g $DNS_PREFIX --query "[?tags.instance_group=='pivotal-container-service']" | jq -r '.[].name')
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
-        echo "Creating Workload LoadBalancer (${DNS_PREFIX}-$n)"
+        messageTitle "Creating Workload LoadBalancer (${DNS_PREFIX}-$n)"
 
         # --- CREATE PULIC IP FOR LOADBALANCER ---
         ipa=$(az network public-ip list -g $DNS_PREFIX --query "[?name=='${DNS_PREFIX}-${n}-lb-ip']" | jq -r '.[].ipAddress')
@@ -2889,10 +2889,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
 #gaga-lb-create
     if [ "${PCF_CLOUD_NAME}" == "gcp" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
+        messageTitle "Creating Workload LoadBalancer (${GCP_DNS_PREFIX}-$n)"
+
         gcloud compute target-pools describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE TARGET POOL ---
-          echo "Creating Target Pool (${GCP_DNS_PREFIX}-$n)"
+          messagePrint " - Creating Target Pool (${GCP_DNS_PREFIX}-$n)"
           gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating target-pools (${GCP_DNS_PREFIX}-$n)"
@@ -2904,12 +2906,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -gt 0 ]; then
           # --- CREATE LOAD BALANCER ---
-          echo "Creating LoadBalancer (${GCP_DNS_PREFIX}-$n) for cluster: $n"
+          messagePrint " - Creating LoadBalancer (${GCP_DNS_PREFIX}-$n) for cluster: $n"
 	  gcloud compute forwarding-rules create ${GCP_DNS_PREFIX}-${n} --ports 8443 \
             --target-pool ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating forwarding-rules (${GCP_DNS_PREFIX}-$n)"
-            echo "gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
+            echo "       => gcloud compute target-pools create ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION"
             exit 1
           fi
         fi
@@ -2917,12 +2919,12 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
         cnt=$(gcloud dns record-sets list -z ${GCP_DNS_PREFIX}-zone --name "${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}." \
                 --type=A 2> /dev/null | wc -l | sed 's/ //g')
         if [ ${cnt} -eq 0 ]; then
-          echo "Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
+          echo " - Creating DNS Entry ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. for (${GCP_DNS_PREFIX}-zone)"
           ipa=$(gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION | \
               grep IPAddress | awk '{ print $NF }')
-          gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone
+          gcloud dns record-sets transaction start -z ${GCP_DNS_PREFIX}-zone > /dev/null 2>&1
           gcloud dns record-sets transaction add "$ipa" --name ${n}.${GCP_DNS_PREFIX}.${GCP_DNS_SUFFIX}. \
-             --type A -z ${GCP_DNS_PREFIX}-zone --ttl=300
+             --type A -z ${GCP_DNS_PREFIX}-zone --ttl=300 > /dev/null 2>&1
           gcloud dns record-sets transaction execute -z ${GCP_DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
           if [ ${ret} -ne 0 ]; then
             echo "ERROR: Creating DNS record-sets for zone (${GCP_DNS_PREFIX}-zone)"
@@ -2941,7 +2943,7 @@ if [ "${PCFCONFIG_BASE}" == "pcfconfig-pks-setup" ]; then
       SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TERRAFORM_TFSTATE | \
          grep -v null | sed '/: $/d' | sort -u)
 
-      echo "Creating ELB Loadbalancer (k8s-master-$n)"
+      messageTitle "Creating ELB Loadbalancer (k8s-master-$n)"
       messagePrint " - Subnet-1:" "$SUB1"
       messagePrint " - Subnet-2:" "$SUB2"
       messagePrint " - Subnet-3:" "$SUB3"
@@ -3037,15 +3039,6 @@ EOF
       echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/debug.sh"
       exit 1
     fi
-
-    #echo ""
-    #echo "# --- DIRECTOR LOGIN FOR DEBUGGING ---"
-    #echo "ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} "
-    #echo "ubuntu@${DNS_PREFIX}-ops-manager:~$ sh /tmp/debug.sh"
-    #echo ""
-    #echo "# --- PKS LOGIN ---"
-    #echo "pks login -u ${PKS_ADMIN_USER} -p ${PKS_ADMIN_PASS} -a ${API_HOST_NAME} --skip-ssl-validation"
-    #echo "pks login -u admin -p ${admin_sec} -a ${API_HOST_NAME} --skip-ssl-validation"
 
     ##############################################################################################
     #################################### CREATE PKS CLUSTERS #####################################
@@ -3247,6 +3240,7 @@ EOF
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
 
+echo "pcfconfig-pks: debug-1 mst:$mst"
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
@@ -3258,6 +3252,9 @@ EOF
         fi
       done
     fi
+
+debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do

@@ -45,7 +45,7 @@ debugInfos() {
 
   if [ $(($MASK & $BITMASK_JMP)) -gt 0 ]; then 
     echo "ACCESSING THE JUMP-HOST"
-    echo "=> $SSH_COMMAND"
+    echo "=> $SSH_DISPLAY"
     echo ""
   fi
 
@@ -70,18 +70,27 @@ debugInfos() {
   fi
 
   if [ $(($MASK & $BITMASK_K8S)) -gt 0 ]; then 
+echo gaga1
     for cvar in PCF_TILE_PKS_CLUSTER_CL1_PLAN PCF_TILE_PKS_CLUSTER_CL2_PLAN PCF_TILE_PKS_CLUSTER_CL3_PLAN; do
+echo "gaga1 cvar:$cvar"
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL1_PLAN" ] && cluster=cl1
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL2_PLAN" ] && cluster=cl2
       [ "$cvar" == "PCF_TILE_PKS_CLUSTER_CL3_PLAN" ] && cluster=cl3
 
+echo gaga2
       eval plan=\$$cvar
+echo "CLUSTER:$cluster"
 
+echo gaga3
       if [ "${plan}" != "" ]; then 
+echo gaga4
         pks get-credentials $cluster > /dev/null 2>&1
+echo gaga5
         userid=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"$cluster\")].context.user}")
+echo gaga6
         token=$(kubectl describe secret $(kubectl get secret | grep $userid | awk '{print $1}') | \
               grep "token:" | awk '{ print $2 }')
+echo gaga7
 
         echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
         echo "=> pks get-credentials $cluster"
@@ -311,6 +320,7 @@ sshEnvironment() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
+    SSH_DISPLAY="ssh ${SSH_USER}@${SSH_HOST}"
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -318,12 +328,18 @@ sshEnvironment() {
     SSH_HOME=/home/ubuntu
     SSH_HOST=$JUMP_HOST
     SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SSH_DISPLAY="-o StrictHostKeyChecking=no"
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS -i ~/.ssh/${JUMP_HOST}.pem"
+    SSH_DISPLAY="ssh -i ~/.ssh/${JUMP_HOST}.pem ${SSH_USER}@${SSH_HOST}"
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+    INSTANCE_NAME="pcfjump"
+    INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
+    ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
+
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
     SSH_HOST="${INSTANCE_NAME}.${ZONE}.${prj}"
@@ -331,6 +347,7 @@ sshEnvironment() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
+    SSH_DISPLAY="ssh ${SSH_USER}@${SSH_HOST}"
   fi
 }
 
@@ -3117,6 +3134,8 @@ downloadFromPivnet() {
   PRODUCT_SLUG=$1
   PRODUCT_VERSION=$2
   PRODUCT_NAME=$3
+
+  if [ "${SEARCH_NOT}" == "" ]; then SEARCH_NOT="blabla"; fi
 
   rec=$(echo "$PRODUCT_VERSION" | awk -F'.' '{ print NF }')
   if [ $rec -eq 2 ]; then SEARCH_STR="^${PRODUCT_VERSION}.[0-9]*$"; else SEARCH_STR="^${PRODUCT_VERSION}$"; fi
