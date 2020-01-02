@@ -3240,7 +3240,6 @@ EOF
           mst=$(ssh -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/masters.sh" 2>/dev/null)
         fi
 
-echo "pcfconfig-pks: debug-1 mst:$mst"
         ##############################################################################################
         ########################## ADD MASTER INSTANCES TO THE PKS CLUSTER ###########################
         ##############################################################################################
@@ -3269,9 +3268,6 @@ echo "pcfconfig-pks: debug-1 mst:$mst"
         fi
       done
     fi
-
-debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-exit 1
 
     if [ "${PCF_CLOUD_NAME}" == "aws" ]; then
       for n in $PKS_CLUSTER_1_NAME $PKS_CLUSTER_2_NAME $PKS_CLUSTER_3_NAME; do
