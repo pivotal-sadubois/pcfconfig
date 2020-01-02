@@ -141,6 +141,7 @@ echo "555555555555555555555555 - 1"
   DNS_NAME="*.apps-${cluster}"
   messageTitle "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
 
+echo xxx
 #gcloud dns record-sets transaction start -z gcppks-zone 
 #gcloud dns record-sets transaction add 35.240.42.219 --name *.apps-cl1.gcppks.pcfsdu.com --type A -z gcppks-zone --ttl=300 
 #gcloud dns record-sets transaction execute -z gcppks-zone
