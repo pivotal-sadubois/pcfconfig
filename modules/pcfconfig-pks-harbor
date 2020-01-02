@@ -21,7 +21,6 @@ envFile=$1
 [ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && TF_DEPLOYMENT="gcp"
 
 if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then PRODUCT_TILE=pks; else PRODUCT_TILE=pas; fi
-echo "XXXX PCF_TILE_HARBOR_ADMIN_PASS:$PCF_TILE_HARBOR_ADMIN_PASS"
 
 export DEBUG=0
 export PCFCONFIG_BASE=$(basename $0)
@@ -470,13 +469,12 @@ fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
-echo "RET:$ret"
-ret=0
   if [ ${ret} -eq 0 ]; then
     for ins in $mst; do
       messagePrint " - Adding Node to LB Backend (${DNS_PREFIX}-harbor)" "$ins"
       zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
-      gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor --instances=$ins --instances-zone=$zone
+      gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \
+          --instances=$ins --instances-zone=$zone > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to add node $ins to LB Backend (${DNS_PREFIX}-harbor)"
         echo "       => gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \\"
