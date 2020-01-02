@@ -1,0 +1,548 @@
+#!/bin/bash
+# ############################################################################################
+# File: ........: pcfconfig-pks-istio
+# Language .....: bash
+# Author .......: Sacha Dubois, Pivotal
+# Description ..: PCF OpsManager Configuration Utility
+# ############################################################################################
+
+if [ "${1}" == "" ]; then
+  echo "$0 <env-file>"; exit 0
+fi
+
+envFile=$1
+
+# --- SOURCE FUNCTIONS---
+. ${PCFPATH}/functions
+. $envFile
+
+[ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ] && TF_DEPLOYMENT="aws"
+[ "$PCF_DEPLOYMENT_CLOUD" == "Azure" ] && TF_DEPLOYMENT="azure"
+[ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ] && TF_DEPLOYMENT="gcp"
+
+if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then PRODUCT_TILE=pks; else PRODUCT_TILE=pas; fi
+
+export DEBUG=0
+export PCFCONFIG_BASE=$(basename $0)
+export PCFPATH=$HOME/pcfconfig
+export TF_WORKDIR=$HOME/workspace
+export TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
+export TF_VARS=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfvars
+
+messageTitle ""
+messageTitle "PCF Configuration Utility Module: (pcfconfig-pks-istio)"
+messageTitle "by Sacha Dubois, Pivotal Inc,"
+messageTitle "-----------------------------------------------------------------------------------------------------------"
+
+# --- CHECK UTILITIES ---
+checkOpsMantools
+
+messageTitle "Install Pivotal Service Mesh (Istio)"
+messagePrint " - Product Version:"                 "$PCF_TILE_ISTIO_VERSION"
+messagePrint " - Product Slug:"                    "$PCF_TILE_ISTIO_NAME"
+
+ISTIO_SLUG=$PCF_TILE_ISTIO_NAME
+ISTIO_VERSION=$PCF_TILE_ISTIO_VERSION
+
+OPS_MANAGER_URL="pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+OM_LOGIN="--skip-ssl-validation --target ${OPS_MANAGER_URL} --username $PCF_OPSMANAGER_ADMIN_USER \
+          --password $PCF_OPSMANAGER_ADMIN_PASS"
+
+ISTIO_BUNDLE=$(downloadFromPivnet $PCF_TILE_ISTIO_SLUG $PCF_TILE_ISTIO_VERSION "^Pivotal Ingress Router\$")
+
+
+exit
+
+##############################################################################################
+############################# GENERATING / ADDING TLS CERTIFICATES ###########################
+##############################################################################################
+
+TLS_CERTIFICATE=$PCFPATH/certificates/fullchain.pem 
+TLS_PRIVATE_KEY=$PCFPATH/certificates/privkey.pem
+TLS_ROOT_CERT=$PCFPATH/certificates/ca.pem
+VARFILE=/tmp/harbor_vars.yml; rm -rf $VARFILE; touch $VARFILE
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  AVAILABILITY_ZONES=$(aws ec2 --region=$AWS_REGION describe-availability-zones | \
+                      jq -r '.AvailabilityZones[].ZoneName' | paste - - -)
+  AVAILABILITY_ZONE1=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $1 }')
+  AVAILABILITY_ZONE2=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $2 }')
+  AVAILABILITY_ZONE3=$(echo "${AVAILABILITY_ZONES}" | awk '{ print $3 }')
+
+  echo "availability_zone_1: $AVAILABILITY_ZONE1" >> $VARFILE
+  echo "availability_zone_2: $AVAILABILITY_ZONE2" >> $VARFILE
+  echo "availability_zone_3: $AVAILABILITY_ZONE3" >> $VARFILE
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  AVAILABILITY_ZONES=$(gcloud compute zones list | grep ${GCP_REGION} 2>/dev/null | awk '{ print $1 }')
+  AVAILABILITY_ZONE1=$(echo ${AVAILABILITY_ZONES} | awk '{ print $1 }')
+  AVAILABILITY_ZONE2=$(echo ${AVAILABILITY_ZONES} | awk '{ print $2 }')
+  AVAILABILITY_ZONE3=$(echo ${AVAILABILITY_ZONES} | awk '{ print $3 }')
+
+  echo "zone-1: $AVAILABILITY_ZONE1" >> $VARFILE
+  echo "zone-2: $AVAILABILITY_ZONE2" >> $VARFILE
+  echo "zone-3: $AVAILABILITY_ZONE3" >> $VARFILE
+  echo "pks_subnet_name: ${PCF_DEPLOYMENT_ENV_NAME}-pks-subnet" >> $VARFILE
+fi
+
+status=$($OM $OM_LOGIN deployed-products | grep -c "$PCF_TILE_HARBOR_NAME")
+if [ $status -eq 0 ]; then 
+  messageTitle "Configuring Harbor Tile (${PCF_TILE_HARBOR_CONFIG})"
+  messagePrint " - Harbor YAML Configuration Template" "\$PCFCONFIG_PATH/templates/${PCF_TILE_HARBOR_CONFIG}"
+  messagePrint " - Harbor YAML Variable File" "$VARFILE"
+
+  if [ -f "${TLS_CERTIFICATE}" -a -f "${TLS_PRIVATE_KEY}" -a -f "${TLS_ROOT_CERT}" ]; then
+    TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+    messagePrint " - Verify Customer TLS Certificate for hosts" "${TLS_HOST_NAME}"
+    verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
+
+    TLS_CERTIFICATE_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_CERTIFICATE)
+    TLS_PRIVATE_KEY_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_PRIVATE_KEY)
+    TLS_ROOT_CERT_STRING=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' $TLS_ROOT_CERT)
+
+    echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASS\"" >> $VARFILE
+    echo "harbor_tls_cert_pem: \"$TLS_CERTIFICATE_STRING\"" >> $VARFILE
+    echo "harbor_tls_private_key_pem: \"$TLS_PRIVATE_KEY_STRING\"" >> $VARFILE
+    echo "harbor_tls_root_cert_pem: \"$TLS_ROOT_CERT_STRING\"" >> $VARFILE
+  else
+    TLS_HOST_NAME=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+    messagePrint " - Generating Customer TLS Certificate" "${TLS_HOST_NAME}"
+
+    TLS_TEMP_CERT=/tmp/$$_cert
+    $OM $OM_LOGIN generate-certificate --domains $TLS_HOST_NAME > $TLS_TEMP_CERT
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Generating Certificate for $TLS_HOST_NAME failed"; exit 1
+    fi
+
+    TLS_CERTIFICATE=$(jq '.certificate' $TLS_TEMP_CERT)
+    TLS_PRIVATE_KEY=$(jq '.key' $TLS_TEMP_CERT)
+
+    echo "harbor_hostname: \"$TLS_HOST_NAME\"" >> $VARFILE
+    echo "admin_password: \"$PCF_TILE_HARBOR_ADMIN_PASS\"" >> $VARFILE
+    echo "harbor_tls_cert_pem: $TLS_CERTIFICATE" >> $VARFILE
+    echo "harbor_tls_private_key_pem: $TLS_PRIVATE_KEY" >> $VARFILE
+    echo "harbor_tls_root_cert_pem: " >> $VARFILE
+
+    rm -f $TLS_TEMP_CERT
+  fi
+
+  echo "-----------------------------------------------------------------------------------------------------------"
+  echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
+  $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
+  fi
+  echo "-----------------------------------------------------------------------------------------------------------"
+
+  pending=$($OM $OM_LOGIN pending-changes | grep "$PCF_TILE_HARBOR_NAME" | awk '{ print $4 }')
+  if [ "${pending}" == "install" -o "${pending}" == "update" ]; then
+    messageTitle "Applying Changes to Harbor"
+    if [ $DEBUG -gt 0 ]; then
+      echo "-----------------------------------------------------------------------------------------------------------"
+      $OM $OM_LOGIN --request-timeout=90 apply-changes
+      echo "-----------------------------------------------------------------------------------------------------------"
+    else
+      $OM $OM_LOGIN --request-timeout=90 apply-changes > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Applying Changes has been failed, please try manual"
+        echo "       $OM $OM_LOGIN apply-changes"; exit 1
+      fi
+    fi
+  fi
+fi
+
+##############################################################################################
+################################ CONFIGURE PKS LOADBALANCERS #################################
+##############################################################################################
+messageTitle "Creating Harbor LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  gcloud compute target-pools describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    # --- CREATE TARGET POOL ---
+    messagePrint " - Creating Target Pool" "${PCF_DEPLOYMENT_ENV_NAME}-harbor"
+    gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating target-pools (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
+      echo "gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION"
+      exit 1
+    fi
+  fi
+
+  gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    # --- CREATE LOAD BALANCER ---
+    messagePrint " - Creating Forwarding Rules" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr"
+    gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \
+      --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating forwarding-rules (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
+      echo "       => gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \\"
+      echo "             --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION"
+      exit 1
+    fi
+  fi
+
+  HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+  cnt=$(gcloud dns record-sets list -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --name "${HARBOR}." \
+          --type=A 2> /dev/null | wc -l | sed 's/ //g')
+  if [ ${cnt} -eq 0 ]; then
+    messagePrint " - Creating DNS Entry in (${PCF_DEPLOYMENT_ENV_NAME}-zone)" "${HARBOR}"
+    ipa=$(gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION | \
+        grep IPAddress | awk '{ print $NF }')
+    gcloud dns record-sets transaction start -z ${PCF_DEPLOYMENT_ENV_NAME}-zone > /dev/null 2>&1
+    gcloud dns record-sets transaction add "$ipa" --name ${HARBOR}. \
+       --type A -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --ttl=300 > /dev/null 2>&1
+    gcloud dns record-sets transaction execute -z ${PCF_DEPLOYMENT_ENV_NAME}-zone > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating DNS record-sets for zone (${PCF_DEPLOYMENT_ENV_NAME}-zone)"
+      exit 1
+    fi
+  fi
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  # --- CREATE ELB LOADBALANCER ---
+  SUB1=$($JQ -r '.modules[].outputs.public_subnet_ids.value[0]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SUB2=$($JQ -r '.modules[].outputs.public_subnet_ids.value[1]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SUB3=$($JQ -r '.modules[].outputs.public_subnet_ids.value[2]' $TF_STATE | grep -v null | sed '/: $/d' | sort -u)
+  SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TF_STATE | \
+     grep -v null | sed '/: $/d' | sort -u)
+
+  messagePrint " - Subnet-1:" "$SUB1"
+  messagePrint " - Subnet-2:" "$SUB2"
+  messagePrint " - Subnet-3:" "$SUB3"
+
+  aws elb --region $AWS_REGION describe-load-balancers \
+          --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
+  if [ ${ret} -gt 0 ]; then
+    vpcid=$(aws ec2 describe-subnets --region $AWS_REGION --subnet-ids $SUB1 | jq -r '.Subnets[].VpcId')
+    secid=$(aws ec2 describe-security-groups --region $AWS_REGION \
+            --filters Name=group-name,Values=$PCF_DEPLOYMENT_ENV_NAME-harbor-security-group | \
+            jq -r '.SecurityGroups[].GroupId') 
+    if [ "${secid}" == "" ]; then 
+      messagePrint " - Security Group:" "$PCF_DEPLOYMENT_ENV_NAME-harbor-security-group"
+      aws ec2 create-security-group --region $AWS_REGION --group-name $PCF_DEPLOYMENT_ENV_NAME-harbor-security-group \
+          --description "Harbor Security Group" --vpc-id $vpcid > /dev/null 2>&1
+      if [ $? -ne 0 ]; then 
+        echo "ERROR: failed to create Security Group"
+        echo "       => aws ec2 create-security-group --region $AWS_REGION --group-name $PCF_DEPLOYMENT_ENV_NAME-harbor-security-group \\"
+        echo "          --description "Harbor Security Group" --vpc-id $vpcid"
+        exit 1
+      fi
+
+      secid=$(aws ec2 describe-security-groups --region $AWS_REGION \
+              --filters Name=group-name,Values=$PCF_DEPLOYMENT_ENV_NAME-harbor-security-group | \
+              jq -r '.SecurityGroups[].GroupId')
+
+      aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $secid \
+          --protocol tcp --port 443 --cidr 0.0.0.0/0 > /dev/null 2>&1
+      if [ $? -ne 0 ]; then        
+        echo "ERROR: failed to create Security Group Roules"
+        echo "       => aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $secid \\"
+        echo "          --protocol tcp --port 443 --cidr 0.0.0.0/0"
+        exit 1
+      fi
+    fi
+
+    aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
+       --tags "Key=Environment,Value=$PCF_DEPLOYMENT_ENV_NAME" \
+       --listeners "Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443" \
+       --subnet $SUB1 $SUB2 $SUB3 --security-groups $secid > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Creating LoadBalancer"
+      echo "aws elb create-load-balancer --region $AWS_REGION  --load-balancer-name \"${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb\" \\"
+      echo "  --tags \"Key=Environment,Value=$PCF_DEPLOYMENT_ENV_NAME\" \\"
+      echo "  --listeners \"Protocol=TCP,LoadBalancerPort=443,InstanceProtocol=TCP,InstancePort=443\" \\"
+      echo "  --subnet $SUB1 $SUB2 $SUB3 --security-groups $secid"
+      exit 1
+    fi
+
+    aws elb configure-health-check --region $AWS_REGION --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       --health-check "Target=TCP:443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3" > /dev/null 2>&1; ret=$?
+    if [ ${ret} -ne 0 ]; then
+      echo "ERROR: Configure Healhcheck"
+      echo "aws elb configure-health-check --region $AWS_REGION --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "  --health-check \"Target=TCP:443,Interval=30,UnhealthyThreshold=2,HealthyThreshold=2,Timeout=3\""
+      exit 1
+    fi
+
+    ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} | \
+             jq -r '.HostedZones[0].Id')
+    ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
+    DNSLB=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].DNSName')
+    DNSLB_ZONEID=$(aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" | \
+        jq -r '.LoadBalancerDescriptions[0].CanonicalHostedZoneNameID')
+
+    HARBOR="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+    ALIAS=$(aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID \
+            --query "ResourceRecordSets[?contains(Name, '${HARBOR}')].AliasTarget.DNSName" | \
+            jq -r '.[]' | sed -e 's/dualstack\.//g' -e 's/\.$//g' )
+
+    if [ "${ZONE_ID}" != "" ]; then
+      messagePrint " - Create DNS Entry for $HARBOR"
+      ZONE="$HARBOR"
+
+      TMPROUTE53=/tmp/$$_tmp_route53.json
+      echo "{"                                                   >  $TMPROUTE53
+      echo "  \"Comment\": \"CREATE/DELETE/UPSERT a record \","  >> $TMPROUTE53
+      echo "  \"Changes\": [{"                                   >> $TMPROUTE53
+      echo "  \"Action\": \"UPSERT\","                           >> $TMPROUTE53
+      echo "  \"ResourceRecordSet\": {"                          >> $TMPROUTE53
+      echo "    \"Name\": \"${ZONE}\","                          >> $TMPROUTE53
+      echo "    \"Type\": \"A\","                                >> $TMPROUTE53
+      echo "    \"AliasTarget\": {"                              >> $TMPROUTE53
+      echo "      \"HostedZoneId\": \"${DNSLB_ZONEID}\","        >> $TMPROUTE53
+      echo "      \"DNSName\": \"dualstack.${DNSLB}.\","         >> $TMPROUTE53
+      echo "      \"EvaluateTargetHealth\": true"                >> $TMPROUTE53
+      echo "    }"                                               >> $TMPROUTE53
+      echo "}}]"                                                 >> $TMPROUTE53
+      echo "}"                                                   >> $TMPROUTE53
+
+      aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID \
+          --change-batch file://${TMPROUTE53} > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failed to set DNS for $hnm"
+        echo "       => aws route53 change-resource-record-sets --hosted-zone-id \"${ZONE_ID}\" \\"
+        echo "              --change-batch file://${TMPROUTE53}"
+        cat $TMPROUTE53
+        exit 1
+      fi
+
+      rm -f $TMPROUTE53
+    fi
+  fi
+fi 
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  # --- CREATE PULIC IP FOR LOADBALANCER ---
+  ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
+        jq -r '.[].ipAddress')
+  if [ "${ipa}" == "" ]; then
+    messagePrint " - Create Public IP (${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip)"
+    az network public-ip create -g $PCF_DEPLOYMENT_ENV_NAME -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \
+       --allocation-method Static --sku Standard > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failled to create publicip"
+      echo "       => az network public-ip create -g $PCF_DEPLOYMENT_ENV_NAME -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \\"
+      echo "             --allocation-method Static"
+      exit 1
+    fi
+
+    ipa=$(az network public-ip list -g $PCF_DEPLOYMENT_ENV_NAME --query "[?name=='${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip']" | \
+         jq -r '.[].ipAddress')
+    messagePrint " - Create LB Public IP ($ipa)" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
+  else
+    messagePrint " - Verify LB Public IP ($ipa)" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
+  fi
+
+  # --- CHECK IF ENTRY EXISTS ---
+  rec=$(az network dns record-set list -g ${PCF_DEPLOYMENT_ENV_NAME} \
+           --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+           --query "[?fqdn=='harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}.']" | jq -r '.[].fqdn')
+  if [ "${rec}" == "" ]; then
+    messagePrint " - Creating DNS entry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" "$ipa"
+    az network dns record-set a add-record -g ${PCF_DEPLOYMENT_ENV_NAME} \
+       --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+       --record-set-name harbor --ipv4-address $ipa > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create DNS record for harbor (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})"
+      echo "       => az network dns record-set a add-record -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
+      echo "             --zone-name ${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} --record-set-name harbor \\"
+      echo "             --ipv4-address $ipa"; exit 1
+    fi
+  else
+    messagePrint " - Verify DNS entry for (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" "$ipa"
+  fi
+
+  # --- CHECK IF LB EXISTS ---
+  lbn=$(az network lb list -g ${PCF_DEPLOYMENT_ENV_NAME} --query "[?name == '${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb']" | \
+           jq -r '.[].name')
+  if [ "${lbn}" == "" ]; then
+    messagePrint " - Creating loadbalancer" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb"
+    az network lb create -g ${PCF_DEPLOYMENT_ENV_NAME} -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --sku Standard \
+       --public-ip-address "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip" --location $AZURE_REGION \
+       --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create loadbalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb)"
+      echo "       => az network lb create -g ${PCF_DEPLOYMENT_ENV_NAME} -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "           --sku Standard --public-ip-address ${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip \\"
+      echo "           --backend-pool-name ${n}-pool --location $AZURE_REGION"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify loadbalancer" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb"
+  fi
+
+  # --- CREATE LB HEALTH PROBE ---
+  prb=$(az network lb probe show -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+           -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe 2>/dev/null | jq -r '.name')
+  if [ "${prb}" == "" ]; then
+    messagePrint " - Creating LB Health Probe for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+    az network lb probe create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe --protocol tcp --port 443 > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create LB Health Probe"
+      echo "       => az network lb probe create -g ${PCF_DEPLOYMENT_ENV_NAME} ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "             -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe --protocol tcp --port 443"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify LB Health Proble for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+  fi
+
+  # --- CREATE LB RULE ---
+  rul=$(az network lb rule show -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+           -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule 2>/dev/null | jq -r '.name')
+  if [ "${rul}" == "" ]; then
+    messagePrint " - Creating LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
+    az network lb rule create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \
+       -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule --protocol tcp \
+       --frontend-port 443 --backend-port 443 --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool \
+       --probe-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      echo "ERROR: Can not create LB Rule"
+      echo "       => az network lb rule create -g ${PCF_DEPLOYMENT_ENV_NAME} --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "          -n ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb-rule --protocol tcp --frontend-port 443 --backend-port 443 \\"
+      echo "          --backend-pool-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool \\"
+      echo "          --probe-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-probe"
+      exit 1
+    fi
+  else
+    messagePrint " - Verify LB Rule for port 443" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-rule"
+  fi
+fi
+
+##############################################################################################
+############################## GET CLUSTER INSTANCES GET INSTANCES ###########################
+##############################################################################################
+
+director_ip=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/manifest 2>/dev/null | \
+              jq -r '.instance_groups[].properties.director.address')
+director_cd=$($OM $OM_LOGIN curl --path /api/v0/deployed/director/credentials/uaa_admin_user_credentials 2>/dev/null | \
+              jq -r '.credential.value.password')
+
+TMP_LBSCRIPT=/tmp/harbor-nodes.sh
+
+echo "cert=/var/tempest/workspaces/default/root_ca_certificate"                                          >  $TMP_LBSCRIPT
+echo "bosh alias-env $PCF_DEPLOYMENT_ENV_NAME -e $director_ip --ca-cert \$cert >/dev/null 2>&1"          >> $TMP_LBSCRIPT
+echo "echo -e \"admin\n${director_cd}\" | bosh -e $PCF_DEPLOYMENT_ENV_NAME login >/dev/null 2>&1"        >> $TMP_LBSCRIPT
+echo "dep=\$(bosh -e $PCF_DEPLOYMENT_ENV_NAME deployments | egrep \"^harbor-container-registry\" | \\"   >> $TMP_LBSCRIPT
+echo "  awk '{ print \$1 }')"                                                                            >> $TMP_LBSCRIPT
+echo "bosh -e $PCF_DEPLOYMENT_ENV_NAME -d \$dep --column='Instance' --column='VM CID' vms | \\"          >> $TMP_LBSCRIPT
+echo "egrep \"^harbor-app/\" | sed -e 's/;/ /g' -e 's/agent_id://g' | awk '{ print \$2 }'"               >> $TMP_LBSCRIPT
+
+OPS_MANAGER_DNS=pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+TMP_OPSMAN="/tmp/opsman.pem"
+
+scp -o StrictHostKeyChecking=no -qi $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh; ret=$?
+if [ ${ret} -ne 0 ]; then
+  echo "ERROR: Copying script /tmp/masters.sh to ubuntu@${OPS_MANAGER_DNS} has been failed"
+  echo "       Please try manually:"
+  echo "       => scp -o StrictHostKeyChecking=no -i $TMP_OPSMAN $TMP_LBSCRIPT ubuntu@${OPS_MANAGER_DNS}:/tmp/harbor.sh"
+  exit 1
+fi
+
+ssh -o StrictHostKeyChecking=no -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/harbor.sh" >/dev/null 2>&1; ret=$?
+if [ ${ret} -ne 0 ]; then
+  echo "ERROR: executing remote-script: /tmp/masters.sh on ubuntu@${OPS_MANAGER_DNS} has been failed"
+  echo "       Please try manually:"
+  echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/harbor.sh\""
+  exit 1
+else
+  mst=$(ssh -o StrictHostKeyChecking=no -qi $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n "bash /tmp/harbor.sh" 2>/dev/null)
+  if [ "${mst}" == "" ]; then
+    echo "ERROR: failed to retrieve the hostname and ip adresses of the master nodes"
+    echo "       => ssh -i $TMP_OPSMAN ubuntu@${OPS_MANAGER_DNS} -n \"bash /tmp/harbor.sh\""
+  fi
+fi
+
+##############################################################################################
+############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
+##############################################################################################
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
+  gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+  if [ ${ret} -eq 0 ]; then
+    for ins in $mst; do
+      messagePrint " - Adding Node to LB Backend (${PCF_DEPLOYMENT_ENV_NAME}-harbor)" "$ins"
+      zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
+      gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \
+          --instances=$ins --instances-zone=$zone > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to add node $ins to LB Backend (${PCF_DEPLOYMENT_ENV_NAME}-harbor)"
+        echo "       => gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \\"
+        echo "             --instances=$ins --instances-zone=$zone"
+        exit 1
+      fi
+
+      messagePrint " - Adding Network Tag (https-server)" "$ins"
+      gcloud compute instances add-tags $ins --zone $zone --tags "https-server" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to add network tag (https-server) to VM $ins"
+        echo "       => gcloud compute instances add-tags $ins --zone $zone --tags 'https-server'"
+        exit 1
+      fi
+    done
+  fi
+fi 
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
+  aws elb --region $AWS_REGION describe-load-balancers --load-balancer-names "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" > /dev/null 2>&1; ret=$?
+  if [ ${ret} -eq 0 ]; then
+    for ins in $mst; do
+      aws elb --region $AWS_REGION register-instances-with-load-balancer \
+         --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --instances "${ins}" > /dev/null 2>&1; ret=$?
+      if [ ${ret} -ne 0 ]; then
+        echo "ERROR: Register Instances"
+        echo "aws elb --region $AWS_REGION register-instances-with-load-balancer \\"
+        echo "  --load-balancer-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb --instances $ins"
+        exit 1
+      fi
+    done
+  fi
+fi
+
+if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
+  messageTitle "Adding Harbor Node to LB" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-ip"
+  for node in $mst; do
+    messagePrint " - Add/update Master Node" "${node}"
+    nid=$(az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME} 2>/dev/null | \
+          jq -r '.networkProfile.networkInterfaces[].id')
+    if [ "${nid}" == "" ]; then
+      echo "ERROR: failed to get Network id of Instance $node"
+      echo "       => az vm get-instance-view -n $node -g ${PCF_DEPLOYMENT_ENV_NAME}"; exit 1
+    fi
+
+    nnm=$(az network nic show --ids $nid 2>/dev/null | jq -r '.name')
+    if [ "${nnm}" == "" ]; then
+      echo "ERROR: failed to get Network Name of Instance $node"
+      echo "       => az network nic show --ids $nid"; exit 1
+    fi
+
+    ipc=$(az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm 2>/dev/null | jq -r '.[].name')
+    if [ "${ipc}" == "" ]; then
+      echo "ERROR: failed to get IP Config of Instance $master"
+      echo "       => az network nic ip-config list -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm"
+    fi
+
+    az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} --nic-name $nnm \
+       --lb-name "${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb" \
+       --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to add the master vm $master to backendpool ${n}-pool"
+      echo "       => az network nic ip-config address-pool add -g ${PCF_DEPLOYMENT_ENV_NAME} \\"
+      echo "          --nic-name $nnm --lb-name ${PCF_DEPLOYMENT_ENV_NAME}-harbor-lb \\"
+      echo "          --address-pool "${PCF_DEPLOYMENT_ENV_NAME}-harbor-pool" --ip-config-name $ipc"; exit 1
+    fi
+  done
+fi
+
+# --- CLEANUP 
+rm -f /tmp/harbor*.pivotal
+
+exit 1
+
