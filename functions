@@ -309,11 +309,6 @@ sshEnvironment() {
     AWS_HOSTED_DNS_DOMAIN=$DNS_SUFFIX
   fi
 
-echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-echo "AWS_HOSTED_DNS_DOMAIN:$AWS_HOSTED_DNS_DOMAIN"
-echo "DNS_PREFIX:$DNS_PREFIX"
-echo "DNS_SUFFIX:$DNS_SUFFIX"
-
   JUMP_HOST="jump-${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
@@ -348,9 +343,14 @@ echo "DNS_SUFFIX:$DNS_SUFFIX"
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 echo "JUMP_HOST:$JUMP_HOST"
-    INSTANCE_NAME="jump-gcppks"
     INSTANCE_NAME="$(echo $JUMP_HOST | awk -F'.' '{ print $1 }')"
-    ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
+    #ZONE=$(gcloud compute zones list | grep " $GCP_REGION " | head -1 | awk '{ print $1 }')
+    ZONE=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME')" | egrep "^$INSTANCE_NAME" | awk '{ print $2 }')
+echo "INSTANCE_NAME:$INSTANCE_NAME"
+echo "ZONE:$ZONE"
+
+    prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+echo "prj:$prj"
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
