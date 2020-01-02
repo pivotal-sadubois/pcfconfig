@@ -62,10 +62,10 @@ debugInfos() {
 
     if [ "$PCF_TILE_HARBOR_DEPLOY" == "true" ]; then
       echo "ACCESSING HARBOR"
-      if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then 
+      if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then 
         echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
       else
-        echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (admin/$PCF_TILE_PBS_ADMIN_USER)" 
+        echo "=> https://harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} (admin/$PCF_TILE_HARBOR_ADMIN_PASS)" 
       fi
       echo ""
     fi
