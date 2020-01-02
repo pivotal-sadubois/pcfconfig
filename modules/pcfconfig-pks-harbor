@@ -166,7 +166,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud compute target-pools describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
   if [ ${ret} -gt 0 ]; then
     # --- CREATE TARGET POOL ---
-    echo "Creating Target Pool (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
+    messagePrint " - Creating Target Pool" "${PCF_DEPLOYMENT_ENV_NAME}-harbor"
     gcloud compute target-pools create ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating target-pools (${PCF_DEPLOYMENT_ENV_NAME}-harbor-tp)"
@@ -178,7 +178,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
   if [ ${ret} -gt 0 ]; then
     # --- CREATE LOAD BALANCER ---
-    echo "Creating LoadBalancer (${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr)"
+    messagePrint " - Creating Forwarding Rules" "${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr"
     gcloud compute forwarding-rules create ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --ports 443 \
       --target-pool ${PCF_DEPLOYMENT_ENV_NAME}-harbor --region=$GCP_REGION > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
@@ -193,12 +193,12 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   cnt=$(gcloud dns record-sets list -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --name "${HARBOR}." \
           --type=A 2> /dev/null | wc -l | sed 's/ //g')
   if [ ${cnt} -eq 0 ]; then
-    echo "Creating DNS Entry ${HARBOR} in (${PCF_DEPLOYMENT_ENV_NAME}-zone)"
+    messagePrint " - Creating DNS Entry in (${PCF_DEPLOYMENT_ENV_NAME}-zone)" "${HARBOR}"
     ipa=$(gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION | \
         grep IPAddress | awk '{ print $NF }')
-    gcloud dns record-sets transaction start -z ${PCF_DEPLOYMENT_ENV_NAME}-zone
+    gcloud dns record-sets transaction start -z ${PCF_DEPLOYMENT_ENV_NAME}-zone > /dev/null 2>&1
     gcloud dns record-sets transaction add "$ipa" --name ${HARBOR}. \
-       --type A -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --ttl=300
+       --type A -z ${PCF_DEPLOYMENT_ENV_NAME}-zone --ttl=300 > /dev/null 2>&1
     gcloud dns record-sets transaction execute -z ${PCF_DEPLOYMENT_ENV_NAME}-zone > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating DNS record-sets for zone (${PCF_DEPLOYMENT_ENV_NAME}-zone)"
@@ -464,18 +464,33 @@ else
   fi
 fi
 
-echo "MST:$mst"
-
 ##############################################################################################
 ############################## ADD HARBOR NODES TO BACKEND-POOL ##############################
 ##############################################################################################
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
   gcloud compute forwarding-rules describe ${PCF_DEPLOYMENT_ENV_NAME}-harbor-fr --region=$GCP_REGION > /dev/null 2>&1; ret=$?
+echo "RET:$ret"
+ret=0
   if [ ${ret} -eq 0 ]; then
     for ins in $mst; do
+      messagePrint " - Adding Node to LB Backend (${DNS_PREFIX}-harbor)" "$ins"
       zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }') 
       gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor --instances=$ins --instances-zone=$zone
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to add node $ins to LB Backend (${DNS_PREFIX}-harbor)"
+        echo "       => gcloud compute target-pools add-instances ${PCF_DEPLOYMENT_ENV_NAME}-harbor \\"
+        echo "             --instances=$ins --instances-zone=$zone"
+        exit 1
+      fi
+
+      messagePrint " - Adding Network Tag (https-server)" "$ins"
+      gcloud compute instances add-tags $ins --zone $zone --tags "https-server" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to add network tag (https-server) to VM $ins"
+        echo "       => gcloud compute instances add-tags $ins --zone $zone --tags 'https-server'"
+        exit 1
+      fi
     done
   fi
 fi 
@@ -534,5 +549,5 @@ fi
 # --- CLEANUP 
 rm -f /tmp/harbor*.pivotal
 
-exit 0
+exit 1
 
