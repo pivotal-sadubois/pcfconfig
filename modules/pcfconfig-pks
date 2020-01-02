@@ -3247,7 +3247,24 @@ echo "pcfconfig-pks: debug-1 mst:$mst"
         gcloud compute forwarding-rules describe ${GCP_DNS_PREFIX}-${n} --region=$GCP_REGION > /dev/null 2>&1; ret=$?
         if [ ${ret} -eq 0 ]; then
           for ins in $mst; do
-            gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins
+            messagePrint " - Adding Node to LB Backend (${GCP_DNS_PREFIX}-${n})" "$ins"
+            zone=$(gcloud compute instances list --filter="name=( '$ins')" | egrep "^$ins" | awk '{ print $2 }')
+            gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} --instances=$ins \
+                --instances=$ins --instances-zone=$zone
+            if [ $? -ne 0 ]; then
+              echo "ERROR: failled to add node $ins to LB Backend (${GCP_DNS_PREFIX}-${n})"
+              echo "       => gcloud compute target-pools add-instances ${GCP_DNS_PREFIX}-${n} \\"
+              echo "             --instances=$ins --instances-zone=$zone"
+              exit 1
+            fi
+
+            #messagePrint " - Adding Network Tag (https-server)" "$ins"
+            #gcloud compute instances add-tags $ins --zone $zone --tags "https-server" > /dev/null 2>&1
+            #if [ $? -ne 0 ]; then
+            #  echo "ERROR: failled to add network tag (https-server) to VM $ins"
+            #  echo "       => gcloud compute instances add-tags $ins --zone $zone --tags 'https-server'"
+            #  exit 1
+            #fi
           done
         fi
       done
