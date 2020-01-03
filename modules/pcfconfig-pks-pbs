@@ -126,9 +126,15 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-stt=$(duffle list bs4_azure | awk '/^bs4_azure/{print $NF}')
+PBS_SETUP="pbs-${PCF_DEPLOYMENT_ENV_NAME}"
+PBS_SETUP=bs4_azure
+
+echo "PCF_DEPLOYMENT_DEBUG:$PCF_DEPLOYMENT_DEBUG"
+stt=$(duffle list $PBS_SETUP | awk '/"$PBS_SETUP/{print $NF}")
 if [ "${stt}" != "success" ]; then
-  sudo duffle install bs4_azure -c /tmp/credentials.yml  \
+  LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f /tmp/${PBS_SETUP}.log
+
+  sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
@@ -136,11 +142,11 @@ if [ "${stt}" != "success" ]; then
       --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
       --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
       -f /tmp/build-service-${version}.tgz \
-      -m /tmp/relocated.json
+      -m /tmp/relocated.json > $PBS_SETUP 2>&1
   if [ $? -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-    echo "ERROR: failed to install build-service"
-    echo "       => sudo duffle install bs4_azure -c /tmp/credentials.yml  \\"
+    echo "ERROR: failed to install build-service (see logs: /tmp/${PBS_SETUP}.log"
+    echo "       => sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \\"
     echo "             --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
     echo "             --set kubernetes_env=cl1 \\"
     echo "             --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
