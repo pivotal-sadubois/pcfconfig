@@ -490,9 +490,9 @@ checkEnvironment() {
         DNS_SERVERS="${DNS1} ${DNS2} ${DNS3} ${DNS4}"
       fi
 
-      instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" --filter="name='${GCP_DNS_PREFIX}-ops-manager'" | \
+      instance_status=$(gcloud compute instances list --zones="$GCP_AVAILABILITY_ZONES" \
+            --filter="name='${GCP_DNS_PREFIX}-ops-manager'" | \
             grep "${GCP_DNS_PREFIX}-ops-manager" | awk '{ print $NF }')
-echo "instance_status:$instance_status"
       
       messagePrint " - Ops Manager VM Name" "${GCP_DNS_PREFIX}-ops-manager"
       messagePrint " - Ops Manager Instance" "$instance_status"
@@ -1511,17 +1511,17 @@ echo "$OM $OM_LOGIN configure-director --ignore-verifier-warnings --config $OPSM
 
 #ppppppppppp
     if [ "${PCF_CLOUD_NAME}" = "aws" ]; then
-      messagePrint "Configure Security Groups" ""
-      messagePrint "Security Group:" "web-lb-security-groups"
+      messageTitle "Configure Security Groups" 
+      messagePrint " - Security Group:" "web-lb-security-groups"
 
       $OM $OM_LOGIN -k create-vm-extension --name "web-lb-security-groups" \
         --cloud-properties '{ "security_groups": ["web_lb_security_group", "vms_security_group"], "target_groups":["web-lb-target-groups"] }' > /dev/null 2>&1
 
-      messagePrint "Security Group:" "ssh-lb-security-groups"
+      messagePrint " - Security Group:" "ssh-lb-security-groups"
       $OM $OM_LOGIN -k create-vm-extension --name "ssh-lb-security-groups" \
         --cloud-properties '{ "security_groups": ["ssh_lb_security_group", "vms_security_group"], "target_groups":["ssh-lb-target-groups"] }' > /dev/null 2>&1
 
-      messagePrint "Security Group:" "tcp-lb-security-groups"
+      messagePrint " - Security Group:" "tcp-lb-security-groups"
       $OM $OM_LOGIN -k create-vm-extension --name "tcp-lb-security-groups" \
         --cloud-properties '{ "security_groups": ["tcp_lb_security_group", "vms_security_group"], "target_groups":["tcp-lb-target-groups"] }' > /dev/null 2>&1
     fi
@@ -3337,7 +3337,6 @@ EOF
   else
     echo ""
     echo "ERROR: API Host: $API_HOST_NAME can not be resolved by DNS"; exit 1
-echo "pcfconfig-pks: Debug-29"
   fi
 
   exit 0
