@@ -105,6 +105,7 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
      -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then 
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to relocate Build Servics Images"
     echo "       => duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \\"
     echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library"
@@ -124,6 +125,7 @@ if [ "${stt}" != "success" ]; then
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json
   if [ $? -ne 0 ]; then 
+    debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to install build-service"
     echo "       => sudo duffle install bs4_azure -c /tmp/credentials.yml  \\"
     echo "             --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
