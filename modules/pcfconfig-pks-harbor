@@ -214,6 +214,7 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   SECG=$($JQ -r '.modules[].resources."aws_security_group.pks_api_lb_security_group".primary.id' $TF_STATE | \
      grep -v null | sed '/: $/d' | sort -u)
 
+  messagePrint " - Security Group:" "$SECG"
   messagePrint " - Subnet-1:" "$SUB1"
   messagePrint " - Subnet-2:" "$SUB2"
   messagePrint " - Subnet-3:" "$SUB3"
