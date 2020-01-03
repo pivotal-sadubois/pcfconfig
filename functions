@@ -2475,7 +2475,7 @@ cleanGCPenv() {
       grep -v "EMAIL" | egrep "^$ENV_NAME" | awk '{ print $(NF-1) }'); do
 
     for role in $(gcloud projects get-iam-policy $GCP_PROJECT --flatten="bindings[].members" \
-                      --format='table(bindings.role)' --filter="$n" | grep -v ROLE; do
+                      --format='table(bindings.role)' --filter="$n" | grep -v ROLE); do
 
       gcloud iam service-accounts remove-iam-policy-binding $n \
          --role "roles/owner" --member="serviceAccount:$n" > /dev/null 2>&1
