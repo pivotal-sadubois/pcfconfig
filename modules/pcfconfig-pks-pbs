@@ -142,7 +142,6 @@ fi
 
 
 stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
-echo "STT:$stt"
 if [ "${stt}" != "success" ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
 
@@ -172,11 +171,9 @@ fi
 
 echo "UAAC_TARGET:$UAAC_TARGET"
 echo "OM_TARGET:$OM_TARGET"
-echo "OM_USERNAME:$OM_USERNAME"
-echo "OM_PASSWORD:$OM_PASSWORD"
-echo "OM:$OM"
+ADMIN_PASS=$($OM credentials -p pivotal-container-service -c .properties.uaa_admin_password | sed -e '1,3d' -e '$d' | awk '{ print $2 }')
 
-
+echo "ADMIN_PASS:$ADMIN_PASS"
 
 echo "done"
 
