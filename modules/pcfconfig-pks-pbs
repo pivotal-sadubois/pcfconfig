@@ -103,7 +103,7 @@ sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
   echo "ERROR: failed to login with docker on harbor"
-  echo "       => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}\\""
+  echo "       => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \\"
   echo "          -u admin -p $PCF_TILE_HARBOR_ADMIN_PASS"
   exit 1
 fi
