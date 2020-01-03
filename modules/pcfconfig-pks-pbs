@@ -169,11 +169,25 @@ if [ "${stt}" != "success" ]; then
   fi
 fi
 
-echo "UAAC_TARGET:$UAAC_TARGET"
-echo "OM_TARGET:$OM_TARGET"
 ADMIN_PASS=$($OM credentials -p pivotal-container-service -c .properties.uaa_admin_password | sed -e '1,3d' -e '$d' | awk '{ print $2 }')
 
-echo "ADMIN_PASS:$ADMIN_PASS"
+uaac target $UAAC_TARGET --skip-ssl-validation > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+  echo "ERROR: failed to connect to UAAC Target: $UAAC_TARGET"
+  echo "       => uaac target $UAAC_TARGET --skip-ssl-validation"
+  exit 1
+fi
+
+uaac token client get admin -s $ADMIN_PASS
+if [ $? -ne 0 ]; then
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+  echo "ERROR: failed to login to UAAC Target: $UAAC_TARGET with user admin"
+  echo "       => uaac token client get admin -s $ADMIN_PASS"
+  exit 1
+fi
+
+
 
 echo "done"
 
