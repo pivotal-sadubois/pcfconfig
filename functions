@@ -1656,6 +1656,8 @@ cleanAWSenv() {
   TMPVCP=/tmp/$$_aws_vpc.json
   aws --region $AWS_LOCATION ec2 describe-vpcs > $TMPVCP
   tot=$(grep -c "VpcId" $TMPVCP); i=0; let tot=tot-1
+grep -c "VpcId" $TMPVCP
+echo "functions: debug-1 TOT:$tot"
   while [ $i -le $tot ]; do
     vpc=$(jq -r ".Vpcs[$i].VpcId" 2>/dev/null $TMPVCP)
     cnt=$(jq -r ".Vpcs[$i].Tags[].Value" 2>/dev/null $TMPVCP | egrep -c "^${ENV_NAME}")
