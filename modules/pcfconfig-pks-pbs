@@ -29,6 +29,14 @@ export TF_WORKDIR=$HOME/workspace
 export TF_STATE=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfstate
 export TF_VARS=${TF_WORKDIR}/cf-terraform-${TF_DEPLOYMENT}/terraforming-${PRODUCT_TILE}/terraform.tfvars
 
+export PBS_SETUP="pbs-${PCF_DEPLOYMENT_ENV_NAME}"
+export PBS_SETUP=bs4_azure
+export UAAC_TARGET=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+export OM_TARGET=pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
+export OM_USERNAME=$PCF_OPSMANAGER_ADMIN_USER
+export OM_PASSWORD=$PCF_OPSMANAGER_ADMIN_PASS
+export OM_SKIP_SSL_VALIDATION=true
+
 messageTitle ""
 messageTitle "PCF Configuration Utility Module: (pcfconfig-pks-pbs)"
 messageTitle "by Sacha Dubois, Pivotal Inc,"
@@ -60,6 +68,12 @@ echo "SSH_HOME:$SSH_HOME"
 #openssl x509 -outform der -in fullchain.pem -out fullchain.crt
 #openssl rsa -outform der -in privkey.pem -out privkey.key
 
+# INSTALL UAAC CLIENT IF NOT YET DONE
+if [ ! -x /usr/local/bin/uaac ]; then
+  sudo apt-get install ruby -y > /dev/null 2>&1
+  sudo apt-get install ruby-dev -y > /dev/null 2>&1
+  sudo gem install cf-uaac > /dev/null 2>&1
+fi
 
 CREDENTIALS=/tmp/credentials.yml
 if [ ! -f $CREDENTIALS ]; then   
@@ -126,10 +140,7 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-PBS_SETUP="pbs-${PCF_DEPLOYMENT_ENV_NAME}"
-PBS_SETUP=bs4_azure
 
-echo "PCF_DEPLOYMENT_DEBUG:$PCF_DEPLOYMENT_DEBUG"
 stt=$(duffle list $PBS_SETUP | awk '/"$PBS_SETUP/{print $NF}")
 if [ "${stt}" != "success" ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f /tmp/${PBS_SETUP}.log
@@ -157,6 +168,14 @@ if [ "${stt}" != "success" ]; then
     echo "             -m /tmp/relocated.json"
   fi
 fi
+
+echo "UAAC_TARGET:$UAAC_TARGET"
+echo "OM_TARGET:$OM_TARGET"
+echo "OM_USERNAME:$OM_USERNAME"
+echo "OM_PASSWORD:$OM_PASSWORD"
+echo "OM:$OM"
+
+
 
 echo "done"
 
