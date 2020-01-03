@@ -141,7 +141,7 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
 fi
 
 
-stt=$(duffle list $PBS_SETUP | awk '{ print $1 }') 
+stt=$(duffle list $PBS_SETUP | awk '{ print $NF }') 
 echo "STT:$stt"
 if [ "${stt}" != "success" ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
