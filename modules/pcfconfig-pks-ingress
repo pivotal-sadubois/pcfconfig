@@ -165,8 +165,6 @@ echo xxx
 echo "555555555555555555555555 - 10"
 fi
 
-exit 1
-
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
   DNS_NAME="*.apps-${cluster}"
   echo "Create DNS Entry for *.apps.${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}:"
