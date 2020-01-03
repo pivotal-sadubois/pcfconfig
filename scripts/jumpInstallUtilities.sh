@@ -125,5 +125,11 @@ if [ ! -x /usr/bin/docker ]; then
   apt-get install docker.io -y  > /dev/null 2>&1
 fi
 
+if [ ! -x /usr/local/bin/uaac ]; then
+  sudo apt-get install ruby -y > /dev/null 2>&1
+  sudo apt-get install ruby-dev -y > /dev/null 2>&1
+  sudo gem install cf-uaac > /dev/null 2>&1
+fi
+
 touch  /jump_software_installed
 
