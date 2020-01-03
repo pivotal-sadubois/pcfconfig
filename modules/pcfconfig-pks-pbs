@@ -94,6 +94,19 @@ export PCF_TILE_PBS_ADMIN_PASS=pivotal
 #docker install
 #docker login
 #sudo docker login harbor.awspks.sschmidt.ch -u admin -p pivotal
+#/home/ubuntu/.docker/config.json
+#sudo ls -la /home/ubuntu/.docker/config.json
+
+# LOGIN DOCKER ON HARBOR
+sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+     -u admin -p $PCF_TILE_HARBOR_ADMIN_PASS > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+  echo "ERROR: failed to login with docker on harbor"
+  echo "       => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}\\""
+  echo "          -u admin -p $PCF_TILE_HARBOR_ADMIN_PASS"
+  exit 1
+fi
 
 
 version=0.0.4
