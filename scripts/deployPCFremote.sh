@@ -534,6 +534,8 @@ if [ "$(getPCFconfigState $PCFCONFIG_TF_STATE)" != "completed" ]; then
   echo "--------------------------------------- TERRAFORM DEPLOYMENT ----------------------------------------------"
   terraform init > /tmp/terraform.log 2>&1
 
+echo "deployPCFremote.sh: debug 1"
+exit 1
   i=1; while [ $i -le 3 ]; do  
     terraform plan -out="plan" >> /tmp/terraform.logg 2>&1
     terraform apply -auto-approve "plan" >> /tmp/terraform.log 2>&1; ret=$?
