@@ -62,7 +62,6 @@ sudo cp $PBS_DUFFLE /usr/bin/duffle
 sudo chmod 777 /usr/bin/duffle
 sudo cp $PBS_PBCLI /usr/bin/pb
 sudo chmod 777 /usr/bin/pb
-echo "SSH_HOME:$SSH_HOME"
 
 #openssl x509 -outform der -in ca.pem -out ca.crt
 #openssl x509 -outform der -in fullchain.pem -out fullchain.crt
@@ -171,7 +170,7 @@ fi
 
 ADMIN_PASS=$($OM credentials -p pivotal-container-service -c .properties.uaa_admin_password | sed -e '1,3d' -e '$d' | awk '{ print $2 }')
 
-uaac target $UAAC_TARGET --skip-ssl-validation > /dev/null 2>&1
+uaac target $UAAC_TARGET:8443 --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
   echo "ERROR: failed to connect to UAAC Target: $UAAC_TARGET"
