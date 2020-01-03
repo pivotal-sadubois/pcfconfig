@@ -142,8 +142,9 @@ fi
 
 
 stt=$(duffle list $PBS_SETUP | awk "/$PBS_SETUP/{print $NF}")
+echo "STT:$stt"
 if [ "${stt}" != "success" ]; then
-  LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f /tmp/${PBS_SETUP}.log
+  LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
 
   sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
@@ -153,7 +154,7 @@ if [ "${stt}" != "success" ]; then
       --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
       --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
       -f /tmp/build-service-${version}.tgz \
-      -m /tmp/relocated.json > $PBS_SETUP 2>&1
+      -m /tmp/relocated.json > $LOGFILE 2>&1
   if [ $? -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to install build-service (see logs: /tmp/${PBS_SETUP}.log"
