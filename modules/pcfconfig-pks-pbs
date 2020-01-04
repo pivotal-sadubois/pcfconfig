@@ -221,8 +221,6 @@ fi
 ################################# CREATE STOAGE CLASS ########################################
 ##############################################################################################
 
-    echo "kubectl create -f ${PCFPATH}/files/pbs/aws-storage-claass-gp2.yml"
-
 if [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ]; then 
   kubectl get sc gp2 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -235,6 +233,6 @@ if [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ]; then
   fi
 fi
 
-exit 1
+exit 0
 
 
