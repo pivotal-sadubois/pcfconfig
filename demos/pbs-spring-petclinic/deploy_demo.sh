@@ -48,6 +48,15 @@ echo '                                                                          
 
 showK8sEnvironment
 
+  echo "Kubernetes Cluster ...........: $PKS_CLNAME"
+  echo "Kubernetes Master Host .......: $PKS_ENNAME"
+
+echo "/tmp/deployPCFenv_${PKS_ENNAME}"
+  if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
+    . /tmp/deployPCFenv_${PKS_ENNAME}
+  fi
+
+
 if [ ! -f /usr/bin/pb ]; then 
   echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
   exit
