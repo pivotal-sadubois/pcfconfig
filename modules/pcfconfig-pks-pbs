@@ -136,7 +136,6 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-
 stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
 if [ "${stt}" != "success" ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
@@ -218,8 +217,23 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-echo "done"
+##############################################################################################
+################################# CREATE STOAGE CLASS ########################################
+##############################################################################################
+
+    echo "kubectl create -f ${PCFPATH}/files/pbs/aws-storage-claass-gp2.yml"
+
+if [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ]; then 
+  kubectl get sc gp2 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    kubectl create -f ${PCFPATH}/files/pbs/aws-storage-claass-gp2.yml > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to add storage-class gp2"
+      echo "       => kubectl create -f ${PCFPATH}/files/pbs/aws-storage-claass-gp2.yml "
+      exit 1
+    fi
+  fi
+fi
 
 exit 1
 
