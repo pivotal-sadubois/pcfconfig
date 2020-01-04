@@ -2893,6 +2893,7 @@ checkCloudAccess() {
 #                                  "$AWS_PAS_TLS_PRIVATE_KEY" "$AWS_PAS_TLS_ROOT_CA"
 #    fi
   fi
+echo gaga1
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
     if [ "${AZURE_SUBSCRIPTION_ID}" == "" -o "${AZURE_TENANT_ID}" == "" -o \
@@ -2932,6 +2933,7 @@ checkCloudAccess() {
       messagePrint " - Azure Client Secret"          "$AZURE_CLIENT_SECRET"
       messagePrint " - Azure Region"                 "$AZURE_REGION"
     fi
+echo gaga2
 
 #    if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
 #        verifyCertificate AZURE PKS "$AZURE_PKS_TLS_CERTIFICATE" "$AZURE_PKS_TLS_FULLCHAIN" \
