@@ -132,10 +132,11 @@ if [ $status -eq 0 ]; then
   fi
 
   echo "-----------------------------------------------------------------------------------------------------------"
-  echo "$OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
   $OM $OM_LOGIN configure-product --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE
   if [ $? -ne 0 ]; then
     echo "ERROR: Configuring Harbor tile has been failed, please retry"; exit 1
+    echo "       => $OM $OM_LOGIN configure-product \\"
+    echo "            --config $PCFPATH/templates/${PCF_TILE_HARBOR_CONFIG} --vars-file $VARFILE"
   fi
   echo "-----------------------------------------------------------------------------------------------------------"
 
