@@ -43,6 +43,49 @@ echo '                                                                          
 
 showK8sEnvironment
 
+if [ ! -z /usr/bin/pb ]; then 
+  echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
+  exit
+fi
+
+if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
+     "${PCF_TILE_PBS_DOCKER_USER}" == "" -o "${PCF_TILE_PBS_DOCKER_PASS}" == "" ]; then
+  missing_variables=1
+  echo ""
+  echo "  MISSING ENVIRONMENT-VARIABES  DESCRIPTION        "
+  echo "  --------------------------------------------------------------------------------------------------------------"
+
+  if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then
+    echo "  PCF_TILE_PBS_ADMIN_USER       (required) PBS Administrator User"
+  fi
+
+  if [ "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
+    echo "  PCF_TILE_PBS_ADMIN_PASS       (required) PBS Administrator Password"
+  fi
+
+  if [ "${PCF_TILE_PBS_DOCKER_REPO}" == "" ]; then
+    echo "  PCF_TILE_PBS_DOCKER_REPO      (required) Docker Repository Name"
+  fi
+
+  if [ "${PCF_TILE_PBS_DOCKER_USER}" == "" ]; then
+    echo "  PCF_TILE_PBS_DOCKER_USER      (required) Docker Repository User"
+  fi
+
+  if [ "${PCF_TILE_PBS_DOCKER_PASS}" == "" ]; then
+    echo "  PCF_TILE_PBS_DOCKER_PASS      (required) Docker Repository Password"
+  fi
+  echo ""
+else
+  messageTitle "Pivotal Container Platform (PBS)"
+  messagePrint " - PBS Version"                "$PCF_TILE_PBS_VERSION"
+  messagePrint " - PBS Product SLUG"           "$PCF_TILE_PBS_SLUG"
+  messagePrint " - PBS Administrator User"     "$PCF_TILE_PBS_ADMIN_USER"
+  messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
+  messagePrint " - Docker Repository Name"     "$PCF_TILE_PBS_DOCKER_REPO"
+  messagePrint " - Docker Repository User"     "$PCF_TILE_PBS_DOCKER_USER"
+  messagePrint " - Docker Repository Password" "$PCF_TILE_PBS_DOCKER_PASS"
+fi
+
 
 exit
 
