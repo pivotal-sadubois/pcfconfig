@@ -43,7 +43,7 @@ echo '                                                                          
 
 showK8sEnvironment
 
-if [ ! -z /usr/bin/pb ]; then 
+if [ ! -f /usr/bin/pb ]; then 
   echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
   exit
 fi
