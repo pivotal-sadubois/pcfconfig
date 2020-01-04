@@ -48,18 +48,28 @@ echo '                                                                          
 
 showK8sEnvironment
 
-  echo "Kubernetes Cluster ...........: $PKS_CLNAME"
-  echo "Kubernetes Master Host .......: $PKS_ENNAME"
-
-echo "/tmp/deployPCFenv_${PKS_ENNAME}"
-  if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
-    . /tmp/deployPCFenv_${PKS_ENNAME}
-  fi
-
+if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
+  . /tmp/deployPCFenv_${PKS_ENNAME}
+fi
 
 if [ ! -f /usr/bin/pb ]; then 
   echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
   exit
+fi
+
+if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+  missing_variables=1
+  echo ""
+  echo "  MISSING ENVIRONMENT-VARIABES  DESCRIPTION        "
+  echo "  --------------------------------------------------------------------------------------------------------------"
+
+  if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+    echo "  PCF_TILE_HARBOR_ADMIN_PASS    (required) Harbor Administrator Password"
+  else
+    messageTitle "Pivotal Container Platform (Harbor)"
+    messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
+    messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
+  fi
 fi
 
 if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
@@ -92,7 +102,6 @@ if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o
 else
   messageTitle "Pivotal Container Platform (PBS)"
   messagePrint " - PBS Version"                "$PCF_TILE_PBS_VERSION"
-  messagePrint " - PBS Product SLUG"           "$PCF_TILE_PBS_SLUG"
   messagePrint " - PBS Administrator User"     "$PCF_TILE_PBS_ADMIN_USER"
   messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
   messagePrint " - Docker Repository Name"     "$PCF_TILE_PBS_DOCKER_REPO"
