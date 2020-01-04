@@ -151,6 +151,9 @@ execCmd "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-
 prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
 pb login
 
+prtHead "Add screts for Docker Registry from (/tmp/docker.yml)" 
+execCmd "cat /tmp/docker.yml"
+execCmd "pb secrets registry apply -f /tmp/docker.yml"
 
 exit
 
