@@ -171,6 +171,8 @@ fi
 
 ADMIN_PASS=$($OM credentials -p pivotal-container-service -c .properties.uaa_admin_password | sed -e '1,3d' -e '$d' | awk '{ print $2 }')
 
+echo "ADMIN_PASS:$ADMIN_PASS"
+echo "uaac target $UAAC_TARGET:8443 --skip-ssl-validation"
 uaac target $UAAC_TARGET:8443 --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
@@ -179,6 +181,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "uaac token client get admin -s $ADMIN_PASS"
 echo "pcfconfig-pks-pbs: debug-1"
 uaac token client get admin -s $ADMIN_PASS
 echo "pcfconfig-pks-pbs: debug-2"
