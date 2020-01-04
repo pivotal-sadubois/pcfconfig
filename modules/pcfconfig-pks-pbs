@@ -101,10 +101,6 @@ if [ ! -f $CREDENTIALS ]; then
   echo "     path: \"/cnab/app/cert/tls.key\""                                  >>  $CREDENTIALS
 fi
 
-export PCF_TILE_PBS_ADMIN_USER=admin
-export PCF_TILE_PBS_ADMIN_PASS=pivotal
-
-
 #docker install
 #docker login
 #sudo docker login harbor.awspks.sschmidt.ch -u admin -p pivotal
@@ -203,16 +199,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "PCF_TILE_PBS_ADMIN_USER:$PCF_TILE_PBS_ADMIN_USER"
-echo "PCF_TILE_PBS_ADMIN_USER:$PCF_TILE_PBS_ADMIN_USER"
+uaac user get $PCF_TILE_PBS_ADMIN_USER > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS --emails $PCF_TILE_PBS_ADMIN_EMAIL > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: failed to create UAA user"
+    echo "       => uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS \\"
+    echo "             --emails $PCF_TILE_PBS_ADMIN_EMAIL"
+    exit 1
+  fi
+fi
 
-echo "uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS --emails $PCF_TILE_PBS_ADMIN_EMAIL"
-uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS --emails $PCF_TILE_PBS_ADMIN_EMAIL
-
-
-
-
-echo "pb api set https://$PBS_TAGET --skip-ssl-validation"
 pb api set https://$PBS_TAGET --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
@@ -221,8 +218,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-
-  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 echo "done"
 
 exit 1
