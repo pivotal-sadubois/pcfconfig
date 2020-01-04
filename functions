@@ -97,8 +97,17 @@ debugInfos() {
         echo "=> kubectl proxy                                     # To start Kubernetes Dashboard"
         echo "DASHBOARD ACCESS TOKEN (http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy)"
         echo "$token"
+        echo ""
       fi
     done
+
+    if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
+      echo "PIVOTAL BUILD SERVIVCE (PBS)"
+      echo "=> export PKS_USER_PASSWORD=$PCF_TILE_PKS_ADMIN_PASS"
+      echo "=> pb api set https://build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} --skip-ssl-validation"
+      echo "=> pb login ($PCF_TILE_PKS_ADMIN_USER/$PCF_TILE_PKS_ADMIN_PASS)"
+      echo "Demo: pcfconfig/demos/pbs-spring-petclinic"
+    fi
   fi
 
   echo ""
