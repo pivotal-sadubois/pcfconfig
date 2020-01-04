@@ -181,10 +181,8 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "uaac token client get admin -s $ADMIN_PASS"
-echo "pcfconfig-pks-pbs: debug-1"
-uaac token client get admin -s $ADMIN_PASS
-echo "pcfconfig-pks-pbs: debug-2"
+#echo "uaac token client get admin -s $ADMIN_PASS"
+#uaac token client get admin -s $ADMIN_PASS
 #if [ $? -ne 0 ]; then
 #  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 #  echo "ERROR: failed to login to UAAC Target: $UAAC_TARGET with user admin"
@@ -192,6 +190,7 @@ echo "pcfconfig-pks-pbs: debug-2"
 #  exit 1
 #fi
 
+echo "pb api set https://$PBS_TAGET --skip-ssl-validation"
 pb api set https://$PBS_TAGET --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
@@ -201,6 +200,7 @@ if [ $? -ne 0 ]; then
 fi
 
 
+  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
 echo "done"
 
 exit 1
