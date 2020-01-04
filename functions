@@ -92,6 +92,7 @@ debugInfos() {
               grep "token:" | awk '{ print $2 }')
 
         echo "KUBERNETES CLUSTER ($cluster) ACCESS CREDENTIALS"
+        echo "=> export PKS_USER_PASSWORD=$PCF_TILE_PKS_ADMIN_PASS"
         echo "=> pks get-credentials $cluster"
         echo "=> kubectl config use-context $cluster                    # Set kubernetes context to $cluster"
         echo "=> kubectl proxy                                     # To start Kubernetes Dashboard"
@@ -103,7 +104,6 @@ debugInfos() {
 
     if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
       echo "PIVOTAL BUILD SERVIVCE (PBS)"
-      echo "=> export PKS_USER_PASSWORD=$PCF_TILE_PKS_ADMIN_PASS"
       echo "=> pb api set https://build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} --skip-ssl-validation"
       echo "=> pb login ($PCF_TILE_PKS_ADMIN_USER/$PCF_TILE_PKS_ADMIN_PASS)"
       echo "Demo: pcfconfig/demos/pbs-spring-petclinic"
@@ -170,7 +170,7 @@ createENVfile() {
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
-      echo "PCF_TILE_PBS_ADMIN_MAIL=\"$PCF_TILE_PBS_ADMIN_MAIL\""       >> $envFile
+      echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
     fi
   fi
 
@@ -210,7 +210,7 @@ createENVfile() {
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
-      echo "PCF_TILE_PBS_ADMIN_MAIL=\"$PCF_TILE_PBS_ADMIN_MAIL\""       >> $envFile
+      echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
     fi
   fi
 
@@ -252,7 +252,7 @@ createENVfile() {
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
-      echo "PCF_TILE_PBS_ADMIN_MAIL=\"$PCF_TILE_PBS_ADMIN_MAIL\""       >> $envFile
+      echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
     fi
   fi
 }
