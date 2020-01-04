@@ -16,6 +16,11 @@ else
   echo "ERROR: can ont find ${DIRNAME}/../../functions"; exit 1
 fi
 
+# --- CHECK ENVIRONMENT VARIABLES ---
+if [ -f ~/.pcfconfig ]; then
+  . ~/.pcfconfig
+fi
+
 # --- LOAD CLOUD ENVIRONMENT ---
 dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
 
