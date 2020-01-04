@@ -36,6 +36,7 @@ export OM_TARGET=pcf.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 export OM_USERNAME=$PCF_OPSMANAGER_ADMIN_USER
 export OM_PASSWORD=$PCF_OPSMANAGER_ADMIN_PASS
 export OM_SKIP_SSL_VALIDATION=true
+export PBS_TAGET=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 
 messageTitle ""
 messageTitle "PCF Configuration Utility Module: (pcfconfig-pks-pbs)"
@@ -178,14 +179,23 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "pcfconfig-pks-pbs: debug-1"
 uaac token client get admin -s $ADMIN_PASS
+echo "pcfconfig-pks-pbs: debug-2"
+#if [ $? -ne 0 ]; then
+#  debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
+#  echo "ERROR: failed to login to UAAC Target: $UAAC_TARGET with user admin"
+#  echo "       => uaac token client get admin -s $ADMIN_PASS"
+#  exit 1
+#fi
+
+pb api set https://$PBS_TAGET --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
-  echo "ERROR: failed to login to UAAC Target: $UAAC_TARGET with user admin"
-  echo "       => uaac token client get admin -s $ADMIN_PASS"
+  echo "ERROR: failed to set the pbs target to $PBS_TAGET"
+  echo "       => pb api set https://$PBS_TAGET --skip-ssl-validation"
   exit 1
 fi
-
 
 
 echo "done"
