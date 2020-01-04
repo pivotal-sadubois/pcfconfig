@@ -65,11 +65,11 @@ if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
 
   if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
     echo "  PCF_TILE_HARBOR_ADMIN_PASS    (required) Harbor Administrator Password"
-  else
-    messageTitle "Pivotal Container Platform (Harbor)"
-    messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
-    messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
   fi
+else
+  messageTitle "Pivotal Container Platform (Harbor)"
+  messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
+  messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
 fi
 
 if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
