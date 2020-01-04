@@ -167,6 +167,7 @@ execCmd "pb project target ped-clinic"
 prtHead "Create Image (spring-petclinic-docker.yml)"
 execCmd "cat spring-petclinic-docker.yml"
 execCmd "pb image apply -f spring-petclinic-docker.yml"
+sleep 10
 execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest -b 1 -f"
 
 exit
