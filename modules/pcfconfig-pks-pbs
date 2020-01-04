@@ -185,6 +185,7 @@ messagePrint " - UAAC Admin Password:" "$ADMIN_PASS"
 messagePrint " - UAAC Admin Secret:" "$ADMIN_SECRET"
 messagePrint " - PBS User:" "$PCF_TILE_PBS_ADMIN_USER"
 messagePrint " - PBS Pass:" "$PCF_TILE_PBS_ADMIN_PASS"
+messagePrint " - PBS eMail:" "$PCF_TILE_PBS_ADMIN_EMAIL"
 
 uaac target $UAAC_TARGET:8443 --skip-ssl-validation > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -202,8 +203,8 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-messagePrint " - PBS User:" "$PCF_TILE_PBS_ADMIN_USER"
-messagePrint " - PBS Pass:" "$PCF_TILE_PBS_ADMIN_PASS"
+echo "PCF_TILE_PBS_ADMIN_USER:$PCF_TILE_PBS_ADMIN_USER"
+echo "PCF_TILE_PBS_ADMIN_USER:$PCF_TILE_PBS_ADMIN_USER"
 
 echo "uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS --emails $PCF_TILE_PBS_ADMIN_EMAIL"
 uaac user add $PCF_TILE_PBS_ADMIN_USER -p $PCF_TILE_PBS_ADMIN_PASS --emails $PCF_TILE_PBS_ADMIN_EMAIL
