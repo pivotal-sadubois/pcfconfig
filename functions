@@ -171,6 +171,9 @@ createENVfile() {
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
+      echo "PCF_TILE_PBS_DOCKER_REPO=\"$PCF_TILE_PBS_DOCKER_REPO\""     >> $envFile
+      echo "PCF_TILE_PBS_DOCKER_USER=\"$PCF_TILE_PBS_DOCKER_USER\""     >> $envFile
+      echo "PCF_TILE_PBS_DOCKER_PASS=\"$PCF_TILE_PBS_DOCKER_PASS\""     >> $envFile
     fi
   fi
 
