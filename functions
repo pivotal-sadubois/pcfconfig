@@ -174,6 +174,9 @@ createENVfile() {
       echo "PCF_TILE_PBS_DOCKER_REPO=\"$PCF_TILE_PBS_DOCKER_REPO\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_USER=\"$PCF_TILE_PBS_DOCKER_USER\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_PASS=\"$PCF_TILE_PBS_DOCKER_PASS\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_REPO=\"$PCF_TILE_PBS_GITHUB_REPO\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_USER=\"$PCF_TILE_PBS_GITHUB_USER\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_PASS=\"$PCF_TILE_PBS_GITHUB_PASS\""     >> $envFile
     fi
   fi
 
@@ -217,6 +220,9 @@ createENVfile() {
       echo "PCF_TILE_PBS_DOCKER_REPO=\"$PCF_TILE_PBS_DOCKER_REPO\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_USER=\"$PCF_TILE_PBS_DOCKER_USER\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_PASS=\"$PCF_TILE_PBS_DOCKER_PASS\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_REPO=\"$PCF_TILE_PBS_GITHUB_REPO\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_USER=\"$PCF_TILE_PBS_GITHUB_USER\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_PASS=\"$PCF_TILE_PBS_GITHUB_PASS\""     >> $envFile
     fi
   fi
 
@@ -262,6 +268,9 @@ createENVfile() {
       echo "PCF_TILE_PBS_DOCKER_REPO=\"$PCF_TILE_PBS_DOCKER_REPO\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_USER=\"$PCF_TILE_PBS_DOCKER_USER\""     >> $envFile
       echo "PCF_TILE_PBS_DOCKER_PASS=\"$PCF_TILE_PBS_DOCKER_PASS\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_REPO=\"$PCF_TILE_PBS_GITHUB_REPO\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_USER=\"$PCF_TILE_PBS_GITHUB_USER\""     >> $envFile
+      echo "PCF_TILE_PBS_GITHUB_PASS=\"$PCF_TILE_PBS_GITHUB_PASS\""     >> $envFile
     fi
   fi
 }
