@@ -147,6 +147,9 @@ echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
 prtHead "Set API Target for Pivotal Build Service (PBS)"
 execCmd "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
+
+prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
+execCmd "pb login"
 exit
 
 # GENERATE INGRES FILES
