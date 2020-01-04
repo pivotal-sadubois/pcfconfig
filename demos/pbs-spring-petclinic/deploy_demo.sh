@@ -56,7 +56,7 @@ if [ ! -f /usr/bin/pb ]; then
   echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
   exit
 fi
-
+missing_variables=0
 if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
   missing_variables=1
   echo ""
