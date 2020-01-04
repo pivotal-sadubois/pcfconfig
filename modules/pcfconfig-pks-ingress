@@ -25,6 +25,7 @@ sshEnvironment
 API_HOST_NAME=api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}
 DNS_PREFIX=$PCF_DEPLOYMENT_ENV_NAME
 DNS_SUFFIX=$AWS_HOSTED_DNS_DOMAIN
+export PKS_USER_PASSWORD=$PCF_TILE_PKS_ADMIN_PASS
 
 # --- LOGIN TO PKS ---
 i=1; stt=1
@@ -49,6 +50,7 @@ fi
 ######################################################################################################
 cluster=cl1
 
+#pks login -u sadubois -p pivotal -a api.pks.awspks.pcfsdu.com --ca-cert ~/pcfconfig/certificates/fullchain.pem
 pks get-credentials $cluster > /dev/null 2>&1
 
 userid=""; while [ "${userid}" == "" ]; do
