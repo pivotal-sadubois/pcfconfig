@@ -158,7 +158,7 @@ execCmd "pb secrets registry apply -f /tmp/docker.yml"
 
 prtHead "Add screts for Docker Registry from (/tmp/github.yml)" 
 execCmd "cat /tmp/github.yml"
-execCmd "pb secrets git apply -f /tmp/github.yml"
+execCmd "pb secrets registry apply -f /tmp/github.yml"
 
 prtHead "Create and select Project ped-clinic"
 execCmd "pb project create ped-clinic"
@@ -167,7 +167,7 @@ execCmd "pb project target ped-clinic"
 prtHead "Create Image (spring-petclinic-docker.yml)"
 execCmd "cat spring-petclinic-docker.yml"
 execCmd "pb image apply -f spring-petclinic-docker.yml"
-execCmd "pb image logs index.docker.io/sadubois/spring-petclinic:latest -b 1 -f"
+execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest -b 1 -f"
 
 exit
 
