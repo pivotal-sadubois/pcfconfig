@@ -2638,7 +2638,7 @@ verifyCertificate () {
        "${TLS_FULLCHAIN}" == "" ]; then
     
     echo ""
-    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+    echo "  3MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
     echo "  --------------------------------------------------------------------------------------------------------------"
     echo "  To allow TLS encrypted httpd traffic a Certificate and key needs to be created for your DNS Domain. Free"
     echo "  certificates can be optained through https://letsencrypt.org."
@@ -2819,7 +2819,7 @@ checkCloudAccess() {
     if [ "${GCP_REGION}" == "" -o "${GCP_PROJECT}" == "" ]; then 
       missing_variables=1
       echo ""
-      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  4MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
       echo "  --------------------------------------------------------------------------------------------------------------"
 
       #if [ "${GCP_SERVICE_ACCOUNT}" == "" ]; then
@@ -2860,7 +2860,7 @@ checkCloudAccess() {
 
       missing_variables=1
       echo ""
-      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  5MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
       echo "  --------------------------------------------------------------------------------------------------------------"
 
       if [ "${AWS_ACCESS_KEY}" == "" ]; then
@@ -2893,7 +2893,6 @@ checkCloudAccess() {
 #                                  "$AWS_PAS_TLS_PRIVATE_KEY" "$AWS_PAS_TLS_ROOT_CA"
 #    fi
   fi
-echo gaga1
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then 
     if [ "${AZURE_SUBSCRIPTION_ID}" == "" -o "${AZURE_TENANT_ID}" == "" -o \
@@ -2901,7 +2900,7 @@ echo gaga1
 
       missing_variables=1
       echo ""
-      echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+      echo "  1MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
       echo "  --------------------------------------------------------------------------------------------------------------"
 
       if [ "${AZURE_SUBSCRIPTION_ID}" == "" ]; then
@@ -2933,7 +2932,6 @@ echo gaga1
       messagePrint " - Azure Client Secret"          "$AZURE_CLIENT_SECRET"
       messagePrint " - Azure Region"                 "$AZURE_REGION"
     fi
-echo gaga2
 
 #    if [ "$PCF_TILE_PKS_DEPLOY" == "true" ]; then
 #        verifyCertificate AZURE PKS "$AZURE_PKS_TLS_CERTIFICATE" "$AZURE_PKS_TLS_FULLCHAIN" \
@@ -2951,7 +2949,7 @@ echo gaga2
 
     missing_variables=1
     echo ""
-    echo "  MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
+    echo "  2MISSING ENVIRONMENT-VARIABES    DESCRIPTION        "
     echo "  --------------------------------------------------------------------------------------------------------------"
 
     if [ "${PCF_PIVNET_TOKEN}" == "" ]; then
