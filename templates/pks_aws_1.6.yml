@@ -9,9 +9,20 @@ network-properties:
   service_network:
     name: services-subnet
 product-properties:
+# .properties.oidc_selector:
+#   selected_option: disabled
+#   value: disabled
  .properties.oidc_selector:
-   selected_option: disabled
-   value: disabled
+   selected_option: enabled
+   value: enabled
+ .properties.oidc_selector.enabled.groups_claim:
+   value: roles
+ .properties.oidc_selector.enabled.groups_prefix:
+   value: 'oidc:'
+ .properties.oidc_selector.enabled.username_claim:
+   value: user_name
+ .properties.oidc_selector.enabled.username_prefix:
+   value: 'oidc:'
 # PKS API Service
  .pivotal-container-service.pks_tls:
    value:
