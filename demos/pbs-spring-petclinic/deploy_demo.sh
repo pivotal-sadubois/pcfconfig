@@ -70,6 +70,7 @@ else
   messageTitle "Pivotal Container Platform (Harbor)"
   messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
   messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
+  echo ""
 fi
 
 if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
@@ -123,6 +124,7 @@ else
   messagePrint " - GitHub Repository Name"     "$PCF_TILE_PBS_GITHUB_REPO"
   messagePrint " - GitHub Repository User"     "$PCF_TILE_PBS_GITHUB_USER"
   messagePrint " - GitHub Repository Password" "$PCF_TILE_PBS_GITHUB_PASS"
+  echo ""
 fi
 
 if [ ${missing_variables} -eq 1 ]; then
