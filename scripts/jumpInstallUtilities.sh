@@ -1,4 +1,5 @@
 #!/bin/bash
+#https://docs.python-guide.org/dev/virtualenvs/
 
 export PIVNET_TOKEN=$1
 #LOC=$(locale 2>/dev/null | grep LC_CTYPE | sed 's/"//g' | awk -F= '{ print $2 }') 
