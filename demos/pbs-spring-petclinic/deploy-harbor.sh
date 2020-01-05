@@ -136,6 +136,8 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
+echo "PCF_TILE_PBS_HARBOR_REPO:$PCF_TILE_PBS_HARBOR_REPO"
+echo "PCF_TILE_PBS_HARBOR_USER:$PCF_TILE_PBS_HARBOR_USER"
 
 echo "registry: $PCF_TILE_PBS_HARBOR_REPO"    >  /tmp/harbor.yml
 echo "username: $PCF_TILE_PBS_HARBOR_USER"    >> /tmp/harbor.yml
