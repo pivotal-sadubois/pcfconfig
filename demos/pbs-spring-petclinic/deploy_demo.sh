@@ -136,6 +136,10 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
+prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
+prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
+prtText " => sudo docker run index.docker.io/sadubois/spring-petclinic:latest"
+exit
 
 echo "registry: $PCF_TILE_PBS_DOCKER_REPO"    >  /tmp/docker.yml
 echo "username: $PCF_TILE_PBS_DOCKER_USER"    >> /tmp/docker.yml
@@ -171,47 +175,9 @@ execCmd "pb image list"
 sleep 10
 execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest -b 1 -f"
 
+prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
+prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
+prtText " => sudo docker run index.docker.io/sadubois/spring-petclinic:latest"
+
 exit
 
-# GENERATE INGRES FILES
-cat ${DIRNAME}/template_cheese-ingress.yml | sed "s/DOMAIN/$PKS_APPATH/g" > /tmp/cheese-ingress.yml
-
-prtHead " 1.) Create seperate namespace to host the Ingress Cheese Demo"
-execCmd "kubectl create namespace cheese" 
-
-prtHead " 2.) Create the deployment for stilton-cheese"
-execCmd "kubectl create deployment stilton-cheese --image=errm/cheese:stilton -n cheese"
-
-prtHead " 3.) Create the deployment for stilton-cheese"
-execCmd "kubectl create deployment cheddar-cheese --image=errm/cheese:cheddar -n cheese"
-
-prtHead " 4.) Verify Deployment for stilton and cheddar cheese"
-execCmd "kubectl get deployment,pods -n cheese"
-
-prtHead " 5.) Create service type NodePort on port 80 for both deployments"
-execCmd "kubectl expose deployment stilton-cheese --type=NodePort --port=80 -n cheese"
-
-prtHead " 6.) Create service type NodePort on port 80 for both deployments"
-execCmd "kubectl expose deployment cheddar-cheese --type=NodePort --port=80 -n cheese"
-
-prtHead " 7.) Verify services of cheddar-cheese and stilton-cheese"
-execCmd "kubectl get svc -n cheese"
-
-prtHead " 8.) Describe services cheddar-cheese and stilton-cheese"
-execCmd "kubectl describe svc cheddar-cheese -n cheese"
-execCmd "kubectl describe svc stilton-cheese -n cheese"
-
-prtHead " 9.) Review ingress configuration file (/tmp/cheese-ingress.yml)"
-execCmd "more /tmp/cheese-ingress.yml"
-
-prtHead "10.) Create ingress routing cheddar-cheese and stilton-cheese service"
-execCmd "kubectl create -f /tmp/cheese-ingress.yml -n cheese"
-execCmd "kubectl get ingress -n cheese"
-execCmd "kubectl describe ingress -n cheese"
-
-prtHead "10.) Open WebBrowser and verify the deployment"
-prtText "     => http://cheddar-cheese.apps-cl1.$dom"
-prtText "     => http://stilton-cheese.apps-cl1.$dom"
-prtText ""
-
-exit 0
