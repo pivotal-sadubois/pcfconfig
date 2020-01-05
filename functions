@@ -963,7 +963,6 @@ echo "CERTS_GENERATE_NEW:$CERTS_GENERATE_NEW"
   if [ "${CERTS_GENERATE_NEW}" == "true" ]; then 
     messageTitle "Generate Certificates for domain ($domain)"
     route53createHostedZone $domain
-exit 1
 
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
     typ=$(echo $domain | egrep -c "azpks|awspks|gcppks")
