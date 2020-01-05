@@ -37,6 +37,7 @@ if [ ! -x /usr/bin/zipinfo ]; then
   apt-get install zip -y  > /dev/null 2>&1
 fi
 
+exit
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
 
