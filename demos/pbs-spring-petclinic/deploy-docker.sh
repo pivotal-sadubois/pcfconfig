@@ -153,8 +153,8 @@ pb login
 echo ""
 
 prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic"
-execCmd "pb project target ped-clinic"
+execCmd "pb project create ped-clinic-docker"
+execCmd "pb project target ped-clinic-docker"
 
 prtHead "Add screts for Docker Registry from (/tmp/docker.yml)" 
 execCmd "cat /tmp/docker.yml"

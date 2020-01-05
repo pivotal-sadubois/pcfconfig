@@ -172,7 +172,7 @@ execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN
 
 prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
 prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
-prtText " => sudo docker run ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
+prtText " => sudo docker run harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest"
 
 exit
 
