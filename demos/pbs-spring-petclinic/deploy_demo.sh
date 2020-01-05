@@ -152,6 +152,10 @@ prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pa
 pb login
 echo ""
 
+prtHead "Create and select Project ped-clinic"
+execCmd "pb project create ped-clinic"
+execCmd "pb project target ped-clinic"
+
 prtHead "Add screts for Docker Registry from (/tmp/docker.yml)" 
 execCmd "cat /tmp/docker.yml"
 execCmd "pb secrets registry apply -f /tmp/docker.yml"
@@ -159,10 +163,6 @@ execCmd "pb secrets registry apply -f /tmp/docker.yml"
 prtHead "Add screts for Docker Registry from (/tmp/github.yml)" 
 execCmd "cat /tmp/github.yml"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
-
-prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic"
-execCmd "pb project target ped-clinic"
 
 prtHead "Create Image (spring-petclinic-docker.yml)"
 execCmd "cat spring-petclinic-docker.yml"
