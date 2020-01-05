@@ -529,7 +529,7 @@ installJumpHost() {
     fi
 #pppppppp installJump Middle
     pip=""
-    while [ "$pip" != "" -a $pip" != "null" ]; do
+    while [ "$pip" != "" -a "$pip" != "null" ]; do
       pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | \
             jq -r '.[].ipAddress')
       sleep 10
