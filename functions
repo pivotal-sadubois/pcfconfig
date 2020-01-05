@@ -941,6 +941,7 @@ installJumpHost() {
   CERTS_INSTALLED=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo true || echo false")
   domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 
+echo "CERTS_INSTALLED:$CERTS_INSTALLED"
   if [ "${CERTS_INSTALLED}" == "true" ]; then
     messageTitle "Validate Certificates for domain ($domain)"
     $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
@@ -954,6 +955,8 @@ installJumpHost() {
       messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE [>>> *EXPIRED* <<<]"
       CERTS_GENERATE_NEW=true
     fi
+  else
+    CERTS_GENERATE_NEW=true
   fi
 
 echo "CERTS_GENERATE_NEW:$CERTS_GENERATE_NEW"
