@@ -136,12 +136,9 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
-echo "PCF_TILE_PBS_HARBOR_REPO:$PCF_TILE_PBS_HARBOR_REPO"
-echo "PCF_TILE_PBS_HARBOR_USER:$PCF_TILE_PBS_HARBOR_USER"
-
-echo "registry: $PCF_TILE_PBS_HARBOR_REPO"    >  /tmp/harbor.yml
-echo "username: $PCF_TILE_PBS_HARBOR_USER"    >> /tmp/harbor.yml
-echo "password: $PCF_TILE_PBS_HARBOR_PASS"    >> /tmp/harbor.yml
+echo "registry: harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"    >  /tmp/harbor.yml
+echo "username: admin"                        >> /tmp/harbor.yml
+echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
 
 echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
