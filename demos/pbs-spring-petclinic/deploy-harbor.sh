@@ -137,9 +137,9 @@ if [ ${missing_variables} -eq 1 ]; then
 fi
 
 
-echo "registry: $PCF_TILE_PBS_DOCKER_REPO"    >  /tmp/docker.yml
-echo "username: $PCF_TILE_PBS_DOCKER_USER"    >> /tmp/docker.yml
-echo "password: $PCF_TILE_PBS_DOCKER_PASS"    >> /tmp/docker.yml
+echo "registry: $PCF_TILE_PBS_HARBOR_REPO"    >  /tmp/harbor.yml
+echo "username: $PCF_TILE_PBS_HARBOR_USER"    >> /tmp/harbor.yml
+echo "password: $PCF_TILE_PBS_HARBOR_PASS"    >> /tmp/harbor.yml
 
 echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
@@ -153,23 +153,23 @@ pb login
 echo ""
 
 prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic"
-execCmd "pb project target ped-clinic"
+execCmd "pb project create ped-clinic-harbor"
+execCmd "pb project target ped-clinic-harbor"
 
-prtHead "Add screts for Docker Registry from (/tmp/docker.yml)" 
-execCmd "cat /tmp/docker.yml"
-execCmd "pb secrets registry apply -f /tmp/docker.yml"
+prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
+execCmd "cat /tmp/harbor.yml"
+execCmd "pb secrets registry apply -f /tmp/harbor.yml"
 
 prtHead "Add screts for Docker Registry from (/tmp/github.yml)" 
 execCmd "cat /tmp/github.yml"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-prtHead "Create Image (spring-petclinic-docker.yml)"
-execCmd "cat spring-petclinic-docker.yml"
-execCmd "pb image apply -f spring-petclinic-docker.yml"
+prtHead "Create Image (spring-petclinic-harbor.yml)"
+execCmd "cat spring-petclinic-harbor.yml"
+execCmd "pb image apply -f spring-petclinic-harbor.yml"
 execCmd "pb image list"
 sleep 10
-execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest -b 1 -f"
+execCmd "pb image logs ${PCF_TILE_PBS_HARBOR_REPO}/library/spring-petclinic:latest -b 1 -f"
 
 prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
 prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"

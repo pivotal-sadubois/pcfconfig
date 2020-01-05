@@ -1,0 +1,10 @@
+source:
+  git:
+    url: https://github.com/spring-projects/spring-petclinic
+    revision: master
+build:
+  env:
+  - name: BP_JAVA_VERSION
+    value: 8
+image:
+  tag: harbor.awspks.pcfsdu.com/library/spring-petclinic
