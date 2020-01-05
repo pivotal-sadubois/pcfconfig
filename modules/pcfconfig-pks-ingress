@@ -64,6 +64,8 @@ echo bla1
 pks clusters
 echo bla2
 
+#Pivotal-MacBook-Pro:~ sadubois$ kubectl get psp pks-restricted -o yaml
+#Pivotal-MacBook-Pro:~ sadubois$ kubectl get psp 
 
 userid=""; while [ "${userid}" == "" ]; do
 echo "pcfconfig-pks-ingress: Debug 33.1"
