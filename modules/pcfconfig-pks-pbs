@@ -141,9 +141,12 @@ new_install=0
 prj=$(sudo duffle list | egrep "^$PBS_SETUP" | awk '{ print $1 }')
 if [ "${prj}" == "$PBS_SETUP" ]; then 
   messageTitle "Validate existing Project: $PBS_SETUP"
-  sudo duffle status pbs-awspks > /dev/null 2>&1; ret=$?
+  sudo duffle status $PBS_SETUP > /dev/null 2>&1; ret=$?
   if [ $ret -ne 0 ]; then 
     messagePrint " - PBS Project $PBS_SETUP does not work anymore, make a new one"
+    sudo duffle uninstall $PBS_SETUP > /dev/null 2>&1
+    [ -f /home/ubuntu/.duffle/claims/$PBS_SETUP.json ] && sudo rm /home/ubuntu/.duffle/claims/$PBS_SETUP.json
+
     new_install=1
   else
     echo "-----------------------------------------------------------------------------------------------------------"
