@@ -73,9 +73,21 @@ echo "pcfconfig-pks-ingress: Debug 33.1"
   [ "${userid}" == "" -o "${token}" == "" ] && sleep 30
 done
 
+echo "userid:$userid"
+echo "token:$token"
+
 kubectl config use-context $cluster > /dev/null 2>&1
+
+kubectl get namespaces > /dev/null 2>&1
+if [ $? -ne 0 ]; then 
+  echo "ERROR: failed to access kubernetes cluster $cluster"
+  exit
+fi
+
+echo gggg1
 kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin \
         --serviceaccount=kube-system:default > /dev/null 2>&1
+echo gggg2
 
 # --- VERIFY NAMESPACE ---
 kubectl get namespace ingress > /dev/null 2>&1
