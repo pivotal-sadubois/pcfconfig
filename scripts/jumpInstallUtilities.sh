@@ -28,6 +28,7 @@ if [ ! -x /usr/bin/certbot ]; then
   sudo apt install certbot -y
   sudo apt-get install python-pip -y
   pip install certbot_dns_route53 
+  pip install cryptography --upgrade
   #sudo apt install python3-pip -y
   #sudo pip3 install certbot-dns-route53
 fi
@@ -37,7 +38,6 @@ if [ ! -x /usr/bin/zipinfo ]; then
   apt-get install zip -y  > /dev/null 2>&1
 fi
 
-exit
 if [ ! -x /usr/bin/aws ]; then 
   echo "- Install AWS CLI"
 
