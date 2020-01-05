@@ -137,7 +137,7 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-new_install=0
+new_install=1
 prj=$(sudo duffle list | egrep "^$PBS_SETUP" | awk '{ print $1 }')
 if [ "${prj}" == "$PBS_SETUP" ]; then 
   messageTitle "Validate existing Project: $PBS_SETUP"
@@ -145,16 +145,14 @@ if [ "${prj}" == "$PBS_SETUP" ]; then
   if [ $ret -ne 0 ]; then 
     messagePrint " - PBS Project $PBS_SETUP does not work anymore, clean it up"
     sudo duffle uninstall $PBS_SETUP > /dev/null 2>&1
-echo "/home/ubuntu/.duffle/claims/$PBS_SETUP.json"
     [ -f ~/.duffle/claims/$PBS_SETUP.json ] && sudo rm ~/.duffle/claims/$PBS_SETUP.json
-
-ls -la /home/ubuntu/.duffle/claims/$PBS_SETUP.json
 
     new_install=1
   else
     echo "-----------------------------------------------------------------------------------------------------------"
     sudo duffle status $PBS_SETUP
     echo "-----------------------------------------------------------------------------------------------------------"
+    new_install=0
   fi
 fi
 
