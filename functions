@@ -933,30 +933,32 @@ installJumpHost() {
   ##############################################################################################
 
   CERTS_GENERATE_NEW=false
+  if [ -d $PCFPATH/certificates/$domain -a -f $PCFPATH/certificates/$domain/privkey.pem ]; then
+    messageTitle "Install Certificate for domain ($domain)"
+    $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+  fi
+
   CERTS_INSTALLED=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo true || echo false")
   domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 
-  if [ "${CERTS_INSTALLED}" == "false" ]; then
-    # --- CHECK IF LOCAL COPY OF THE CERTIFICATES ARE AVAILABLE ---
-    if [ -d $PCFPATH/certificates/$domain -a -f $PCFPATH/certificates/$domain/privkey.pem ]; then
-      messageTitle "Install Certificate for domain ($domain)"
-      $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+  if [ "${CERTS_INSTALLED}" == "true" ]; then
+    messageTitle "Validate Certificates for domain ($domain)"
+    $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
+
+    CERTS_ENDDATE=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -enddate | awk -F'=' '{ print \$2 }'")
+    CERTS_EXPIRED=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -checkend 3600 > /dev/null 2>&1; echo \$?")
+
+    if [ $CERTS_EXPIRED -eq 0 ]; then
+      messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE"
     else
-      messageTitle "Validate Certificates for domain ($domain)"
+      messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE [>>> *EXPIRED* <<<]"
+      CERTS_GENERATE_NEW=true
     fi
   fi
 
-  CERTS_ENDDATE=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -enddate | awk -F'=' '{ print \$2 }'")
-  CERTS_EXPIRED=$($SSH_COMMAND -n "openssl x509 -noout -in ~/pcfconfig/certificates/cert.pem -checkend 3600 > /dev/null 2>&1; echo \$?")
-
-  if [ $CERTS_EXPIRED -eq 0 ]; then 
-    messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE"
-  else
-    messagePrint " - Certificate Expiratation Data:" "$CERTS_ENDDATE [>>> *EXPIRED* <<<]"
-    CERTS_GENERATE_NEW=true
-  fi
-
+echo "CERTS_GENERATE_NEW:$CERTS_GENERATE_NEW"
   if [ "${CERTS_GENERATE_NEW}" == "true" ]; then 
+    messageTitle "Generate Certificates for domain ($domain)"
     route53createHostedZone $domain
 
     echo "-------------------------------------- GENERATE LET'S-ENCRYPT CERTIFICATES -------------------------------------"
