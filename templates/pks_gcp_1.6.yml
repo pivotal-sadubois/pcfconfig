@@ -47,7 +47,9 @@ product-properties:
     value: Plan Active
   .properties.plan1_selector.active.admission_plugins:
     value:
-    - pod_security_policy
+#   - pod_security_policy
+#   - deny_escalating_exec
+#   - security_context_deny
   .properties.plan1_selector.active.allow_privileged_containers:
     value: true
   .properties.plan1_selector.active.description:
