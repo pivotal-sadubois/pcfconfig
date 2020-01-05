@@ -181,6 +181,7 @@ if [ ${new_install} -eq 1 ]; then
     echo "             --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \\"
     echo "             -f /tmp/build-service-${version}.tgz \\"
     echo "             -m /tmp/relocated.json"
+    exit 1
   fi
 fi
 
