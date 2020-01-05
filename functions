@@ -528,7 +528,13 @@ installJumpHost() {
       fi
     fi
 #pppppppp installJump Middle
-    pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
+    pip=""
+    while [ "$pip" != "" -a $pip" != "null" ]; do
+      pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | \
+            jq -r '.[].ipAddress')
+      sleep 10
+    done
+
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
 
     # --- UPDATE DNS DOMAIN ---
@@ -536,6 +542,7 @@ installJumpHost() {
       messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
       messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
       route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
+#nnnnnnnnnnn
 
       sed -in "/$JUMP_HOST/d" ~/.ssh/known_hosts
       messagePrint " - Wait for SSH Daemon on jump-host to come online" "< 5min"
@@ -1294,7 +1301,7 @@ route53setNSrecord () {
 }
 
 #route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
-route53setDNSrecord () {
+route53setDNSrecord() {
   ipa=$1; hnm=$2; dom=$3
 
   ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${dom} | jq -r '.HostedZones[0].Id')
