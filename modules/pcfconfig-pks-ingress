@@ -50,8 +50,20 @@ fi
 ######################################################################################################
 cluster=cl1
 
+echo "pcfconfig-pks-ingress: PKS_USER_PASSWORD:$PKS_USER_PASSWORD"
 #pks login -u sadubois -p pivotal -a api.pks.awspks.pcfsdu.com --ca-cert ~/pcfconfig/certificates/fullchain.pem
 pks get-credentials $cluster > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "ERROR: failed to get pks credentials for cluster $cluster"
+  echo "       => export PKS_USER_PASSWORD=$PKS_USER_PASSWORD"
+  echo "       => pks get-credentials $cluster"
+  exit
+fi
+
+echo bla1
+pks clusters
+echo bla2
+
 
 userid=""; while [ "${userid}" == "" ]; do
 echo "pcfconfig-pks-ingress: Debug 33.1"
