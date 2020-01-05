@@ -121,6 +121,7 @@ fi
 
 version=0.0.4
 touch /tmp/relocated.json
+RELOCATE_LOG=/tmp/relocate.log; sudo rm -f $RELOCATE_LOG
 if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
   messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
@@ -136,8 +137,24 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   fi
 fi
 
-stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
-if [ "${stt}" != "success" ]; then
+new_install=0
+prj=$(sudo duffle list | egrep "^$PBS_SETUP" | awk '{ print $1 }')
+if [ "${prj}" == "$PBS_SETUP" ]; then 
+  messageTitle "Validate existing Project: $PBS_SETUP"
+  sudo duffle status pbs-awspks > /dev/null 2>&1; ret=$?
+  if [ $ret -ne 0 ]; then 
+    messagePrint " - PBS Project $PBS_SETUP does not work anymore, make a new one"
+    new_install=1
+  else
+    echo "-----------------------------------------------------------------------------------------------------------"
+    sudo duffle status $PBS_SETUP
+    echo "-----------------------------------------------------------------------------------------------------------"
+  fi
+fi
+
+#stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
+
+if [ ${new_install} -eq 1 ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
 
   sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \
