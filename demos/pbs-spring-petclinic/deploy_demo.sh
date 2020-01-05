@@ -148,9 +148,9 @@ echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 prtHead "Set API Target for Pivotal Build Service (PBS)"
 execCmd "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
 
-#prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
-#pb login
-#echo ""
+prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
+pb login
+echo ""
 
 prtHead "Add screts for Docker Registry from (/tmp/docker.yml)" 
 execCmd "cat /tmp/docker.yml"
@@ -167,6 +167,7 @@ execCmd "pb project target ped-clinic"
 prtHead "Create Image (spring-petclinic-docker.yml)"
 execCmd "cat spring-petclinic-docker.yml"
 execCmd "pb image apply -f spring-petclinic-docker.yml"
+execCmd "pb image list"
 sleep 10
 execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest -b 1 -f"
 
