@@ -136,10 +136,6 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
-prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
-prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
-prtText " => sudo docker run index.docker.io/sadubois/spring-petclinic:latest"
-exit
 
 echo "registry: $PCF_TILE_PBS_DOCKER_REPO"    >  /tmp/docker.yml
 echo "username: $PCF_TILE_PBS_DOCKER_USER"    >> /tmp/docker.yml
@@ -177,7 +173,7 @@ execCmd "pb image logs ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/s
 
 prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
 prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
-prtText " => sudo docker run index.docker.io/sadubois/spring-petclinic:latest"
+prtText " => sudo docker run ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
 
 exit
 
