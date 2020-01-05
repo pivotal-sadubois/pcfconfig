@@ -165,8 +165,8 @@ if [ ${new_install} -eq 1 ]; then
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-      --set registry_username="$PCF_TILE_PBS_ADMIN_USER" \
-      --set registry_password="$PCF_TILE_PBS_ADMIN_PASS" \
+      --set registry_username="admin" \
+      --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
       --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json > $LOGFILE 2>&1
