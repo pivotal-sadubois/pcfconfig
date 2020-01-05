@@ -168,7 +168,7 @@ execCmd "cat spring-petclinic-harbor.yml"
 execCmd "pb image apply -f spring-petclinic-harbor.yml"
 execCmd "pb image list"
 sleep 10
-execCmd "pb image logs ${PCF_TILE_PBS_HARBOR_REPO}/library/spring-petclinic:latest -b 1 -f"
+execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest -b 1 -f"
 
 prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
 prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
