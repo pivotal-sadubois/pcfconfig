@@ -136,6 +136,15 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
+echo "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
+pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation > /dev/null 2>&1
+pb login
+pb project target ped-clinic-harbor > /dev/null 2>&1
+pb project delete ped-clinic-harbor > /dev/null 2>&1
+
+
+exit
+
 echo "registry: harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"    >  /tmp/harbor.yml
 echo "username: admin"                        >> /tmp/harbor.yml
 echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
@@ -163,7 +172,7 @@ prtHead "Add screts for Docker Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-sed "s/XXXDOMAINXXX/${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/g" spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml
+sed "s/XXXDOMAINXX/${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/g" spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml
 prtHead "Create Image (spring-petclinic-harbor.yml)"
 execCmd "cat spring-petclinic-harbor.yml"
 execCmd "pb image apply -f spring-petclinic-harbor.yml"
