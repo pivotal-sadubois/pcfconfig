@@ -171,6 +171,7 @@ echo "555555555555555555555555 - 1"
 
   cnt=$(gcloud dns record-sets list -z ${DNS_PREFIX}-zone --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}." \
           --type=A 2> /dev/null | grep -v "^NAME" | wc -l | sed 's/ //g')
+echo "CNT:$cnt"
   if [ ${cnt} -eq 0 ]; then
     messagePrint " - Creating DNS Entry in (${DNS_PREFIX}-zone)" "${DNS_NAME}"
     gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone > /dev/null 2>&1
