@@ -163,36 +163,25 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
   fi
 fi
 
-echo "555555555555555555555555 - 0"
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
-echo "555555555555555555555555 - 1"
   DNS_NAME="*.apps-${cluster}"
   messageTitle "Create DNS Entry for *.apps-${cluster}.${DNS_PREFIX}.${DNS_SUFFIX}"
 
   cnt=$(gcloud dns record-sets list -z ${DNS_PREFIX}-zone --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}." \
           --type=A 2> /dev/null | grep -v "^NAME" | wc -l | sed 's/ //g')
-echo "CNT:$cnt"
   if [ ${cnt} -eq 0 ]; then
     messagePrint " - Creating DNS Entry in (${DNS_PREFIX}-zone)" "${DNS_NAME}"
-echo "gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone"
-echo "gcloud dns record-sets transaction add $DNSLB --name \"${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}\" --type A -z \"${DNS_PREFIX}-zone\" --ttl=300"
-echo "gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone"
-
     gcloud dns record-sets transaction abort -z ${DNS_PREFIX}-zone > /dev/null 2>&1
     gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone > /dev/null 2>&1
-echo "1 $?"
     gcloud dns record-sets transaction add "$DNSLB" --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}." \
        --type A -z ${DNS_PREFIX}-zone --ttl=300 > /dev/null 2>&1
-echo "2 $?"
     gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
-echo "3 $?"
     if [ ${ret} -ne 0 ]; then
       echo "ERROR: Creating DNS record-sets for zone (${DNS_PREFIX}-zone)"
       echo "       => gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone"
       exit 1
     fi
   fi
-echo "555555555555555555555555 - 10"
 fi
 
 if [ "${PCF_DEPLOYMENT_CLOUD}" == "Azure" ]; then
