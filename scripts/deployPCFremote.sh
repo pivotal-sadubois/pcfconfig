@@ -685,9 +685,12 @@ if [ "${PRODUCT_TILE}" == "pks" ]; then
 if [ "$PCF_TILE_PAS_ADMIN_USER" == "sadubois" -o "$PCF_TILE_PAS_ADMIN_USER" == "sschmidt" ]; then 
 echo "=> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - PBS"
 
+echo "deployPCFremote.sh: debug1"
   if [ "$PCF_TILE_PBS_DEPLOY" == "true" ]; then
+echo "deployPCFremote.sh: debug2"
     # --- ONLY EXECUTE IF STATUS OF LAST RUNN IS NOT 'completed' ---
     if [ "$(getPCFconfigState $PCFCONFIG_PKS_PBS)" != "completed" ]; then
+echo "deployPCFremote.sh: debug3"
       ${PCFPATH}/modules/pcfconfig-pks-pbs $envFile
 
       if [ $? -ne 0 ]; then
