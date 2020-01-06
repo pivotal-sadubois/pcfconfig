@@ -193,7 +193,9 @@ execCmd "cat spring-petclinic-harbor.yml"
 execCmd "pb image apply -f spring-petclinic-harbor.yml"
 execCmd "pb image list"
 sleep 10
-execCmd "pb image logs ${HARBOR_REGISTRY}/sadubois/spring-petclinic:latest -b 1 -f"
+execCmd "pb image logs ${HARBOR_REGISTRY}/${PCF_PBS_GOHARBOR_PROJ}/spring-petclinic:latest -b 1 -f"
+execCmd "pb image builds ${HARBOR_REGISTRY}/${PCF_PBS_GOHARBOR_PROJ}/spring-petclinic:latest"
+execCmd "pb image build demo.goharbor.io/sadubois/spring-petclinic:latest -b 1"
 
 prtText "Login in to Docker Repository on your local workstartion and run petclinic"
 prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_PBS_GOHARBOR_USER -p $PCF_PBS_GOHARBOR_PASS"
