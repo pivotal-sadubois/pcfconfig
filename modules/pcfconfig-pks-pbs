@@ -50,6 +50,10 @@ export PCF_TILE_PBS_NAME="Pivotal Build Service"
 export PCF_TILE_PBS_SLUG=build-service
 export PCF_TILE_PBS_VERSION=0.0.4
 
+sshEnvironment
+
+echo "SSH_HOME:$SSH_HOME"
+exit 1
 messageTitle "Install Pivotal Build Service (PBS)"
 messagePrint " - PBS Version:"                     "$PCF_TILE_PBS_VERSION"
 messagePrint " - PBS Name:"                        "$PCF_TILE_PBS_NAME"
@@ -150,7 +154,7 @@ if [ "${prj}" == "$PBS_SETUP" ]; then
     new_install=1
   else
     echo "-----------------------------------------------------------------------------------------------------------"
-    sudo duffle status $PBS_SETUP
+    sudo duffle list $PBS_SETUP
     echo "-----------------------------------------------------------------------------------------------------------"
     new_install=0
   fi
@@ -183,6 +187,10 @@ if [ ${new_install} -eq 1 ]; then
     echo "             -f /tmp/build-service-${version}.tgz \\"
     echo "             -m /tmp/relocated.json"
     exit 1
+  else
+    echo "-----------------------------------------------------------------------------------------------------------"
+    sudo duffle status $PBS_SETUP
+    echo "-----------------------------------------------------------------------------------------------------------"
   fi
 fi
 
