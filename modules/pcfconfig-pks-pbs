@@ -52,8 +52,6 @@ export PCF_TILE_PBS_VERSION=0.0.4
 
 sshEnvironment
 
-echo "SSH_HOME:$SSH_HOME"
-exit 1
 messageTitle "Install Pivotal Build Service (PBS)"
 messagePrint " - PBS Version:"                     "$PCF_TILE_PBS_VERSION"
 messagePrint " - PBS Name:"                        "$PCF_TILE_PBS_NAME"
