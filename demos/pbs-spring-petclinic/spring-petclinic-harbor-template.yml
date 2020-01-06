@@ -7,4 +7,4 @@ build:
   - name: BP_JAVA_VERSION
     value: 8
 image:
-  tag: harbor.XXXDOMAINXXX/library/spring-petclinic
+  tag: harbor.XXXDOMAINXXX/YYYREPOYYY/spring-petclinic

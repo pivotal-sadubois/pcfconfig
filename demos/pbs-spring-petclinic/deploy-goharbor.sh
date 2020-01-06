@@ -136,11 +136,15 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
-HARBOR_REGISTRY=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+PCF_TILE_HARBOR_ADMIN_USER=ssdubois
+PCF_TILE_HARBOR_ADMIN_PASS=00Penwin
+PCF_TILE_PBS_ADMIN_USER=sdubois
+PCF_TILE_PBS_ADMIN_PASS=kindalarm71
+HARBOR_REGISTRY=https://demo.goharbor.io
+HARBOR_REGISTRY=demo.goharbor.io
 HARBOR_PROJECT=library
-PCF_TILE_HARBOR_ADMIN_USER=admin
 
-echo "registry: ${HARBOR_PROJECT}"            >  /tmp/harbor.yml
+echo "registry: $HARBOR_REGISTRY"             >  /tmp/harbor.yml
 echo "username: $PCF_TILE_HARBOR_ADMIN_USER"  >> /tmp/harbor.yml
 echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
 
@@ -149,7 +153,7 @@ echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
 echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
 prtHead "Set API Target for Pivotal Build Service (PBS)"
-execCmd "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
+execCmd "pb api set https://pbs.picorivera.cf-app.com --skip-ssl-validation"
 
 prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
 pb login
@@ -169,12 +173,13 @@ execCmd "pb secrets registry apply -f /tmp/github.yml"
 
 sed -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" -e "s/YYYREPOYYY/${HARBOR_PROJECT}/g" \
     spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml
+
 prtHead "Create Image (spring-petclinic-harbor.yml)"
 execCmd "cat spring-petclinic-harbor.yml"
 execCmd "pb image apply -f spring-petclinic-harbor.yml"
 execCmd "pb image list"
 sleep 10
-execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest -b 1 -f"
+execCmd "pb image logs ${HARBOR_REGISTRY}/sadubois/spring-petclinic:latest -b 1 -f"
 
 prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
 prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_TILE_HARBOR_ADMIN_USER -p $PCF_TILE_HARBOR_ADMIN_PASS"
