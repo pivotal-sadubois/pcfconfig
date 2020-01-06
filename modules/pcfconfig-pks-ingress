@@ -178,7 +178,7 @@ echo "gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone"
 echo "gcloud dns record-sets transaction add "$DNSLB" --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}" --type A -z ${DNS_PREFIX}-zone --ttl=300"
 echo "gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone"
     gcloud dns record-sets transaction start -z ${DNS_PREFIX}-zone > /dev/null 2>&1
-    gcloud dns record-sets transaction add "$DNSLB" --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}" \
+    gcloud dns record-sets transaction add "$DNSLB" --name "${DNS_NAME}.${DNS_PREFIX}.${DNS_SUFFIX}." \
        --type A -z ${DNS_PREFIX}-zone --ttl=300 > /dev/null 2>&1
     gcloud dns record-sets transaction execute -z ${DNS_PREFIX}-zone > /dev/null 2>&1; ret=$?
     if [ ${ret} -ne 0 ]; then
