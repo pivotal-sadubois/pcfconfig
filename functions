@@ -215,6 +215,7 @@ createENVfile() {
     fi
 
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
+      echo "PCF_TILE_PBS_DEPLOY=\"$PCF_TILE_PBS_DEPLOY\""               >> $envFile
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
@@ -263,6 +264,7 @@ createENVfile() {
     fi
 
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
+      echo "PCF_TILE_PBS_DEPLOY=\"$PCF_TILE_PBS_DEPLOY\""               >> $envFile
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
