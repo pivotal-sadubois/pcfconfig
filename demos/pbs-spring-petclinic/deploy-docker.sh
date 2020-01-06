@@ -145,22 +145,13 @@ echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
 echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
-PB_LOGIN_REQUIRED=0
+export BUILD_SERVICE_USERNAME=$PCF_PBS_CFAPP_USER
+export BUILD_SERVICE_PASSWORD=$PCF_PBS_CFAPP_PASS
 PB_API_TARGET=https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME
-PB_API_CURRENT=$(pb api get 2>/dev/null | awk '{ print $NF }')
-[ "${PB_API_CURRENT}" != "${PB_API_TARGET}" ] && PB_LOGIN_REQUIRED=1
 
 prtHead "Set API Target for Pivotal Build Service (PBS)"
 execCmd "pb api set ${PB_API_TARGET} --skip-ssl-validation"
-
-pb image list > /dev/null 2>&1
-[ $? -ne 0 ] && PB_LOGIN_REQUIRED=1
-
-if [ $PB_LOGIN_REQUIRED -eq 1 ]; then
-  prtHead "Login to the Pivotal Build Service as '$PCF_PBS_CFAPP_USER' and pawword '$PCF_PBS_CFAPP_PASS'"
-  pb login
-  echo ""
-fi
+execCmd "pb login"
 
 prtHead "Create and select Project pet-clinic"
 tgt=$(pb project target | egrep "Currently targeting" | sed -e "s/'//g" -e 's/\.//g'| awk '{ print $3 }')
