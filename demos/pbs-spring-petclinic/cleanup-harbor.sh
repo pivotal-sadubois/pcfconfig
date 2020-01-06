@@ -27,12 +27,12 @@ dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | se
 # Created by /usr/local/bin/figlet
 clear
 echo '                                                                                      '
-echo '           ____             _               ____          _    ____ _ _       _       '
-echo '          / ___| _ __  _ __(_)_ __   __ _  |  _ \ ___  __| |  / ___| (_)_ __ (_) ___  '
-echo '          \___ \|  _ \|  __| |  _ \ / _  | | |_) / _ \/ _  | | |   | | |  _ \| |/ __| '
-echo '           ___) | |_) | |  | | | | | (_| | |  __/  __/ (_| | | |___| | | | | | | (__  '
-echo '          |____/| .__/|_|  |_|_| |_|\__, | |_|   \___|\__,_|  \____|_|_|_| |_|_|\___| '
-echo '                |_|                 |___/                                             '
+echo '            ____             _               ____      _      ____ _ _       _        '
+echo '           / ___| _ __  _ __(_)_ __   __ _  |  _ \ ___| |_   / ___| (_)_ __ (_) ___   '
+echo '           \___ \|  _ \|  __| |  _ \ / _  | | |_) / _ \ __| | |   | | |  _ \| |/ __|  '
+echo '            ___) | |_) | |  | | | | | (_| | |  __/  __/ |_  | |___| | | | | | | (__   '
+echo '           |____/| .__/|_|  |_|_| |_|\__, | |_|   \___|\__|  \____|_|_|_| |_|_|\___|  '
+echo '                 |_|                 |___/                                            '
 echo '                                                                                      '
 echo '                                   ____                                               '
 echo '                                  |  _ \  ___ _ __ ___   ___                          '
@@ -139,8 +139,8 @@ fi
 echo "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
 pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation > /dev/null 2>&1
 pb login
-pb project target ped-clinic-harbor > /dev/null 2>&1
-pb project delete ped-clinic-harbor > /dev/null 2>&1
+pb project target pet-clinic-harbor > /dev/null 2>&1
+pb project delete pet-clinic-harbor > /dev/null 2>&1
 
 
 exit
@@ -160,9 +160,9 @@ prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pa
 pb login
 echo ""
 
-prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic-harbor"
-execCmd "pb project target ped-clinic-harbor"
+prtHead "Create and select Project pet-clinic"
+execCmd "pb project create pet-clinic-harbor"
+execCmd "pb project target pet-clinic-harbor"
 
 prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
 execCmd "cat /tmp/harbor.yml"
@@ -180,7 +180,7 @@ execCmd "pb image list"
 sleep 10
 execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest -b 1 -f"
 
-prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
+prtText "Login in to Docker Repository on your local workstartion and run petclinic"
 prtText " => sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p pivotal"
 prtText " => sudo docker run -e \"SPRING_PROFILES_ACTIVE=prod\" -p 8080:8080 -t --name springboot-petclinic ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
 

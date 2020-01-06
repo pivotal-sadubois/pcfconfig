@@ -155,9 +155,9 @@ prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pa
 pb login
 echo ""
 
-prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic-harbor"
-execCmd "pb project target ped-clinic-harbor"
+prtHead "Create and select Project pet-clinic"
+execCmd "pb project create pet-clinic-harbor"
+execCmd "pb project target pet-clinic-harbor"
 
 prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
 execCmd "cat /tmp/harbor.yml"
@@ -176,7 +176,7 @@ execCmd "pb image list"
 sleep 10
 execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest -b 1 -f"
 
-prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
+prtText "Login in to Docker Repository on your local workstartion and run petclinic"
 prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_TILE_HARBOR_ADMIN_USER -p $PCF_TILE_HARBOR_ADMIN_PASS"
 prtText " => sudo docker run -e \"SPRING_PROFILES_ACTIVE=prod\" -p 8080:8080 -t --name springboot-petclinic ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
 
