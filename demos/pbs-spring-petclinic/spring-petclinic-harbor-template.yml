@@ -7,4 +7,4 @@ build:
   - name: BP_JAVA_VERSION
     value: 8
 image:
-  tag: harbor.awspks.pcfsdu.com/library/spring-petclinic
+  tag: harbor.XXXDOMAINXXX/library/spring-petclinic
