@@ -21,8 +21,8 @@ if [ -f ~/.pcfconfig ]; then
   . ~/.pcfconfig
 fi
 
-# --- LOAD CLOUD ENVIRONMENT ---
-dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
+HARBOR_REGISTRY=https://demo.goharbor.io
+HARBOR_REGISTRY=demo.goharbor.io
 
 # Created by /usr/local/bin/figlet
 clear
@@ -46,34 +46,43 @@ echo '                                    by Sacha Dubois, Pivotal Inc          
 echo '          ----------------------------------------------------------------------------'
 echo '                                                                                      '
 
-showK8sEnvironment
+prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_PBS_GOHARBOR_USER -p $PCF_PBS_GOHARBOR_PASS"
 
-if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
-  . /tmp/deployPCFenv_${PKS_ENNAME}
-fi
-
-if [ ! -f /usr/bin/pb ]; then 
-  echo "ERROR: The /usr/bin/pb utility is not installed, please optain it from network.pivotal.io"
+PB=$(which pb)
+if [ "$PB" == "" ]; then 
+  echo "ERROR: The pb utility is not installed, please optain it from network.pivotal.io"
   exit
 fi
 missing_variables=0
-if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+if [ "${PCF_PBS_GOHARBOR_USER}" == "" -o "${PCF_PBS_GOHARBOR_PASS}" == "" -a "${PCF_PBS_GOHARBOR_PROJ}" == "" ]; then
   missing_variables=1
   echo ""
   echo "  MISSING ENVIRONMENT-VARIABES  DESCRIPTION        "
   echo "  --------------------------------------------------------------------------------------------------------------"
 
-  if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
+  if [ "${PCF_PBS_GOHARBOR_USER}" == "" ]; then
+    echo "  PCF_TILE_HARBOR_ADMIN_USER    (required) Harbor Administrator User"
+  fi
+
+  if [ "${PCF_PBS_GOHARBOR_PASS}" == "" ]; then
     echo "  PCF_TILE_HARBOR_ADMIN_PASS    (required) Harbor Administrator Password"
   fi
+
+  if [ "${PCF_PBS_GOHARBOR_PROJ}" == "" ]; then
+    echo "  PCF_TILE_HARBOR_ADMIN_PROJ    (required) Harbor Project"
+  fi
+
+  echo ""
+  echo "  A user account for the hosted harbor registry (https://$HARBOR_REGISTRY) can be optained under the"
+  echo "  following link: https://github.com/goharbor/harbor/blob/master/docs/demo_server.md"
 else
   messageTitle "Pivotal Container Platform (Harbor)"
-  messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
-  messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
+  messagePrint " - Harbor Administrator User"     "$PCF_PBS_GOHARBOR_USER"
+  messagePrint " - Harbor Administrator Password" "$PCF_PBS_GOHARBOR_PASS"
   echo ""
 fi
 
-if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
+if [ "${PCF_PBS_CFAPP_USER}" == "" -o "${PCF_PBS_CFAPP_PASS}" == "" -o "${PCF_TILE_PBS_DOCKER_REPO}" == "" -o \
      "${PCF_TILE_PBS_DOCKER_USER}" == "" -o "${PCF_TILE_PBS_DOCKER_PASS}" == "" -o "${PCF_TILE_PBS_GITHUB_REPO}" == "" -o \
      "${PCF_TILE_PBS_GITHUB_USER}" == "" -o "${PCF_TILE_PBS_GITHUB_PASS}" == "" ]; then
   missing_variables=1
@@ -81,12 +90,12 @@ if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o
   echo "  MISSING ENVIRONMENT-VARIABES  DESCRIPTION        "
   echo "  --------------------------------------------------------------------------------------------------------------"
 
-  if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" ]; then
-    echo "  PCF_TILE_PBS_ADMIN_USER       (required) PBS Administrator User"
+  if [ "${PCF_PBS_CFAPP_USER}" == "" ]; then
+    echo "  PCF_PBS_CFAPP_USER            (required) PBS Administrator User"
   fi
 
-  if [ "${PCF_TILE_PBS_ADMIN_PASS}" == "" ]; then
-    echo "  PCF_TILE_PBS_ADMIN_PASS       (required) PBS Administrator Password"
+  if [ "${PCF_PBS_CFAPP_PASS}" == "" ]; then
+    echo "  PCF_PBS_CFAPP_PASS            (required) PBS Administrator Password"
   fi
 
   if [ "${PCF_TILE_PBS_DOCKER_REPO}" == "" ]; then
@@ -115,9 +124,8 @@ if [ "${PCF_TILE_PBS_ADMIN_USER}" == "" -o "${PCF_TILE_PBS_ADMIN_PASS}" == "" -o
   echo ""
 else
   messageTitle "Pivotal Container Platform (PBS)"
-  messagePrint " - PBS Version"                "$PCF_TILE_PBS_VERSION"
-  messagePrint " - PBS Administrator User"     "$PCF_TILE_PBS_ADMIN_USER"
-  messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
+  messagePrint " - PBS Administrator User"     "$PCF_PBS_CFAPP_USER"
+  messagePrint " - PBS Administrator Password" "$PCF_PBS_CFAPP_PASS"
   messagePrint " - Docker Repository Name"     "$PCF_TILE_PBS_DOCKER_REPO"
   messagePrint " - Docker Repository User"     "$PCF_TILE_PBS_DOCKER_USER"
   messagePrint " - Docker Repository Password" "$PCF_TILE_PBS_DOCKER_PASS"
@@ -136,32 +144,38 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
-PCF_TILE_HARBOR_ADMIN_USER=ssdubois
-PCF_TILE_HARBOR_ADMIN_PASS=00Penwin
-PCF_TILE_PBS_ADMIN_USER=sdubois
-PCF_TILE_PBS_ADMIN_PASS=kindalarm71
-HARBOR_REGISTRY=https://demo.goharbor.io
-HARBOR_REGISTRY=demo.goharbor.io
-HARBOR_PROJECT=library
-
 echo "registry: $HARBOR_REGISTRY"             >  /tmp/harbor.yml
-echo "username: $PCF_TILE_HARBOR_ADMIN_USER"  >> /tmp/harbor.yml
-echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
+echo "username: $PCF_PBS_GOHARBOR_USER"       >> /tmp/harbor.yml
+echo "password: $PCF_PBS_GOHARBOR_PASS"       >> /tmp/harbor.yml
 
 echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
 echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
+PB_LOGIN_REQUIRED=0
+PB_API_TARGET=https://pbs.picorivera.cf-app.com
+PB_API_CURRENT=$(pb api get 2>/dev/null | awk '{ print $NF }') 
+[ "${PB_API_CURRENT}" != "${PB_API_TARGET}" ] && PB_LOGIN_REQUIRED=1
+
+# --- CHECK IF LOGGED IN --
+pb image list > /dev/null 2>&1
+[ $? -ne 0 ] && PB_LOGIN_REQUIRED=1
+
 prtHead "Set API Target for Pivotal Build Service (PBS)"
-execCmd "pb api set https://pbs.picorivera.cf-app.com --skip-ssl-validation"
+execCmd "pb api set $PB_API_TARGET --skip-ssl-validation"
 
-prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
-pb login
-echo ""
+if [ $PB_LOGIN_REQUIRED -eq 1 ]; then 
+  prtHead "Login to the Pivotal Build Service as '$PCF_PBS_CFAPP_USER' and pawword '$PCF_PBS_CFAPP_PASS'"
+  pb login
+  echo ""
+fi
 
-prtHead "Create and select Project ped-clinic"
-execCmd "pb project create ped-clinic-harbor"
-execCmd "pb project target ped-clinic-harbor"
+prtHead "Create and select Project pet-clinic"
+tgt=$(pb project target | egrep "Currently targeting" | sed -e "s/'//g" -e 's/\.//g'| awk '{ print $3 }')
+if [ "${tgt}" != "pet-clinic-harbor" ]; then 
+  execCmd "pb project create pet-clinic-harbor"
+fi
+execCmd "pb project target pet-clinic-harbor"
 
 prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
 execCmd "cat /tmp/harbor.yml"
@@ -171,7 +185,7 @@ prtHead "Add screts for Docker Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-sed -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" -e "s/YYYREPOYYY/${HARBOR_PROJECT}/g" \
+sed -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" -e "s/YYYREPOYYY/${PCF_PBS_GOHARBOR_PROJ}/g" \
     spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml
 
 prtHead "Create Image (spring-petclinic-harbor.yml)"
@@ -181,8 +195,8 @@ execCmd "pb image list"
 sleep 10
 execCmd "pb image logs ${HARBOR_REGISTRY}/sadubois/spring-petclinic:latest -b 1 -f"
 
-prtText "Login in to Docker Repository on your local workstartion and run pedclinic"
-prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_TILE_HARBOR_ADMIN_USER -p $PCF_TILE_HARBOR_ADMIN_PASS"
+prtText "Login in to Docker Repository on your local workstartion and run petclinic"
+prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_PBS_GOHARBOR_USER -p $PCF_PBS_GOHARBOR_PASS"
 prtText " => sudo docker run -e \"SPRING_PROFILES_ACTIVE=prod\" -p 8080:8080 -t --name springboot-petclinic ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
 
 
