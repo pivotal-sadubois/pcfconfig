@@ -163,6 +163,7 @@ prtHead "Add screts for Docker Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
+sed "s/XXXDOMAINXX/${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/g" spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml
 prtHead "Create Image (spring-petclinic-harbor.yml)"
 execCmd "cat spring-petclinic-harbor.yml"
 execCmd "pb image apply -f spring-petclinic-harbor.yml"
