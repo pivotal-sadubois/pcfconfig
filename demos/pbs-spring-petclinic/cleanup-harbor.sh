@@ -69,7 +69,7 @@ if [ "${PCF_TILE_HARBOR_ADMIN_PASS}" == "" ]; then
 else
   messageTitle "Pivotal Container Platform (Harbor)"
   messagePrint " - Harbor Version"                "$PCF_TILE_HARBOR_VERSION"
-  messagePrint " - Harbor Administrator Password" "$PCF_TILE_HARBOR_ADMIN_PASS"
+  messagePrint " - Harbor Administrator Password" "##########"
   echo ""
 fi
 
@@ -117,13 +117,13 @@ else
   messageTitle "Pivotal Container Platform (PBS)"
   messagePrint " - PBS Version"                "$PCF_TILE_PBS_VERSION"
   messagePrint " - PBS Administrator User"     "$PCF_TILE_PBS_ADMIN_USER"
-  messagePrint " - PBS Administrator Password" "$PCF_TILE_PBS_ADMIN_PASS"
+  messagePrint " - PBS Administrator Password" "##########"
   messagePrint " - Docker Repository Name"     "$PCF_TILE_PBS_DOCKER_REPO"
   messagePrint " - Docker Repository User"     "$PCF_TILE_PBS_DOCKER_USER"
-  messagePrint " - Docker Repository Password" "$PCF_TILE_PBS_DOCKER_PASS"
+  messagePrint " - Docker Repository Password" "##########"
   messagePrint " - GitHub Repository Name"     "$PCF_TILE_PBS_GITHUB_REPO"
   messagePrint " - GitHub Repository User"     "$PCF_TILE_PBS_GITHUB_USER"
-  messagePrint " - GitHub Repository Password" "$PCF_TILE_PBS_GITHUB_PASS"
+  messagePrint " - GitHub Repository Password" "##########"
   echo ""
 fi
 
@@ -136,15 +136,6 @@ if [ ${missing_variables} -eq 1 ]; then
   exit 1
 fi
 
-echo "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
-pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation > /dev/null 2>&1
-pb login
-pb project target pet-clinic-harbor > /dev/null 2>&1
-pb project delete pet-clinic-harbor > /dev/null 2>&1
-
-
-exit
-
 echo "registry: harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"    >  /tmp/harbor.yml
 echo "username: admin"                        >> /tmp/harbor.yml
 echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
@@ -156,20 +147,26 @@ echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 prtHead "Set API Target for Pivotal Build Service (PBS)"
 execCmd "pb api set https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME --skip-ssl-validation"
 
-prtHead "Login to the Pivotal Build Service as '$PCF_TILE_PBS_ADMIN_USER' and pawword '$PCF_TILE_PBS_ADMIN_PASS'"
-pb login
-echo ""
+pb image list > /dev/null 2>&1
+if [ $? -ne 0 ]; then 
+  prtHead "Login to the Pivotal Build Service as '$PCF_PBS_CFAPP_USER' and pawword '$PCF_PBS_CFAPP_PASS'"
+  pb login
+  echo ""
+fi
 
 prtHead "Create and select Project pet-clinic"
-execCmd "pb project create pet-clinic-harbor"
+tgt=$(pb project target | egrep "Currently targeting" | sed -e "s/'//g" -e 's/\.//g'| awk '{ print $3 }')
+if [ "${tgt}" != "pet-clinic-harbor" ]; then
+  execCmd "pb project create pet-clinic-harbor"
+fi
 execCmd "pb project target pet-clinic-harbor"
 
 prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
-execCmd "cat /tmp/harbor.yml"
+execCmd "cat /tmp/harbor.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/harbor.yml"
 
 prtHead "Add screts for Docker Registry from (/tmp/github.yml)" 
-execCmd "cat /tmp/github.yml"
+execCmd "cat /tmp/github.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
 sed "s/XXXDOMAINXX/${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/g" spring-petclinic-harbor-template.yml > spring-petclinic-harbor.yml

@@ -78,7 +78,7 @@ if [ "${PCF_PBS_GOHARBOR_USER}" == "" -o "${PCF_PBS_GOHARBOR_PASS}" == "" -a "${
 else
   messageTitle "Pivotal Container Platform (Harbor)"
   messagePrint " - Harbor Administrator User"     "$PCF_PBS_GOHARBOR_USER"
-  messagePrint " - Harbor Administrator Password" "$PCF_PBS_GOHARBOR_PASS"
+  messagePrint " - Harbor Administrator Password" "##########"
   echo ""
 fi
 
@@ -125,13 +125,13 @@ if [ "${PCF_PBS_CFAPP_USER}" == "" -o "${PCF_PBS_CFAPP_PASS}" == "" -o "${PCF_TI
 else
   messageTitle "Pivotal Container Platform (PBS)"
   messagePrint " - PBS Administrator User"     "$PCF_PBS_CFAPP_USER"
-  messagePrint " - PBS Administrator Password" "$PCF_PBS_CFAPP_PASS"
+  messagePrint " - PBS Administrator Password" "##########"
   messagePrint " - Docker Repository Name"     "$PCF_TILE_PBS_DOCKER_REPO"
   messagePrint " - Docker Repository User"     "$PCF_TILE_PBS_DOCKER_USER"
-  messagePrint " - Docker Repository Password" "$PCF_TILE_PBS_DOCKER_PASS"
+  messagePrint " - Docker Repository Password" "##########"
   messagePrint " - GitHub Repository Name"     "$PCF_TILE_PBS_GITHUB_REPO"
   messagePrint " - GitHub Repository User"     "$PCF_TILE_PBS_GITHUB_USER"
-  messagePrint " - GitHub Repository Password" "$PCF_TILE_PBS_GITHUB_PASS"
+  messagePrint " - GitHub Repository Password" "##########"
   echo ""
 fi
 
@@ -178,11 +178,11 @@ fi
 execCmd "pb project target pet-clinic-harbor"
 
 prtHead "Add screts for Harbor Registry from (/tmp/harbor.yml)" 
-execCmd "cat /tmp/harbor.yml"
+execCmd "cat /tmp/harbor.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/harbor.yml"
 
 prtHead "Add screts for Docker Registry from (/tmp/github.yml)" 
-execCmd "cat /tmp/github.yml"
+execCmd "cat /tmp/github.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
 sed -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" -e "s/YYYREPOYYY/${PCF_PBS_GOHARBOR_PROJ}/g" \
