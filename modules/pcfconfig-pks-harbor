@@ -486,9 +486,9 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
 
       messagePrint " - Creating Firewall Rule (https-harbor)" "tcp/443"
       gcloud compute firewall-rules create ${PCF_DEPLOYMENT_ENV_NAME}-https-harbor --network ${PCF_DEPLOYMENT_ENV_NAME}-pcf-network \
-          --target-tags https --source-ranges "0.0.0.0/0" --allow=tcp:443
+          --target-tags ${PCF_DEPLOYMENT_ENV_NAME}-https-harbor --source-ranges "0.0.0.0/0" --allow=tcp:443 > /dev/null 2>&1
       if [ $? -ne 0 ]; then
-        echo "ERROR: failled to create firewall rule (https-harbor)"
+        echo "ERROR: failled to create firewall rule (${PCF_DEPLOYMENT_ENV_NAME}-https-harbor)"
         echo "       => gcloud compute firewall-rules create ${PCF_DEPLOYMENT_ENV_NAME}-https-harbor --target-tags https-harbor \\"
         echo "            --network ${PCF_DEPLOYMENT_ENV_NAME}-pcf-network --source-ranges "0.0.0.0/0" --allow=tcp:443"
         exit 1
