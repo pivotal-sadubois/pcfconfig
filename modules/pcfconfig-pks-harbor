@@ -484,13 +484,21 @@ if [ "${PCF_DEPLOYMENT_CLOUD}" == "GCP" ]; then
         exit 1
       fi
 
-      messagePrint " - Adding Network Tag (https-server)" "$ins"
-echo "gcloud compute instances add-tags $ins --zone $zone --tags \"https-server\""
+      messagePrint " - Creating Firewall Rule (https-harbor)" "tcp/443"
+      gcloud compute firewall-rules create https-harbor --network $${PCF_DEPLOYMENT_ENV_NAME}-pcf-network \
+          --target-tags https --source-ranges "0.0.0.0/0" --allow=tcp:443
+      if [ $? -ne 0 ]; then
+        echo "ERROR: failled to create firewall rule (https-harbor)"
+        echo "       => gcloud compute firewall-rules create https-harbor --target-tags https-harbor \\"
+        echo "            --network $${PCF_DEPLOYMENT_ENV_NAME}-pcf-network --source-ranges "0.0.0.0/0" --allow=tcp:443"
+        exit 1
+      fi
 
-      gcloud compute instances add-tags $ins --zone $zone --tags "https-server" > /dev/null 2>&1
+      messagePrint " - Adding Network Tag (https-harbor)" "$ins"
+      gcloud compute instances add-tags $ins --zone $zone --tags "https-harbor" > /dev/null 2>&1
       if [ $? -ne 0 ]; then
         echo "ERROR: failled to add network tag (https-server) to VM $ins"
-        echo "       => gcloud compute instances add-tags $ins --zone $zone --tags 'https-server'"
+        echo "       => gcloud compute instances add-tags $ins --zone $zone --tags 'https-harbor'"
         exit 1
       fi
     done
