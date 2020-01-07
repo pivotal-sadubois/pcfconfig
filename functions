@@ -937,13 +937,13 @@ installJumpHost() {
   ##############################################################################################
 
   CERTS_GENERATE_NEW=false
+  domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
   if [ -d $PCFPATH/certificates/$domain -a -f $PCFPATH/certificates/$domain/privkey.pem ]; then
     messageTitle "Install Certificate for domain ($domain)"
     $SCP_COMMAND $PCFPATH/certificates/$domain/* ${SSH_USER}@${SSH_HOST}:~/pcfconfig/certificates > /dev/null 2>&1
   fi
 
   CERTS_INSTALLED=$($SSH_COMMAND -n "[ -f ~/pcfconfig/certificates/privkey.pem ] && echo true || echo false")
-  domain="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 
 echo "CERTS_INSTALLED:$CERTS_INSTALLED"
   if [ "${CERTS_INSTALLED}" == "true" ]; then
