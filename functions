@@ -577,6 +577,7 @@ installJumpHost() {
 
       gcloud compute instances create $INSTANCE_NAME \
         --zone=$ZONE \
+        --boot-disk-size 30GB \
         --image-family=$IMAGE_FAMILY \
         --image-project=ubuntu-os-cloud  \
         --maintenance-policy=TERMINATE \
