@@ -1,12 +1,13 @@
 # Demo Guide for Pivotal Build Service spring-petclinic
 
-
-build-petclinic-docker.sh
-build-petclinic-harbor.sh
-cleanup-harbor.sh
-deploy-goharbor.sh
-deploy-petclinic-harbor-k8s.sh
-deploy-petclinic-harbor-local.sh
+| Script | Description |
+| --- | --- |
+| Build_PetClinic_DockerReg.sh | PKS Build Service - Build the application with PBS Service and deploy the image to public Docker Registry |
+| Build_PetClinic_HarborReg.sh | PKS Build Service - Build the application with PBS Service and deploy the image to the Harbor Registry running on PKS|
+| Build_PetClinic_DockerReg_Hosted.sh | Hosted Build Service - Build the application with the Pivotal hosted PBS Service and deploy the image to Harbor Registry  |
+| Deploy_PetClinic_PKS.sh | staged |
+| Deploy_PetClinic_GKE.sh | staged |
+| Deploy_PetClinic_AKS.sh | staged |
 
 Short introduction to the demo and the prerequisites.
 
