@@ -1,10 +1,21 @@
 # Demo Guide for Pivotal Build Service spring-petclinic
 
+
+build-petclinic-docker.sh
+build-petclinic-harbor.sh
+cleanup-harbor.sh
+deploy-goharbor.sh
+deploy-petclinic-harbor-k8s.sh
+deploy-petclinic-harbor-local.sh
+
 Short introduction to the demo and the prerequisites.
+
+#Hi Matt, i would like demo the hosted PBS environment (pb api set https://pbs.picorivera.cf-app.com --skip-ssl-validation), is it possible to have an account there ?
 
 ## Prerequisites
 
 We recommend you create your own copy of the Spring Petclinic by forking the repository at `https://github.com/spring-projects/spring-petclinic`. This will allow you to make changes to the code and force a (re)build of the container image by simply commiting your changes to your master branch.
+- Requst access to the hosted Build Service (PBS) environment (https://pbs.picorivera.cf-app.com) by contacting Matthew Gibson by slack or email (mgibson@pivotal.io). 
 
 ## Image Rebuild by Config Change
 
