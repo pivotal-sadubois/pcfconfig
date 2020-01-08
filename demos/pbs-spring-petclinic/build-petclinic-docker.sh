@@ -168,8 +168,8 @@ echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
 echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
-export BUILD_SERVICE_USERNAME=$PCF_PBS_CFAPP_USER
-export BUILD_SERVICE_PASSWORD=$PCF_PBS_CFAPP_PASS
+export BUILD_SERVICE_USERNAME=$PCF_TILE_PBS_ADMIN_USER
+export BUILD_SERVICE_PASSWORD=$PCF_TILE_PBS_ADMIN_PASS
 PB_API_TARGET=https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME
 
 prtHead "Set API Target for Pivotal Build Service (PBS)"
@@ -178,7 +178,7 @@ execCmd "pb login"
 
 prtHead "Create and select Project pet-clinic"
 tgt=$(pb project target | egrep "Currently targeting" | sed -e "s/'//g" -e 's/\.//g'| awk '{ print $3 }')
-if [ "${tgt}" == "pet-clinic-docker" ]; then
+if [ "${tgt}" != "pet-clinic-docker" ]; then
   execCmd "pb project create pet-clinic-docker"
 fi
 execCmd "pb project target pet-clinic-docker"
@@ -191,7 +191,8 @@ prtHead "Add screts for Docker Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-sed -e "s/XXXDOMAINXXX/${PCF_TILE_PBS_DOCKER_REPO}/g" -e "s/YYYREPOYYY/${PCF_TILE_PBS_DOCKER_USER}/g" \
+sed -e "s+XXXGITREPOSITORYXXX+${PCF_TILE_PBS_DEMO_PETCLINIC}+g" -e "s/XXXDOMAINXXX/${PCF_TILE_PBS_DOCKER_REPO}/g" \
+    -e "s/YYYREPOYYY/${PCF_TILE_PBS_DOCKER_USER}/g" \
     files/spring-petclinic-docker-template.yml > /tmp/spring-petclinic-docker.yml
 
 prtHead "Create Image (/tmp/spring-petclinic-docker.yml)"

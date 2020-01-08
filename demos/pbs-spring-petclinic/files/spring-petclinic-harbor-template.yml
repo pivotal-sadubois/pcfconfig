@@ -1,0 +1,10 @@
+source:
+  git:
+    url: XXXGITREPOSITORYXXX
+    revision: master
+build:
+  env:
+  - name: BP_JAVA_VERSION
+    value: 11
+image:
+  tag: XXXDOMAINXXX/YYYREPOYYY/spring-petclinic:latest

@@ -1,0 +1,27 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+ annotations:
+   kubernetes.io/ingress.class: nginx
+ name: spring-petclinic-ingress
+spec:
+ rules:
+ - host: spring-petclinic.DOMAIN
+   http:
+     paths:
+     - backend:
+         serviceName: spring-petclinic
+         servicePort: 8080
+
+ tls:
+ - hosts:
+   - spring-petclinic.DOMAIN
+   secretName: spring-petclinic-certs
+---
+kind: Secret
+metadata:
+ name: spring-petclinic-certs
+type: Opaque
+apiVersion: v1
+data:

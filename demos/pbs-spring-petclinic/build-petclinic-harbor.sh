@@ -173,7 +173,7 @@ HARBOR_REGISTRY="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 HARBOR_PROJECT=library
 PCF_TILE_HARBOR_ADMIN_USER=admin
 
-echo "registry: ${HARBOR_PROJECT}"            >  /tmp/harbor.yml
+echo "registry: ${HARBOR_REGISTRY}"            >  /tmp/harbor.yml
 echo "username: $PCF_TILE_HARBOR_ADMIN_USER"  >> /tmp/harbor.yml
 echo "password: $PCF_TILE_HARBOR_ADMIN_PASS"  >> /tmp/harbor.yml
 
@@ -181,8 +181,8 @@ echo "registry: $PCF_TILE_PBS_GITHUB_REPO"    >  /tmp/github.yml
 echo "username: $PCF_TILE_PBS_GITHUB_USER"    >> /tmp/github.yml
 echo "password: $PCF_TILE_PBS_GITHUB_PASS"    >> /tmp/github.yml
 
-export BUILD_SERVICE_USERNAME=$PCF_PBS_CFAPP_USER
-export BUILD_SERVICE_PASSWORD=$PCF_PBS_CFAPP_PASS
+export BUILD_SERVICE_USERNAME=$PCF_TILE_PBS_ADMIN_USER
+export BUILD_SERVICE_PASSWORD=$PCF_TILE_PBS_ADMIN_PASS
 PB_API_TARGET=https://build-service.apps-${PKS_CLNAME}.$PKS_ENNAME
 
 prtHead "Set API Target for Pivotal Build Service (PBS)"
@@ -191,7 +191,7 @@ execCmd "pb login"
 
 prtHead "Create and select Project pet-clinic"
 tgt=$(pb project target | egrep "Currently targeting" | sed -e "s/'//g" -e 's/\.//g'| awk '{ print $3 }')
-if [ "${tgt}" == "pet-clinic-harbor" ]; then
+if [ "${tgt}" != "pet-clinic-harbor" ]; then
   execCmd "pb project create pet-clinic-harbor"
 fi
 execCmd "pb project target pet-clinic-harbor"
@@ -204,18 +204,24 @@ prtHead "Add screts for Docker Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-sed -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" -e "s/YYYREPOYYY/${HARBOR_PROJECT}/g" \
-    spring-petclinic-harbor-template.yml > /tmp/spring-petclinic-harbor.yml
+sed -e "s+XXXGITREPOSITORYXXX+${PCF_TILE_PBS_DEMO_PETCLINIC}+g" -e "s/XXXDOMAINXXX/${HARBOR_REGISTRY}/g" \
+    -e "s/YYYREPOYYY/${HARBOR_PROJECT}/g" \
+    files/spring-petclinic-harbor-template.yml > /tmp/spring-petclinic-harbor.yml
+
 prtHead "Create Image (/tmp/spring-petclinic-harbor.yml)"
 execCmd "cat /tmp/spring-petclinic-harbor.yml"
 execCmd "pb image apply -f /tmp/spring-petclinic-harbor.yml"
+sleep 7
 execCmd "pb image list"
-sleep 10
-execCmd "pb image logs harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/spring-petclinic:latest -b 1 -f"
+execCmd "pb image builds ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/spring-petclinic:latest"
 
-prtText "Login in to Docker Repository on your local workstartion and run petclinic"
-prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_TILE_HARBOR_ADMIN_USER -p $PCF_TILE_HARBOR_ADMIN_PASS"
-prtText " => sudo docker run -e \"SPRING_PROFILES_ACTIVE=prod\" -p 8080:8080 -t --name springboot-petclinic ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
+bld=$(pb image builds ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/spring-petclinic:latest | \
+      sed '/^$/d' | tail -1 | awk '{ print $1 }') 
+execCmd "pb image logs ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/spring-petclinic:latest -b $bld -f"
+
+#prtText "Login in to Docker Repository on your local workstartion and run petclinic"
+#prtText " => sudo docker login ${HARBOR_REGISTRY} -u $PCF_TILE_HARBOR_ADMIN_USER -p $PCF_TILE_HARBOR_ADMIN_PASS"
+#prtText " => sudo docker run -e \"SPRING_PROFILES_ACTIVE=prod\" -p 8080:8080 -t --name springboot-petclinic ${PCF_TILE_PBS_DOCKER_REPO}/${PCF_TILE_PBS_DOCKER_USER}/spring-petclinic:latest"
 
 
 exit
