@@ -4,9 +4,8 @@ The following table shows the demo scripts available with a short description.
 
 | Script | Description |
 | --- | --- |
-| Build_PetClinic_DockerReg.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the public Docker Registry (index.docker.io). This demo requires a PKS cluster deployed (deplyoPCF) including PBS Build Service and an account on docker.io account. |
+| Build_PetClinic_DockerReg.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the public Docker Registry (index.docker.io). This demo requires a PKS cluster deployed (deplyoPCF) including PBS Build Service and an account on docker.io account |
 | Build_PetClinic_HarborReg.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the Harbor Registry. This demo requires a PKS cluster deployed (deplyoPCF) with PBS Build Service and Harbor Registry deployed. |
-quires a PKS cluster deployed (deplyoPCF) with PBS Build Service and Harbor Registry deployed |
 | Build_PetClinic_HarborReg_Hosted.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the Harbor Registry hosted by Pivotal. This demo does not requires a PKS cluster deployed but an account for the Build Service (https://pbs.picorivera.cf-app.com), see the prerequisists |
 | Deploy_PetClinic_PKS.sh | Deploy the build PetClinic docker container as Kubernets project on PKS cluster deployed by deplyoPCF |
 | Deploy_PetClinic_GKE.sh | Deploy the build PetClinic docker container as Kubernets project on Google Kubernetes Engine (GKE) |
