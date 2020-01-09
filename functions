@@ -31,6 +31,63 @@ verifyEnvVariables() {
 a=1
 }
 
+# --------------------------------------------------------------------------------------------
+# Function: ....: harborAPIuserAdd
+# Description ..: Create a User on Harbor if it does note yet exist
+# Author .......: Sacha Dubois, Pivotal
+# --------------------------------------------------------------------------------------------
+# Args:       #1: Service Name (string)
+#             #2: SpaceId
+#             #3: Tags (String-1, String-2, String-x)
+# --------------------------------------------------------------------------------------------
+# Return:       : 0 - ok, 1 - nok
+# --------------------------------------------------------------------------------------------
+harborAPIuserAdd() {
+  HARBOR_URL=https://demo.goharbor.io/harbor/projects
+  HARBOR_SERVER=$1
+  HARBOR_USER=$2
+  HARBOR_PASS=$3
+  HARBOR_EMAIL=$4
+  HARBOR_FIRST_NAME=$5
+  HARBOR_LAST_NAME=$6
+
+HARBOR_SERVER=harbor.azpks.pcfsdu.com
+
+token=$(curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+
+curl -i -k -u "admin:pivotal" -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users" -d '{"user_id":4,"username": "user1", "email": "user1@mycompany.local", "password": "01234530c02590d88285704369964daa", "realname": "User1", "comment": "N/A", "deleted": 0, "role_name": "", "role_id": 0, "has_admin_role": 0, "reset_uuid": "", "creation_time": "2018-03-21T11:33:50Z", "update_time": "2018-03-21T11:33:50Z"}'
+
+exit
+curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users" -d '{"user_id":4,"username": "user1", "email": "user1@mycompany.local", "password": "01234530c02590d88285704369964daa", "realname": "User1", "comment": "N/A", "deleted": 0, "role_name": "", "role_id": 0, "has_admin_role": 0, "reset_uuid": "", "creation_time": "2018-03-21T11:33:50Z", "update_time": "2018-03-21T11:33:50Z"}'
+
+curl -u admin:pivotal -i -k -X GET "https://$HARBOR_SERVER/api/users"
+
+exit
+  token=$(curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+
+curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/users"
+
+curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/api/users"
+
+exit
+
+#curl -u admin:password -i -k -X GET "https://$HARBOR_SERVER/api/users?username=sadubois"
+#curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/projects"
+#exit
+
+  token=$(curl -k "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+
+echo "TOKEN:$token"
+echo "HARBOR_USER:$HARBOR_USER"
+echo "HARBOR_PASS:$HARBOR_PASS"
+
+curl -u admin:pivotal -i -k -X GET "https://$HARBOR_SERVER/api/users?username=sadubois"
+exit
+curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/projects"
+#curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users"
+curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/systeminfo"
+}
+
 debugInfos() {
   MASK=$1
 
@@ -354,7 +411,8 @@ sshEnvironment() {
     SSH_USER=ubuntu
     SSH_HOME=/home/ubuntu
     SSH_HOST=$pip
-    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=30"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no -o RequestTTY=yes -o ServerAliveInterval=240 -o ClientAliveInterval=240"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no"
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
@@ -533,22 +591,17 @@ installJumpHost() {
 #pppppppp installJump Middle
     pip=""
     while [ "$pip" == "" -o "$pip" == "null" ]; do
-echo gagagagaga
       pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | \
             jq -r '.[].ipAddress')
       sleep 10
     done
 
-echo "1 functions: pip:$pip"
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
-
-echo "2 functions: pip:$pip aip:$aip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
 
     # --- UPDATE DNS DOMAIN ---
     if [ "${pip}" != "${aip}" ]; then 
       messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
-      messagePrint " - 2Updating Zone Record for ($JUMP_HOST)" "$pip"
-echo "xx functions: pip:$pip"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
       route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
 #nnnnnnnnnnn
 
@@ -819,7 +872,7 @@ echo "xx functions: pip:$pip"
       ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name ${AWS_HOSTED_DNS_DOMAIN} | jq -r '.HostedZones[0].Id')
       ZONE_ID_STR=$(echo "${ZONE_ID}" | awk -F'/' '{ print $NF }')
       messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
-      messagePrint " - 3Updating Zone Record for ($JUMP_HOST)" "$pip"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
 
       # --- UPDATE DNS DOMAIN ---
       route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
@@ -846,7 +899,7 @@ echo "xx functions: pip:$pip"
       if [ "${pip}" != "${aip}" ]; then
         # --- UPDATE DNS DOMAIN ---
         messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
-        messagePrint " - 4Updating Zone Record for ($JUMP_HOST)" "$pip"
+        messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
         route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
       fi
     fi
@@ -1108,7 +1161,7 @@ startJumpHost() {
 
       # --- UPDATE DNS DOMAIN ---
       messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
-      messagePrint " - 5Updating Zone Record for ($JUMP_HOST)" "$pip"
+      messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
       route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
     fi
 
@@ -1135,12 +1188,9 @@ startJumpHost() {
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
 
-echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-echo "functions: PIP:$pip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-
     # --- UPDATE DNS DOMAIN ---
     messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
-    messagePrint " - 1Updating Zone Record for ($JUMP_HOST)" "$pip"
+    messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
     route53setDNSrecord "$pip" "$JUMP_HOST" "$AWS_HOSTED_DNS_DOMAIN"
 
     SSH_USER=ubuntu
@@ -1328,8 +1378,6 @@ route53setDNSrecord() {
     echo "       aws route53 list-hosted-zones-by-name --dns-name ${dom}"
     exit 1
   fi
-
-echo "functions: IPA:$ipa"
 
 cat << EOF | sed -e "s/FQHN/$hnm/g" -e "s/IPADDR/$ipa/g" > /tmp/$$_zone_record
 {
