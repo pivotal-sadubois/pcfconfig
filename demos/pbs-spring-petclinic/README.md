@@ -1,22 +1,23 @@
 # Demo Guide for Pivotal Build Service spring-petclinic
 
-| Script | Environment | Description |
-| --- | --- | --- |
-| Build_PetClinic_DockerReg.sh | PKS Build Service | Build the application with PBS Service and deploy the image to public Docker Registry |
-| Build_PetClinic_HarborReg.sh | PKS Build Service | Build the application with PBS Service and deploy the image to the Harbor Registry running on PKS|
-| Build_PetClinic_DockerReg_Hosted.sh | Hosted Build Service | Build the application with the Pivotal hosted PBS Service and deploy the image to Harbor Registry  |
-| Deploy_PetClinic_PKS.sh | staged |
-| Deploy_PetClinic_GKE.sh | staged |
-| Deploy_PetClinic_AKS.sh | staged |
+The following table shows the demo scripts available with a short description.
 
-Short introduction to the demo and the prerequisites.
-
-#Hi Matt, i would like demo the hosted PBS environment (pb api set https://pbs.picorivera.cf-app.com --skip-ssl-validation), is it possible to have an account there ?
+| Script | Description |
+| --- | --- |
+| Build_PetClinic_DockerReg.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the public Docker Registry (index.docker.io). This demo requires a PKS cluster deployed (deplyoPCF) including PBS Build Service and an account on docker.io account. |
+| Build_PetClinic_HarborReg.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the Harbor Registry. This demo requires a PKS cluster deployed (deplyoPCF) with PBS Build Service and Harbor Registry deployed. |
+quires a PKS cluster deployed (deplyoPCF) with PBS Build Service and Harbor Registry deployed |
+| Build_PetClinic_HarborReg_Hosted.sh | Build the application with the Pivotal Build Service (PBS) and deploy the container to the Harbor Registry hosted by Pivotal. This demo does not requires a PKS cluster deployed but an account for the Build Service (https://pbs.picorivera.cf-app.com), see the prerequisists |
+| Deploy_PetClinic_PKS.sh | Deploy the build PetClinic docker container as Kubernets project on PKS cluster deployed by deplyoPCF |
+| Deploy_PetClinic_GKE.sh | Deploy the build PetClinic docker container as Kubernets project on Google Kubernetes Engine (GKE) |
+| Deploy_PetClinic_AKS.sh | Deploy the build PetClinic docker container as Kubernets project on Azure Kubernetes Service (AKS) |
 
 ## Prerequisites
 
-We recommend you create your own copy of the Spring Petclinic by forking the repository at `https://github.com/spring-projects/spring-petclinic`. This will allow you to make changes to the code and force a (re)build of the container image by simply commiting your changes to your master branch.
-- Requst access to the hosted Build Service (PBS) environment (https://pbs.picorivera.cf-app.com) by contacting Matthew Gibson by slack or email (mgibson@pivotal.io). 
+As a prerequisites to run the demos it's required to have the following steps completed
+- deploy (with deployPCF) a PKS environment with Harbor Registry and Pivotal Build Service (PBS) on your favorite Cloud
+- requst access to the hosted Build Service (PBS) environment (https://pbs.picorivera.cf-app.com) by contacting Matthew Gibson by slack or email (mgibson@pivotal.io). 
+- forking the repository at `https://github.com/spring-projects/spring-petclinic` into your GitHub spaces to make changes to the code and force a (re)build of the container image by simply commiting your changes to your master branch.
 
 ## Image Rebuild by Config Change
 
