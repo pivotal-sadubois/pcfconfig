@@ -1,6 +1,6 @@
 # Demo Guide for Pivotal Build Service spring-petclinic
 
-The following table shows the demo scripts available with a short description.
+This demo demonstrates to capability of building an application with the Pivotal Build Service (PKS) shown on the Spring Boot application Spring PetClinic. The different demo scripts allows to deploy the containers eather to Docker Hub or the Harbor Registry. The Deploy scripts can be used as an addon to demonstrate how to deploy PedClinic as a Kubernetes bassed application on PKS, AKS or GKE environments. The following table shows the demo scripts available with a short description.
 
 | Script | Description |
 | --- | --- |
