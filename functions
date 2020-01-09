@@ -1130,7 +1130,7 @@ startJumpHost() {
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
 
-echo "
+echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
 echo "functions: PIP:$pip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
 
     # --- UPDATE DNS DOMAIN ---
