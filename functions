@@ -1130,6 +1130,9 @@ startJumpHost() {
 
     pip=$(az network public-ip list -g Admin --query "[?contains(name, 'AdminPublicIP_$PCF_DEPLOYMENT_ENV_NAME')]" | jq -r '.[].ipAddress')
 
+echo "
+echo "functions: PIP:$pip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
+
     # --- UPDATE DNS DOMAIN ---
     messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN}:" "zone managed by route53"
     messagePrint " - Updating Zone Record for ($JUMP_HOST)" "$pip"
@@ -1320,6 +1323,8 @@ route53setDNSrecord() {
     echo "       aws route53 list-hosted-zones-by-name --dns-name ${dom}"
     exit 1
   fi
+
+echo "functions: IPA:$ipa"
 
 cat << EOF | sed -e "s/FQHN/$hnm/g" -e "s/IPADDR/$ipa/g" > /tmp/$$_zone_record
 {
