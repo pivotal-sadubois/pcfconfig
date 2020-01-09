@@ -540,6 +540,8 @@ installJumpHost() {
 
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
 
+echo "functions: pip:$pip aip:$aip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
+
     # --- UPDATE DNS DOMAIN ---
     if [ "${pip}" != "${aip}" ]; then 
       messagePrint " - DNS Zone (${AWS_HOSTED_DNS_DOMAIN})" "zone managed by route53"
