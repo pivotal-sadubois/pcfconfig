@@ -138,7 +138,8 @@ product-properties:
 #  .properties.uaa_oidc:
 #    value: false
   .properties.uaa_pks_cli_access_token_lifetime:
-    value: 600
+#    value: 600
+    value: 21600
   .properties.uaa_pks_cli_refresh_token_lifetime:
     value: 21600
   .properties.wavefront:
