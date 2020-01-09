@@ -538,9 +538,10 @@ installJumpHost() {
       sleep 10
     done
 
+echo "1 functions: pip:$pip"
     aip=$(route53getIPaddress $PCF_DEPLOYMENT_ENV_NAME $AWS_HOSTED_DNS_DOMAIN)
 
-echo "functions: pip:$pip aip:$aip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
+echo "2 functions: pip:$pip aip:$aip PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
 
     # --- UPDATE DNS DOMAIN ---
     if [ "${pip}" != "${aip}" ]; then 
