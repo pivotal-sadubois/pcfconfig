@@ -249,6 +249,30 @@ fi
 ################################# CREATE STOAGE CLASS ########################################
 ##############################################################################################
 
+if [ "$PCF_DEPLOYMENT_CLOUD" == "GCP" ]; then
+  kubectl get sc ci-storage > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    kubectl create -f ${PCFPATH}/files/pbs/gcp-storage-class-ci-storage.yml > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to add storage-class ci-storage"
+      echo "       => kubectl create -f ${PCFPATH}/files/pbs/gcp-storage-class-ci-storage.yml "
+      exit 1
+    fi
+  fi
+fi
+
+if [ "$PCF_DEPLOYMENT_CLOUD" == "Azure" ]; then
+  kubectl get sc slow > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    kubectl create -f ${PCFPATH}/files/pbs/azure-storage-claass-slow.yml > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "ERROR: failed to add storage-class slow"
+      echo "       => kubectl create -f ${PCFPATH}/files/pbs/azrue-storage-claass-slow.yml "
+      exit 1
+    fi
+  fi
+fi
+
 if [ "$PCF_DEPLOYMENT_CLOUD" == "AWS" ]; then 
   kubectl get sc gp2 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
