@@ -98,13 +98,9 @@ if [ "$PB" == "" ]; then
   exit
 fi
 
-echo "PCF_DEPLOYMENT_ENV_NAME:$PCF_DEPLOYMENT_ENV_NAME"
-echo "PKS_ENNAME:$PKS_ENNAME"
-echo "PKS_CLNAME:$PKS_CLNAME"
 HARBOR_REGISTRY="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
 HARBOR_PROJECT=library
 PCF_TILE_HARBOR_ADMIN_USER=admin
-echo "HARBOR_REGISTRY:$HARBOR_REGISTRY"
 
 missing_variables=0
 GIT_PETCLIENTIC_SOURCE=https://github.com/spring-projects/spring-petclinic
