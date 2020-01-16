@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================================
 # File: ........: deploy_demo.sh
-# Language .....: bash
+# Language .....: bash 
 # Author .......: Sacha Dubois, Pivotal
 # --------------------------------------------------------------------------------------------
 # Description ..: Demonstration for PBS spring-petclinic based on two different URL
