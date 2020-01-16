@@ -116,7 +116,7 @@ harborAPIprojectAdd() {
   HARBOR_PASS=$4
 
   curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -X POST "https://$HARBOR_SERVER/api/projects" \
-       -d "{\"project_name\": \"$HARBOR_PROJECT\"}" > /dev/null 2>&1
+       -d "{\"project_name\": \"$HARBOR_PROJECT\", \"public\": \"true\"}" > /dev/null 2>&1
 }
 
 
