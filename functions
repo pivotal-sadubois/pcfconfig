@@ -31,6 +31,47 @@ verifyEnvVariables() {
 a=1
 }
 
+harborAPIuserUser() {
+  HARBOR_URL=https://demo.goharbor.io/harbor/projects
+  HARBOR_SERVER=$1
+  HARBOR_USER=$2
+  HARBOR_PASS=$3
+  HARBOR_EMAIL=$4
+  HARBOR_FIRST_NAME=$5
+  HARBOR_LAST_NAME=$6
+
+  curl -k -u "$HARBOR_USER:$HARBOR_PASS" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null 
+
+
+exit
+  token=$(curl -k -u "$HARBOR_USER:$HARBOR_PASS" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+exit
+
+  #curl -u "$HARBOR_USER:$HARBOR_PASS" -i -k -X GET "https://$HARBOR_SERVER/api/users/19"
+  #curl -X GET -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-type: application/json" -k -i  https://$HARBOR_SERVER/api/users/19
+  #curl -X GET -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-type: application/json" -k -i  https://$HARBOR_SERVER/api/users/?username=sschmid
+  #curl -u "$HARBOR_USER:$HARBOR_PASS" -X POST https://$HARBOR_SERVER/auth \
+  #     -d '{"username": "$HARBOR_USER","password": "$HARBOR_PASS","serveraddress": "https://$HARBOR_SERVER"}'
+  #curl -X POST -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-type: application/json" -k -i \
+  #      https://$HARBOR_SERVER/api/users/19
+
+
+
+exit
+  #curl -u "HARBOR_USER:$HARBOR_PASS" -X POST http://$HARBOR_SERVER/auth -d '{"username": "$HARBOR_USER","password": "$HARBOR_PASS","serveraddress": "https://$HARBOR_SERVER/api/users/19"}'
+
+echo gaga1
+  token=$(curl -k -u "$HARBOR_USER:$HARBOR_PASS" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+echo gaga2
+
+
+#  token=$(curl -k "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
+#curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/users/19"
+
+curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -X GET "https://$HARBOR_SERVER/api/users/19"
+
+
+}
 # --------------------------------------------------------------------------------------------
 # Function: ....: harborAPIuserAdd
 # Description ..: Create a User on Harbor if it does note yet exist
@@ -51,42 +92,33 @@ harborAPIuserAdd() {
   HARBOR_FIRST_NAME=$5
   HARBOR_LAST_NAME=$6
 
-HARBOR_SERVER=harbor.azpks.pcfsdu.com
-
-token=$(curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
-
-curl -i -k -u "admin:pivotal" -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users" -d '{"user_id":4,"username": "user1", "email": "user1@mycompany.local", "password": "01234530c02590d88285704369964daa", "realname": "User1", "comment": "N/A", "deleted": 0, "role_name": "", "role_id": 0, "has_admin_role": 0, "reset_uuid": "", "creation_time": "2018-03-21T11:33:50Z", "update_time": "2018-03-21T11:33:50Z"}'
-
-exit
-curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users" -d '{"user_id":4,"username": "user1", "email": "user1@mycompany.local", "password": "01234530c02590d88285704369964daa", "realname": "User1", "comment": "N/A", "deleted": 0, "role_name": "", "role_id": 0, "has_admin_role": 0, "reset_uuid": "", "creation_time": "2018-03-21T11:33:50Z", "update_time": "2018-03-21T11:33:50Z"}'
-
-curl -u admin:pivotal -i -k -X GET "https://$HARBOR_SERVER/api/users"
-
-exit
-  token=$(curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
-
-curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/users"
-
-curl -k -u "admin:pivotal" "https://$HARBOR_SERVER/api/users"
-
-exit
-
-#curl -u admin:password -i -k -X GET "https://$HARBOR_SERVER/api/users?username=sadubois"
-#curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/projects"
-#exit
-
   token=$(curl -k "https://$HARBOR_SERVER/service/token?service=harbor-registry&scope=repository:library/mysql:pull,push" 2>/dev/null | jq -r '.token')
 
-echo "TOKEN:$token"
-echo "HARBOR_USER:$HARBOR_USER"
-echo "HARBOR_PASS:$HARBOR_PASS"
-
-curl -u admin:pivotal -i -k -X GET "https://$HARBOR_SERVER/api/users?username=sadubois"
-exit
-curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/projects"
-#curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users"
-curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X GET "https://$HARBOR_SERVER/api/systeminfo"
+  curl -i -k -H "Content-Type: application/json" -H "Authorization:  Bearer $token" -X POST "https://$HARBOR_SERVER/api/users" -d "{\"username\": \"$HARBOR_USER\", \"email\": \"$HARBOR_EMAIL\", \"password\": \"$HARBOR_PASS\", \"realname\": \"$HARBOR_FIRST_NAME $HARBOR_LAST_NAME\", \"comment\": \"N/A\"}" > /dev/null 2>&1
 }
+
+# --------------------------------------------------------------------------------------------
+# Function: ....: harborAPIprojectAdd
+# Description ..: Create a User on Harbor if it does note yet exist
+# Author .......: Sacha Dubois, Pivotal
+# --------------------------------------------------------------------------------------------
+# Args:       #1: Service Name (string)
+#             #2: SpaceId
+#             #3: Tags (String-1, String-2, String-x)
+# --------------------------------------------------------------------------------------------
+# Return:       : 0 - ok, 1 - nok
+# --------------------------------------------------------------------------------------------
+harborAPIprojectAdd() {
+  HARBOR_URL=https://demo.goharbor.io/harbor/projects
+  HARBOR_SERVER=$1
+  HARBOR_PROJECT=$2
+  HARBOR_USER=$3
+  HARBOR_PASS=$4
+
+  curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -X POST "https://$HARBOR_SERVER/api/projects" \
+       -d "{\"project_name\": \"$HARBOR_PROJECT\"}" > /dev/null 2>&1
+}
+
 
 debugInfos() {
   MASK=$1
@@ -351,8 +383,11 @@ verifyTLScertificate() {
 }
 
 showK8sEnvironment() {
-  pks clusters > /dev/null
-  if [ $? -ne 0 ]; then exit 1; fi
+  pks clusters > /dev/null 2>&1
+  if [ $? -ne 0 ]; then 
+    echo "ERROR: Please log in to PKS"
+    exit 1
+  fi
 
   PKS_CLNAME=$(kubectl config current-context 2>/dev/null)
   PKS_ENNAME=$(pks cluster cl1 | grep 'Kubernetes Master Host:' | \
