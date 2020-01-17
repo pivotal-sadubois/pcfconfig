@@ -43,6 +43,7 @@ if [ "$#" -eq 0 ]; then
   usage; exit 0
 fi
 
+REGISTRY_HARBOR=0
 REGISTRY_DOCKER=0
 REGISTRY_GOHARBOR=0
 
