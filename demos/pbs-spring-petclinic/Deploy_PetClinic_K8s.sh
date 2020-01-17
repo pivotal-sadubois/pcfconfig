@@ -113,6 +113,8 @@ if [ $KUBERNETES_PKS -eq 1 -o $REGISTRY_HARBOR -eq 1 ]; then
 
   showK8sEnvironment
 
+  export PKS_USER_PASSWORD=${PCF_TILE_PKS_ADMIN_PASS}
+
   pks get-credentials cl1 > /dev/null 2>&1
 fi
 
