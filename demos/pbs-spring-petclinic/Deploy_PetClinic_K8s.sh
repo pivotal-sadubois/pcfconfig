@@ -128,7 +128,7 @@ if [ $KUBERNETES_MINIKUBE -eq 1 ]; then
   minikube addons enable ingress /dev/null 2>&1
 
   profile=$(minikube profile) 
-  kubectl config set-context minikube > /dev/null
+  kubectl config use-context $profile > /dev/null
 fi
 
 missing_variables=0
@@ -237,7 +237,13 @@ if [ $REGISTRY_DOCKER -eq 1 ]; then
   cat files/spring-petclinic-ingress-template.yml | sed -e "s/DOMAIN/info/g" > /tmp/spring-petclinic-ingress.yml
 fi
 
+# --- LOAD CLOUD ENVIRONMENT ---
+dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
+# steve: reverted to the above command as PCF_DEPLOYMENT_ENV_NAME is only set on Jump
+# dom="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
+
 if [ $REGISTRY_HARBOR -eq 1 ]; then
+  PCF_DEPLOYMENT_ENV_NAME=$(echo $dom | cut -d '.' -f 1)
   CONTAINER_REGISTRY="harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
   CONTAINER_PROJECT=$PCF_PBS_HARBOR_PROJ
 
@@ -265,10 +271,6 @@ if [ $REGISTRY_HARBOR -eq 1 ]; then
 
     harborAPIprojectAdd $CONTAINER_REGISTRY $PCF_PBS_HARBOR_PROJ admin $PCF_TILE_HARBOR_ADMIN_PASS
   fi
-
-  # --- LOAD CLOUD ENVIRONMENT ---
-  dom=$(pks cluster cl1 | grep "Kubernetes Master Host" | awk '{ print $NF }' | sed 's/cl1\.//g')
-  dom="${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}"
   
   if [ -f ../../certificates/$dom/fullchain.pem ]; then
     TLS_CERTIFICATE=../../certificates/$dom/fullchain.pem
