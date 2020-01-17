@@ -325,9 +325,9 @@ prtHead "Add screts for Github Registry from (/tmp/github.yml)"
 execCmd "cat /tmp/github.yml | sed '/^password: /s/.*/password: xxxxxxxx/g'"
 execCmd "pb secrets registry apply -f /tmp/github.yml"
 
-prtHead "Create Image (spring-petclinic-harbor.yml)"
-execCmd "cat spring-petclinic-harbor.yml"
-execCmd "pb image apply -f spring-petclinic-harbor.yml"
+prtHead "Create Image (/tmp/spring-petclinic.yml)"
+execCmd "cat /tmp/spring-petclinic.yml"
+execCmd "pb image apply -f /tmp/spring-petclinic.yml"
 sleep 7
 execCmd "pb image list"
 execCmd "pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest"
