@@ -5,6 +5,6 @@ source:
 build:
   env:
   - name: BP_JAVA_VERSION
-    value: 11
+    value: 8
 image:
   tag: XXXDOMAINXXX/YYYREPOYYY/spring-petclinic:latest

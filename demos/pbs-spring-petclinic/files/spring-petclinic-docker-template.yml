@@ -7,4 +7,4 @@ build:
   - name: BP_JAVA_VERSION
     value: 8
 image:
-  tag: index.docker.io/YYYREPOYYY/spring-petclinic
+  tag: tag: XXXDOMAINXXX/YYYREPOYYY/spring-petclinic:latest
