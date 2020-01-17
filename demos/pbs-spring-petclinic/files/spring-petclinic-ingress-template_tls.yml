@@ -13,3 +13,15 @@ spec:
      - backend:
          serviceName: spring-petclinic
          servicePort: 8080
+
+ tls:
+ - hosts:
+   - spring-petclinic.DOMAIN
+   secretName: spring-petclinic-certs
+---
+kind: Secret
+metadata:
+ name: spring-petclinic-certs
+type: Opaque
+apiVersion: v1
+data:
