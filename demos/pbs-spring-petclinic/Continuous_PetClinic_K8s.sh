@@ -353,7 +353,7 @@ echo "     => https://spring-petclinic.$PKS_APPATH"
 sleep 10
 
 # get the digest of the newly build/pushed image to update the deployment
-digest=$(pb image builds harbor.gcppks.sschmidt.ch/sschmidt/spring-petclinic:latest | sed '/^$/d' | tail -1 | awk '{print $NF}')
+digest=$(pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest | sed '/^$/d' | tail -1 | awk '{print $NF}')
 
 prtHead "Now we will trigger the deployment of the newly created container"
 
