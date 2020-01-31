@@ -301,8 +301,10 @@ if [ $REGISTRY_HARBOR -eq 1 ]; then
 
   # --- GENERATE INGRES FILES ---
   cat files/spring-petclinic-ingress-template_tls.yml | sed -e "s/DOMAIN/$PKS_APPATH/g" > /tmp/spring-petclinic-ingress.yml
-  echo " tls.crt: \"$cert\"" >> /tmp/spring-petclinic-ingress.yml
-  echo " tls.key: \"$pkey\"" >> /tmp/spring-petclinic-ingress.yml
+  echo " tls.crt: |"          >> /tmp/spring-petclinic-ingress.yml
+  echo "$cert" | sed 's/^/  /' >> /tmp/spring-petclinic-ingress.yml
+  echo " tls.key: |"          >> /tmp/spring-petclinic-ingress.yml
+  echo "$pkey" | sed 's/^/  /' >> /tmp/spring-petclinic-ingress.yml
 fi
 
 
