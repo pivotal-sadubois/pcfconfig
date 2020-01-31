@@ -107,11 +107,14 @@ echo '          ----------------------------------------------------------------
 echo '                                                                                      '
 
 if [ $KUBERNETES_PKS -eq 1 -o $REGISTRY_HARBOR -eq 1 ]; then
+
+  showK8sEnvironment
+  echo "PKS_ENNAME: $PKS_ENNAME"
+
+
   if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
     . /tmp/deployPCFenv_${PKS_ENNAME}
   fi
-
-  showK8sEnvironment
 
   export PKS_USER_PASSWORD=${PCF_TILE_PKS_ADMIN_PASS}
 
