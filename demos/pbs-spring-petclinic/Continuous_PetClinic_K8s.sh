@@ -1,9 +1,9 @@
 # ============================================================================================
-# File: ........: deploy_demo_tls.sh
+# File: ........: Continuous_PetClinic.sh
 # Language .....: bash
-# Author .......: Sacha Dubois, Pivotal
+# Author .......: Steve Schmidt + Sacha Dubois, Pivotal
 # --------------------------------------------------------------------------------------------
-# Description ..: Monitoring with Grafana and Prometheus Demo
+# Description ..: Continuous Delivery from git commit -> Build Service -> K8s deployment
 # ============================================================================================
 
 BASENAME=$(basename $0)
@@ -102,15 +102,13 @@ echo '                                  |____/ \___|_| |_| |_|\___/             
 echo '                                                                                      '
 echo '          ----------------------------------------------------------------------------'
 echo '                           Demonstration for Pivotal Build Service (PBS)              '
-echo '                                    by Sacha Dubois, Pivotal Inc                      '
+echo '                                    by Steve Schmidt and Sacha Dubois, Pivotal Inc    '
 echo '          ----------------------------------------------------------------------------'
 echo '                                                                                      '
 
 if [ $KUBERNETES_PKS -eq 1 -o $REGISTRY_HARBOR -eq 1 ]; then
 
   showK8sEnvironment
-  echo "PKS_ENNAME: $PKS_ENNAME"
-
 
   if [ -f /tmp/deployPCFenv_${PKS_ENNAME} ]; then
     . /tmp/deployPCFenv_${PKS_ENNAME}
@@ -135,7 +133,6 @@ if [ $KUBERNETES_MINIKUBE -eq 1 ]; then
 fi
 
 missing_variables=0
-GIT_PETCLIENTIC_SOURCE=https://github.com/spring-projects/spring-petclinic
 if [ $REGISTRY_GOHARBOR -eq 1 ]; then
   CONTAINER_REGISTRY=demo.goharbor.io
   CONTAINER_PROJECT=$PCF_PBS_GOHARBOR_PROJ
@@ -200,8 +197,6 @@ if [ $REGISTRY_GOHARBOR -eq 1 ]; then
     #                  $PCF_PBS_GOHARBOR_EMAIL $PCF_PBS_GOHARBOR_FIRST_NAME $PCF_PBS_GOHARBOR_LAST_NAME
   fi
 
-  # --- GENERATE INGRES FILES ---
-  cat files/spring-petclinic-ingress-template.yml | sed -e "s/DOMAIN/info/g" > /tmp/spring-petclinic-ingress.yml
 fi
 
 if [ $REGISTRY_DOCKER -eq 1 ]; then
@@ -236,8 +231,6 @@ if [ $REGISTRY_DOCKER -eq 1 ]; then
     echo ""
   fi
 
-  # --- GENERATE INGRES FILES ---
-  cat files/spring-petclinic-ingress-template.yml | sed -e "s/DOMAIN/info/g" > /tmp/spring-petclinic-ingress.yml
 fi
 
 # --- LOAD CLOUD ENVIRONMENT ---
@@ -272,42 +265,8 @@ if [ $REGISTRY_HARBOR -eq 1 ]; then
     messagePrint "   - Harbor Administrator Password" "##########"
     echo ""
 
-    harborAPIprojectAdd $CONTAINER_REGISTRY $PCF_PBS_HARBOR_PROJ admin $PCF_TILE_HARBOR_ADMIN_PASS
   fi
   
-  if [ -f ../../certificates/$dom/fullchain.pem ]; then
-    TLS_CERTIFICATE=../../certificates/$dom/fullchain.pem
-    TLS_PRIVATE_KEY=../../certificates/$dom/privkey.pem
-  fi
-
-  if [ -f ../../certificates/fullchain.pem ]; then
-    TLS_CERTIFICATE=../../certificates/fullchain.pem
-    TLS_PRIVATE_KEY=../../certificates/privkey.pem
-  fi
-
-  # --- CHECK IF CERTIFICATE HAS BEEN DEFINED ---
-  if [ "${TLS_CERTIFICATE}" == "" -o "${TLS_PRIVATE_KEY}" == "" ]; then
-    echo ""
-    echo "ERROR: Certificate and Private-Key has not been specified. Please set"
-    echo "       the following environment variables:"
-    echo "       => export TLS_CERTIFICATE=<cert.pem>"
-    echo "       => export TLS_PRIVATE_KEY=<private_key.pem>"
-    echo ""
-    exit 1
-  else
-    verifyTLScertificate $TLS_CERTIFICATE $TLS_PRIVATE_KEY
-  fi
-
-  # --- CONVERT CERTS TO BASE64 ---
-  cert=$(base64 $TLS_CERTIFICATE)
-  pkey=$(base64 $TLS_PRIVATE_KEY)
-
-  # --- GENERATE INGRES FILES ---
-  cat files/spring-petclinic-ingress-template_tls.yml | sed -e "s/DOMAIN/$PKS_APPATH/g" > /tmp/spring-petclinic-ingress.yml
-  echo " tls.crt: |"          >> /tmp/spring-petclinic-ingress.yml
-  echo "$cert" | sed 's/^/  /' >> /tmp/spring-petclinic-ingress.yml
-  echo " tls.key: |"          >> /tmp/spring-petclinic-ingress.yml
-  echo "$pkey" | sed 's/^/  /' >> /tmp/spring-petclinic-ingress.yml
 fi
 
 
@@ -315,44 +274,110 @@ fi
 NAMESPACE=spring-petclinic
 PETCLINIC_IMAGE=${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest
 
-echo "PETCLINIC_IMAGE:$PETCLINIC_IMAGE"
+echo "PETCLINIC_IMAGE: $PETCLINIC_IMAGE"
 
 kubectl get namespace $NAMESPACE > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-  echo "ERROR: Namespace '$NAMESPACE' already exist"
-  echo "       => kubectl delete namespace $NAMESPACE"
+if [ $? -ne 0 ]; then
+  echo "ERROR: Namespace '$NAMESPACE' does not exist"
+  echo "       => run Build_* and Deploy_* first"
   exit 1
 fi
 
-prtHead "Create seperate namespace to host the Spring Petclinic Demo"
-execCmd "kubectl create namespace $NAMESPACE"
+### steve start here ###
 
-prtHead "Create the deployment for stilton-cheese"
-execCmd "kubectl create deployment spring-petclinic --image=$PETCLINIC_IMAGE -n $NAMESPACE"
+# setup toplevel directory for clone
+mkdir ~/workspace
+cd ~/workspace
 
-#kubectl run spring-petclinic --image=harbor.gcppks.pcfsdu.com/library/spring-petclinic:latest --port=443
+prtHead "Cloning the Spring Petclinic project"
+execCmd "git clone ${PCF_TILE_PBS_DEMO_PETCLINIC}"
 
-prtHead "Verify Deployment for stilton and cheddar cheese"
-execCmd "kubectl get deployment,pods -n $NAMESPACE"
+# change directory for git config and git push to work
+cd ~/workspace/spring-petclinic
+git config user.email "${PCF_TILE_PBS_ADMIN_EMAIL}"
+git config user.name "${PCF_TILE_PBS_ADMIN_USER}"
+# create ~/.netrc file if it does not exist for git push w/o password
+if [ ! -f ~/.netrc ]
+then
+  echo "machine github.com"                   >  ~/.netrc
+  echo "login ${PCF_TILE_PBS_GITHUB_USER}"    >> ~/.netrc
+  echo "password ${PCF_TILE_PBS_GITHUB_PASS}" >> ~/.netrc
+  chmod 0600 ~/.netrc
+fi
 
-prtHead "Create service type NodePort on port 80 for both deployments"
-execCmd "kubectl expose deployment spring-petclinic --type=NodePort --port=8080 -n $NAMESPACE"
+prtHead "Current Welcome message on the Spring Petclinic homepage:"
+execCmd "grep -i welcome src/main/resources/messages/messages.properties"
 
-prtHead "Verify services of cheddar-cheese and stilton-cheese"
-execCmd "kubectl get svc -n $NAMESPACE"
+prtHead "Updating date and time"
+echo
+echo "sed -i "s/=Welcome.*/=Welcome on `date`/" src/main/resources/messages/messages.properties"
+sed -i "s/=Welcome.*/=Welcome on `date`/" src/main/resources/messages/messages.properties
+echo
 
-prtHead "Describe services cheddar-cheese and stilton-cheese"
-execCmd "kubectl describe svc spring-petclinic -n $NAMESPACE"
+prtHead "Adding change to Git"
+execCmd "git add src/main/resources/messages/messages.properties"
 
-prtHead "Review ingress configuration file (/tmp/spring-petclinic-ingress.yml)"
-execCmd "more /tmp/spring-petclinic-ingress.yml"
+prtHead "Commit change to Git"
+execCmd "git commit -m 'updated welcome string' src/main/resources/messages/messages.properties"
 
-prtHead "Create ingress routing cheddar-cheese and stilton-cheese service"
-execCmd "kubectl create -f /tmp/spring-petclinic-ingress.yml -n $NAMESPACE"
-execCmd "kubectl get ingress -n $NAMESPACE"
-execCmd "kubectl describe ingress -n $NAMESPACE"
+# take note of the last build
+bld=$(pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest | \
+      sed '/^$/d' | tail -1 | awk '{ print $1 }') 
 
-prtHead "Open WebBrowser and verify the deployment"
+prtHead "Push change to Git"
+execCmd "git push"
+
+prtHead "Build Service is monitoring the repository and will start a build"
+sleep 10
+
+prtHead "List images and builds"
+execCmd "pb image list"
+execCmd "pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest"
+
+newbuild=$bld
+while [ $newbuild == $bld ]
+do
+  bld=$(pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest | \
+      sed '/^$/d' | tail -1 | awk '{ print $1 }') 
+  sleep 2
+done
+
+execCmd "pb image logs ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest -b $bld -f"
+
+prtText "Login in to the Registry on ($CONTAINER_REGISTRY) to see the newly created image"
+prtText " => https://$CONTAINER_REGISTRY"
+sleep 10
+
+prtHead "Point your Webbrowser to the Spring Petclinic and take a note of the Welcome message"
+echo "     => https://spring-petclinic.$PKS_APPATH"
+sleep 10
+
+# get the digest of the newly build/pushed image to update the deployment
+digest=$(pb image builds ${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest | sed '/^$/d' | tail -1 | awk '{print $NF}')
+
+prtHead "Now we will trigger the deployment of the newly created container"
+
+## since=$(date +%s)
+## echo "kubectl patch deployment spring-petclinic -n spring-petclinic -p '{"spec":{"template":{"metadata":{"annotations":{"date":"'$since'"}}}}}'"
+## kubectl patch deployment spring-petclinic -n spring-petclinic -p '{"spec":{"template":{"metadata":{"annotations":{"date":"'$since'"}}}}}'
+
+# kubectl patch deployment spring-petclinic -n spring-petclinic -p '{"spec":{"template":{"spec":{"containers":[{"name":"spring-petclinic","digest":"'$digest'"}]}}}}'
+
+echo kubectl patch deployment spring-petclinic -n spring-petclinic -p '{"spec":{"template":{"spec":{"containers":[{"name":"spring-petclinic","image":"'${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest':sha256:'$digest'"}]}}}}'
+echo
+kubectl patch deployment spring-petclinic -n spring-petclinic -p '{"spec":{"template":{"spec":{"containers":[{"name":"spring-petclinic","image":"'${CONTAINER_REGISTRY}/${CONTAINER_PROJECT}/spring-petclinic:latest'@sha256:'$digest'"}]}}}}'
+echo
+sleep 2
+
+execCmd "kubectl get pods -n spring-petclinic"
+newpod=""
+while [ "$newpod" == "" ]
+do
+  newpod=$(kubectl get pods -n spring-petclinic | awk '/spring-petclinic.*Running/{print $1}' )
+done
+execCmd "kubectl describe pod $newpod -n spring-petclinic"
+
+prtHead "Go back to the Spring Petclinic website and compare the Welcome message"
 echo "     => https://spring-petclinic.$PKS_APPATH"
 echo ""
 
