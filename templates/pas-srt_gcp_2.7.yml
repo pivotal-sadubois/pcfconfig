@@ -19,7 +19,7 @@ product-properties:
   .cloud_controller.max_disk_quota_app:
     value: 2048
   .cloud_controller.max_file_size:
-    value: 4096
+    value: 2048
   .cloud_controller.security_event_logging_enabled:
     value: true
   .cloud_controller.staging_timeout_in_seconds:
