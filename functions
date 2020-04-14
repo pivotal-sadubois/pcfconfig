@@ -116,7 +116,31 @@ harborAPIprojectAdd() {
   HARBOR_PASS=$4
 
   curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -X POST "https://$HARBOR_SERVER/api/projects" \
-       -d "{\"project_name\": \"$HARBOR_PROJECT\", \"project_public\": \"true\"}" > /dev/null 2>&1
+       -d "{\"project_name\": \"$HARBOR_PROJECT\", \"metadata\": { \"public\": \"true\"}}" > /dev/null 2>&1
+}
+
+# --------------------------------------------------------------------------------------------
+# Function: ....: harborAPIprojectDel
+# Description ..: Create a User on Harbor if it does note yet exist
+# Author .......: Sacha Dubois, Pivotal
+# --------------------------------------------------------------------------------------------
+# Args:       #1: Service Name (string)
+#             #2: SpaceId
+#             #3: Tags (String-1, String-2, String-x)
+# --------------------------------------------------------------------------------------------
+# Return:       : 0 - ok, 1 - nok
+# --------------------------------------------------------------------------------------------
+harborAPIprojectDel() {
+  HARBOR_URL=https://demo.goharbor.io/harbor/projects
+  HARBOR_SERVER=$1
+  HARBOR_PROJECT=$2
+  HARBOR_USER=$3
+  HARBOR_PASS=$4
+
+  projid=$(curl https://$HARBOR_SERVER/api/projects 2>/dev/null | jq -r ".[] | select(.name == \"$HARBOR_PROJECT\").project_id")
+  curl -i -k -u "$HARBOR_USER:$HARBOR_PASS" -H "Content-Type: application/json" -X DELETE "https://$HARBOR_SERVER/api/projects/$projid"
+
+       
 }
 
 
@@ -1174,6 +1198,7 @@ startJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
+echo hallo20
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
@@ -2357,7 +2382,37 @@ cleanGCPenv() {
     messagePrint " - Cleaning up forwarding-rule:" "$nam"
 
     gcloud compute forwarding-rules delete $nam --region=$zon -q >/dev/null 2>&1
+    gcloud compute forwarding-rules delete $nam --global -q >/dev/null 2>&1
   done
+
+#XXXXXXX
+
+  for n in $(gcloud compute target-https-proxies list 2>/dev/null | \
+      egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up GCP target-https-proxies:" "$n"
+    #gcloud compute url-maps delete $n -q --region $GCP_REGION 2>/dev/null
+    gcloud compute target-https-proxies delete $n -q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR deleting target-https-proxies $n"
+      echo "      => gcloud compute target-https-proxies delete $n -q"
+      exit 1
+    fi
+  done
+
+  for n in $(gcloud compute target-http-proxies list 2>/dev/null | \
+      egrep "^${ENV_NAME}-" | awk '{ print $1 }'); do
+
+    messagePrint " - Cleaning up GCP target-http-proxies:" "$n"
+    #gcloud compute url-maps delete $n -q --region $GCP_REGION 2>/dev/null
+    gcloud compute target-http-proxies delete $n -q 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "ERROR deleting target-http-proxies $n"
+      echo "      => gcloud compute target-http-proxies delete $n -q"
+      exit 1
+    fi
+  done
+
 
   # --filter="region:($GCP_REGION)"  NOT-WORKING
   for n in $(gcloud compute url-maps list 2>/dev/null | \
