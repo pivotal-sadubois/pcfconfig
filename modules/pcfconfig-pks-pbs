@@ -46,9 +46,13 @@ messageTitle "------------------------------------------------------------------
 # --- CHECK UTILITIES ---
 checkOpsMantools
 
-export PCF_TILE_PBS_NAME="Pivotal Build Service"
-export PCF_TILE_PBS_SLUG=build-service
-export PCF_TILE_PBS_VERSION=0.0.4
+#export PCF_TILE_PBS_NAME="Pivotal Build Service"
+#export PCF_TILE_PBS_SLUG=build-service
+#export PCF_TILE_PBS_VERSION=0.0.4
+
+echo "PCF_TILE_PBS_NAME:$PCF_TILE_PBS_NAME"
+echo "PCF_TILE_PBS_SLUG:$PCF_TILE_PBS_SLUG"
+echo "PCF_TILE_PBS_VERSION:$PCF_TILE_PBS_VERSION"
 
 sshEnvironment
 
@@ -120,21 +124,23 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "XXXX: sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p $PCF_TILE_HARBOR_ADMIN_PASS"
 
 version=0.0.4
+version=$PCF_TILE_PBS_VERSION
 touch /tmp/relocated.json
 RELOCATE_LOG=/tmp/relocate.log; sudo rm -f $RELOCATE_LOG
 if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
   messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
   sudo duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
-     -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
+     -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service; ret=$?
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to relocate Build Servics Images"
     echo "       => duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \\"
-    echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library"
+    echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service"
     exit 1
   fi
 fi
@@ -160,18 +166,43 @@ fi
 
 #stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
 
+echo gaga1
 if [ ${new_install} -eq 1 ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
+  export CLEANUP_CONTAINERS=true
+echo gaga2
 
-  sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \
-      --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
+#      --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#      --set kubernetes_env=cl1 \
+#      --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library \
+#      --set registry_username="admin" \
+#      --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
+#      --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
+#      -f /tmp/build-service-${version}.tgz \
+#      -m /tmp/relocated.json > $LOGFILE 2>&1
+
+#  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
+#      --set kubernetes_env=cl1 \
+#      --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service \
+#      --set registry_username="admin" \
+#      --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
+#      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service/default-builder \
+#      -f /tmp/build-service-${version}.tgz \
+#      -m /tmp/relocated.json > $LOGFILE 2>&1
+
+  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/pbs-gcppks/build-service \
       --set registry_username="admin" \
       --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
-      --set uaa_url=https://api.pks.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}:8443 \
+      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/pbs-gcppks/build-service/default-builder \
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json > $LOGFILE 2>&1
+echo gaga3
   if [ $? -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to install build-service (see logs: /tmp/${PBS_SETUP}.log"
@@ -187,10 +218,11 @@ if [ ${new_install} -eq 1 ]; then
     exit 1
   else
     echo "-----------------------------------------------------------------------------------------------------------"
-    sudo duffle status $PBS_SETUP
+    sudo CLEANUP_CONTAINERS=true duffle status $PBS_SETUP
     echo "-----------------------------------------------------------------------------------------------------------"
   fi
 fi
+echo gaga4
 
 ##############################################################################################
 ############################### CREATE UAAC USER AND PASS ####################################
