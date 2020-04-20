@@ -189,6 +189,7 @@ echo gaga2
       --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service \
       --set registry_username="admin" \
       --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
+      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service/default-builder \
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json > $LOGFILE 2>&1
 echo gaga3
