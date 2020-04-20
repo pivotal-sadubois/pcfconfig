@@ -46,9 +46,13 @@ messageTitle "------------------------------------------------------------------
 # --- CHECK UTILITIES ---
 checkOpsMantools
 
-export PCF_TILE_PBS_NAME="Pivotal Build Service"
-export PCF_TILE_PBS_SLUG=build-service
-export PCF_TILE_PBS_VERSION=0.0.4
+#export PCF_TILE_PBS_NAME="Pivotal Build Service"
+#export PCF_TILE_PBS_SLUG=build-service
+#export PCF_TILE_PBS_VERSION=0.0.4
+
+echo "PCF_TILE_PBS_NAME:$PCF_TILE_PBS_NAME"
+echo "PCF_TILE_PBS_SLUG:$PCF_TILE_PBS_SLUG"
+echo "PCF_TILE_PBS_VERSION:$PCF_TILE_PBS_VERSION"
 
 sshEnvironment
 
