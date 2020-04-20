@@ -165,9 +165,11 @@ fi
 
 #stt=$(duffle list $PBS_SETUP | egrep "^$PBS_SETUP" | awk '{ print $NF }') 
 
+echo gaga1
 if [ ${new_install} -eq 1 ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
   export CLEANUP_CONTAINERS=true
+echo gaga2
 
 #  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
 #      --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
@@ -188,6 +190,7 @@ if [ ${new_install} -eq 1 ]; then
       --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json > $LOGFILE 2>&1
+echo gaga3
   if [ $? -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to install build-service (see logs: /tmp/${PBS_SETUP}.log"
@@ -207,6 +210,7 @@ if [ ${new_install} -eq 1 ]; then
     echo "-----------------------------------------------------------------------------------------------------------"
   fi
 fi
+echo gaga4
 
 ##############################################################################################
 ############################### CREATE UAAC USER AND PASS ####################################
