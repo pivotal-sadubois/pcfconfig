@@ -169,7 +169,7 @@ if [ ${new_install} -eq 1 ]; then
   LOGFILE=/tmp/${PBS_SETUP}.log; sudo rm -f $LOGFILE
   export CLEANUP_CONTAINERS=true
 
-  sudo duffle install $PBS_SETUP -c /tmp/credentials.yml  \
+  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set domain=build-service.apps-cl1.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
