@@ -183,13 +183,23 @@ echo gaga2
 #      -f /tmp/build-service-${version}.tgz \
 #      -m /tmp/relocated.json > $LOGFILE 2>&1
 
+#  sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
+#      --set kubernetes_env=cl1 \
+#      --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
+#      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service \
+#      --set registry_username="admin" \
+#      --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
+#      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service/default-builder \
+#      -f /tmp/build-service-${version}.tgz \
+#      -m /tmp/relocated.json > $LOGFILE 2>&1
+
   sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service \
+      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/pbs-gcppks/build-service \
       --set registry_username="admin" \
       --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
-      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service/default-builder \
+      --set custom_builder_image=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/pbs-gcppks/build-service/default-builder \
       -f /tmp/build-service-${version}.tgz \
       -m /tmp/relocated.json > $LOGFILE 2>&1
 echo gaga3
