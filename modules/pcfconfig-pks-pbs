@@ -124,6 +124,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "XXXX: sudo docker login harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} -u admin -p $PCF_TILE_HARBOR_ADMIN_PASS"
 
 version=0.0.4
 version=$PCF_TILE_PBS_VERSION
@@ -206,7 +207,7 @@ echo gaga3
     exit 1
   else
     echo "-----------------------------------------------------------------------------------------------------------"
-    sudo duffle status $PBS_SETUP
+    sudo CLEANUP_CONTAINERS=true duffle status $PBS_SETUP
     echo "-----------------------------------------------------------------------------------------------------------"
   fi
 fi
