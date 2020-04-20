@@ -126,6 +126,7 @@ fi
 
 
 version=0.0.4
+version=$PCF_TILE_PBS_VERSION
 touch /tmp/relocated.json
 RELOCATE_LOG=/tmp/relocate.log; sudo rm -f $RELOCATE_LOG
 if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then 
