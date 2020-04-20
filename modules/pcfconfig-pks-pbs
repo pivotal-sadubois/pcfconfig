@@ -134,13 +134,13 @@ if [ $(wc -c /tmp/relocated.json | awk '{ print $1 }') -eq 0 ]; then
   messageTitle "Relocate Build Service images to Harbor registry (harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN})" 
   echo "-----------------------------------------------------------------------------------------------------------"
   sudo duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \
-     -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library; ret=$?
+     -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service; ret=$?
   echo "-----------------------------------------------------------------------------------------------------------"
   if [ $ret -ne 0 ]; then 
     debugInfos $(($BITMASK_JMP+$BITMASK_OPS+$BITMASK_PXS+$BITMASK_K8S))
     echo "ERROR: failed to relocate Build Servics Images"
     echo "       => duffle relocate -f /tmp/build-service-${version}.tgz -m /tmp/relocated.json \\"
-    echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library"
+    echo "                          -p harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service"
     exit 1
   fi
 fi
@@ -186,7 +186,7 @@ echo gaga2
   sudo CLEANUP_CONTAINERS=true duffle install $PBS_SETUP -c /tmp/credentials.yml  \
       --set kubernetes_env=cl1 \
       --set docker_registry=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN} \
-      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library \
+      --set docker_repository=harbor.${PCF_DEPLOYMENT_ENV_NAME}.${AWS_HOSTED_DNS_DOMAIN}/library/build-service \
       --set registry_username="admin" \
       --set registry_password="$PCF_TILE_HARBOR_ADMIN_PASS" \
       -f /tmp/build-service-${version}.tgz \
