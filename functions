@@ -720,7 +720,7 @@ installJumpHost() {
       fi
     fi
 
-    prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+    prj=$(gcloud projects list | egrep "^pa" | sed '1d' | awk '{ print $1 }')
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
