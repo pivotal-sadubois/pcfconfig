@@ -729,6 +729,12 @@ installJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
+
+echo "INSTANCE_NAME:$INSTANCE_NAME"
+echo "ZONE:$ZONE"
+echo "prj:$prj"
+
+exit
   fi
 echo "idiota 1"
 
