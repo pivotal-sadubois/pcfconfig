@@ -282,6 +282,9 @@ createENVfile() {
 
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_DEPLOY=\"$PCF_TILE_PBS_DEPLOY\""               >> $envFile
+      echo "PCF_TILE_PBS_NAME=\"$PCF_TILE_PBS_NAME\""                   >> $envFile
+      echo "PCF_TILE_PBS_SLUG=\"$PCF_TILE_PBS_SLUG\""                   >> $envFile
+      echo "PCF_TILE_PBS_VERSION=\"$PCF_TILE_PBS_VERSION\""             >> $envFile
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
@@ -329,6 +332,9 @@ createENVfile() {
 
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_DEPLOY=\"$PCF_TILE_PBS_DEPLOY\""               >> $envFile
+      echo "PCF_TILE_PBS_NAME=\"$PCF_TILE_PBS_NAME\""                   >> $envFile
+      echo "PCF_TILE_PBS_SLUG=\"$PCF_TILE_PBS_SLUG\""                   >> $envFile
+      echo "PCF_TILE_PBS_VERSION=\"$PCF_TILE_PBS_VERSION\""             >> $envFile
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
@@ -378,6 +384,9 @@ createENVfile() {
 
     if [ "${PCF_TILE_PBS_DEPLOY}" == "true" ]; then
       echo "PCF_TILE_PBS_DEPLOY=\"$PCF_TILE_PBS_DEPLOY\""               >> $envFile
+      echo "PCF_TILE_PBS_NAME=\"$PCF_TILE_PBS_NAME\""                   >> $envFile
+      echo "PCF_TILE_PBS_SLUG=\"$PCF_TILE_PBS_SLUG\""                   >> $envFile
+      echo "PCF_TILE_PBS_VERSION=\"$PCF_TILE_PBS_VERSION\""             >> $envFile
       echo "PCF_TILE_PBS_ADMIN_USER=\"$PCF_TILE_PBS_ADMIN_USER\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_PASS=\"$PCF_TILE_PBS_ADMIN_PASS\""       >> $envFile
       echo "PCF_TILE_PBS_ADMIN_EMAIL=\"$PCF_TILE_PBS_ADMIN_EMAIL\""     >> $envFile
