@@ -505,6 +505,7 @@ sshEnvironment() {
     ZONE=$(gcloud compute instances list --filter="name=( '$INSTANCE_NAME')" | egrep "^$INSTANCE_NAME" | awk '{ print $2 }')
 
     prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+    prj=${GCP_PROJECT}
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
@@ -721,6 +722,7 @@ installJumpHost() {
     fi
 
     prj=$(gcloud projects list | sed '1d' | egrep "^pa" |  awk '{ print $1 }')
+    prj=${GCP_PROJECT}
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
@@ -729,11 +731,6 @@ installJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
-
-echo "INSTANCE_NAME:$INSTANCE_NAME"
-echo "ZONE:$ZONE"
-echo "prj:$prj"
-
   fi
 
 #pppppppppppp  InstallJump AWS
@@ -1206,6 +1203,7 @@ startJumpHost() {
     fi
 
     prj=$(gcloud projects list | sed '1d' | egrep "^pa" | awk '{ print $1 }')
+    prj=${GCP_PROJECT}
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
@@ -1214,7 +1212,6 @@ startJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
-echo hallo20
   fi
 
   if [ "${PCF_DEPLOYMENT_CLOUD}" == "AWS" ]; then
