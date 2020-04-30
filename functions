@@ -1205,7 +1205,7 @@ startJumpHost() {
       fi
     fi
 
-    prj=$(gcloud projects list | sed '1d' | awk '{ print $1 }')
+    prj=$(gcloud projects list | sed '1d' | egrep "^pa" | awk '{ print $1 }')
 
     SSH_USER=$(whoami)
     SSH_HOME=/home/$(whoami)
@@ -1214,9 +1214,6 @@ startJumpHost() {
     SCP_OPTIONS="-o StrictHostKeyChecking=no"
     SSH_COMMAND="ssh -q $SSH_OPTIONS ${SSH_USER}@${SSH_HOST}"
     SCP_COMMAND="scp -r $SCP_OPTIONS"
-echo "SSH_HOST:$SSH_HOST"
-echo "SSH_USER:$SSH_USER"
-echo "SSH_COMMAND:$SSH_COMMAND"
 echo hallo20
   fi
 
@@ -1284,7 +1281,6 @@ echo hallo20
   # --- WAIT UNTIL SSH DEAMON IS READY NO JUMPHOST ----
   ret=1
   while [ $ret -ne 0 ]; do
-echo "$$SSH_COMMAND"
     $SSH_COMMAND -n id > /dev/null 2>&1; ret=$?
     [ $ret -ne 0 ] && sleep 10
   done
